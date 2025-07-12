@@ -9,6 +9,7 @@ import { Download, Search, Filter, Users, TrendingUp, Target, Calendar } from 'l
 import { LeadsList } from '@/components/admin/LeadsList';
 import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
 import { AssessmentManager } from '@/components/admin/AssessmentManager';
+import ContentManager from '@/components/admin/ContentManager';
 
 const Admin = () => {
   const [leads, setLeads] = useState<any[]>([]);
@@ -196,10 +197,11 @@ const Admin = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="leads" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="leads">Lead Intelligence</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="assessments">Assessment Manager</TabsTrigger>
+            <TabsTrigger value="content">Content Manager</TabsTrigger>
           </TabsList>
 
           <TabsContent value="leads" className="space-y-6">
@@ -268,6 +270,10 @@ const Admin = () => {
 
           <TabsContent value="assessments">
             <AssessmentManager />
+          </TabsContent>
+
+          <TabsContent value="content">
+            <ContentManager />
           </TabsContent>
         </Tabs>
       </div>

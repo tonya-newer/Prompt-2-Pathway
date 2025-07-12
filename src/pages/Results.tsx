@@ -59,7 +59,8 @@ Generated on: ${new Date().toLocaleDateString()}
     URL.revokeObjectURL(url);
   };
 
-  const voiceScript = `Congratulations ${leadData?.firstName}! You've completed your VoiceFlow assessment. Your overall clarity score is ${results.overallScore} out of 100, which puts you in the ${overallLabel.label.toLowerCase()} range. Here are your key insights that can help guide your next steps forward.`;
+  // Distinct voice guide message - warm and conversational
+  const voiceScript = `Hello ${leadData?.firstName}, and congratulations on taking this important step! You've just completed a meaningful assessment that many people never take the time to do. Your overall clarity score of ${results.overallScore} out of 100 places you in the ${overallLabel.label.toLowerCase()} range, which is something to feel proud of. What's even more valuable are the personalized insights we've discovered about your path forward. Take a moment to review these insights - they're specifically tailored to help you move forward with greater confidence and clarity.`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -101,14 +102,17 @@ Generated on: ${new Date().toLocaleDateString()}
               </span>
             </h1>
             
-            {/* Enhanced Congratulations Message */}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
-              <p className="text-2xl font-bold text-black mb-2">
-                🎉 Congratulations {leadData?.firstName}! 🎉
+            {/* Enhanced Congratulations Message - Bold and prominent */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-8 mb-6">
+              <p className="text-3xl font-black text-black mb-3">
+                🎉 CONGRATULATIONS {leadData?.firstName?.toUpperCase()}! 🎉
               </p>
-              <p className="text-lg text-gray-700">
+              <p className="text-xl font-bold text-black mb-2">
+                Assessment Complete - Your Results Are Ready!
+              </p>
+              <p className="text-lg font-semibold text-gray-800">
                 You've successfully completed your personalized {template} assessment. 
-                Here are your insights to guide your next steps forward.
+                Your insights and next steps are outlined below.
               </p>
             </div>
             

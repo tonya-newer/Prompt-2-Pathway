@@ -4,10 +4,30 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Play, Mic, Brain, Users, TrendingUp, Star } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { assessmentTemplates } from '@/data/assessmentTemplates';
 
 const Index = () => {
+  const navigate = useNavigate();
+
+  const handleStartJourney = () => {
+    // Navigate to the first available assessment
+    if (assessmentTemplates.length > 0) {
+      navigate(`/assessment/${assessmentTemplates[0].id}`);
+    }
+  };
+
+  const handlePreviewVoice = () => {
+    // For now, scroll to the features section to showcase voice capabilities
+    // In a full implementation, this would open a voice preview modal
+    const featuresSection = document.getElementById('features-section');
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: 'smooth' });
+    }
+    // You can replace this with actual voice preview functionality
+    alert('Voice preview functionality - this would demonstrate our voice-guided experience');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Hero Section */}
@@ -20,11 +40,11 @@ const Index = () => {
             Experience voice-guided clarity assessments that reveal insights about your path forward
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="text-lg px-8 py-4">
+            <Button size="lg" className="text-lg px-8 py-4" onClick={handleStartJourney}>
               <Play className="mr-2 h-5 w-5" />
               Start Your Journey
             </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 py-4">
+            <Button variant="outline" size="lg" className="text-lg px-8 py-4" onClick={handlePreviewVoice}>
               <Mic className="mr-2 h-5 w-5" />
               Preview Voice Experience
             </Button>
@@ -33,7 +53,7 @@ const Index = () => {
       </header>
 
       {/* Features Section */}
-      <section className="container mx-auto px-4 py-16">
+      <section id="features-section" className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             Why VoiceFlow?
