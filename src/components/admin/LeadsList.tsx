@@ -1,16 +1,15 @@
 
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Eye, Mail, Phone, Tag, Edit } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Eye, Mail, Tag, Phone } from 'lucide-react';
 
 interface Lead {
   id: number;
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
+  phone?: string;
   ageRange: string;
   audience: string;
   assessmentTitle: string;
@@ -28,112 +27,126 @@ interface Lead {
 
 interface LeadsListProps {
   leads: Lead[];
+  onView?: (leadId: number) => void;
+  onEmail?: (leadId: number) => void;
+  onTag?: (leadId: number) => void;
 }
 
-export const LeadsList = ({ leads }: LeadsListProps) => {
-  const getScoreBadgeColor = (score: number) => {
-    if (score >= 80) return 'bg-green-500';
-    if (score >= 60) return 'bg-blue-500';
-    if (score >= 40) return 'bg-yellow-500';
-    return 'bg-red-500';
-  };
-
-  const getAudienceBadgeVariant = (audience: string) => {
-    return audience === 'business' ? 'default' : 'secondary';
-  };
-
+export const LeadsList = ({ leads, onView, onEmail, onTag }: LeadsListProps) => {
   return (
     <div className="space-y-4">
       {leads.map((lead) => (
         <Card key={lead.id} className="p-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-            {/* Lead Info */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between">
             <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-2">
-                <h3 className="text-lg font-semibold">
-                  {lead.firstName} {lead.lastName}
-                </h3>
-                <Badge variant={getAudienceBadgeVariant(lead.audience)}>
-                  {lead.audience}
-                </Badge>
-                <Badge className={`${getScoreBadgeColor(lead.overallScore)} text-white`}>
-                  {lead.overallScore}%
-                </Badge>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h3 className="text-lg font-semibold">
+                    {lead.firstName} {lead.lastName}
+                  </h3>
+                  <p className="text-gray-600">{lead.email}</p>
+                  {lead.phone && (
+                    <p className="text-gray-600 flex items-center mt-1">
+                      <Phone className="h-4 w-4 mr-1" />
+                      {lead.phone}
+                    </p>
+                  )}
+                </div>
+                
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-green-600">
+                    {lead.overallScore}%
+                  </div>
+                  <p className="text-sm text-gray-500">Overall Score</p>
+                </div>
               </div>
               
-              <div className="text-sm text-gray-600 space-y-1 mb-3">
-                <div className="flex items-center space-x-4">
-                  <span>{lead.email}</span>
-                  {lead.phone && <span>{lead.phone}</span>}
-                  <span>Age: {lead.ageRange}</span>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div>
+                  <p className="text-xs text-gray-500">Assessment</p>
+                  <p className="font-medium text-sm">{lead.assessmentTitle}</p>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span>{lead.assessmentTitle}</span>
-                  <span>•</span>
-                  <span>{lead.completionDate}</span>
-                  <span>•</span>
-                  <span>Source: {lead.source}</span>
+                <div>
+                  <p className="text-xs text-gray-500">Age Range</p>
+                  <p className="font-medium text-sm">{lead.ageRange}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Source</p>
+                  <p className="font-medium text-sm">{lead.source}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Completion</p>
+                  <p className="font-medium text-sm">{lead.completionRate}%</p>
                 </div>
               </div>
-
-              {/* Category Scores */}
-              <div className="grid grid-cols-3 gap-4 mb-3">
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-xs text-gray-500">Readiness</span>
-                    <span className="text-xs font-medium">{lead.categoryScores.readiness}%</span>
-                  </div>
-                  <Progress value={lead.categoryScores.readiness} className="h-2" />
-                </div>
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-xs text-gray-500">Confidence</span>
-                    <span className="text-xs font-medium">{lead.categoryScores.confidence}%</span>
-                  </div>
-                  <Progress value={lead.categoryScores.confidence} className="h-2" />
-                </div>
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-xs text-gray-500">Clarity</span>
-                    <span className="text-xs font-medium">{lead.categoryScores.clarity}%</span>
-                  </div>
-                  <Progress value={lead.categoryScores.clarity} className="h-2" />
-                </div>
-              </div>
-
-              {/* Tags */}
-              {lead.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1">
+              
+              <div className="flex items-center justify-between">
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant={lead.audience === 'business' ? 'default' : 'secondary'}>
+                    {lead.audience}
+                  </Badge>
                   {lead.tags.map((tag, index) => (
                     <Badge key={index} variant="outline" className="text-xs">
                       {tag}
                     </Badge>
                   ))}
                 </div>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div className="flex space-x-2 lg:flex-col lg:space-x-0 lg:space-y-2">
-              <Button variant="outline" size="sm">
-                <Eye className="h-4 w-4 mr-1" />
-                View
-              </Button>
-              <Button variant="outline" size="sm">
-                <Mail className="h-4 w-4 mr-1" />
-                Email
-              </Button>
-              <Button variant="outline" size="sm">
-                <Tag className="h-4 w-4 mr-1" />
-                Tag
-              </Button>
+                
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => onView?.(lead.id)}
+                    title="View Lead Details"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => onEmail?.(lead.id)}
+                    title="Send Email"
+                  >
+                    <Mail className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => onTag?.(lead.id)}
+                    title="Manage Tags"
+                  >
+                    <Tag className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t">
+                <div className="text-center">
+                  <div className="text-sm font-medium text-blue-600">
+                    {lead.categoryScores.readiness}%
+                  </div>
+                  <p className="text-xs text-gray-500">Readiness</p>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm font-medium text-green-600">
+                    {lead.categoryScores.confidence}%
+                  </div>
+                  <p className="text-xs text-gray-500">Confidence</p>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm font-medium text-purple-600">
+                    {lead.categoryScores.clarity}%
+                  </div>
+                  <p className="text-xs text-gray-500">Clarity</p>
+                </div>
+              </div>
             </div>
           </div>
         </Card>
       ))}
       
       {leads.length === 0 && (
-        <Card className="p-12 text-center">
+        <Card className="p-8 text-center">
           <p className="text-gray-500">No leads found matching your criteria.</p>
         </Card>
       )}

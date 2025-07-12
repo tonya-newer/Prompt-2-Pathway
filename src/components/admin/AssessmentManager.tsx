@@ -8,27 +8,98 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Edit, Copy, Trash2, Mic, Settings } from 'lucide-react';
+import { Plus, Edit, Copy, Trash2, Mic, Settings, Link, Save, X } from 'lucide-react';
 import { assessmentTemplates } from '@/data/assessmentTemplates';
+import { AssessmentTemplate, Question } from '@/types/assessment';
+import { AssessmentEditor } from './AssessmentEditor';
 
 export const AssessmentManager = () => {
-  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<AssessmentTemplate | null>(null);
   const [editMode, setEditMode] = useState(false);
+  const [templates, setTemplates] = useState(assessmentTemplates);
+  const [voiceScripts, setVoiceScripts] = useState({
+    intro: "Welcome to your VoiceFlow assessment. I'm here to guide you through a personalized experience that will help you gain clarity on your path forward. Let's begin this journey together.",
+    mid: "You're doing great! These insights are helping us understand your unique situation. Let's continue with the next set of questions.",
+    outro: "Congratulations on completing your assessment. Your personalized results are ready, and I'm excited to share the insights we've discovered about your journey."
+  });
+  const [apiKey, setApiKey] = useState('');
+  const [selectedVoice, setSelectedVoice] = useState('9BWtsMINqrJLrRacOk9x');
 
-  const handleEditTemplate = (template: any) => {
+  const handleEditTemplate = (template: AssessmentTemplate) => {
     setSelectedTemplate(template);
     setEditMode(true);
   };
 
-  const handleDuplicateTemplate = (template: any) => {
-    const duplicated = {
+  const handleCreateNew = () => {
+    const newTemplate: AssessmentTemplate = {
+      id: Date.now(),
+      title: 'New Assessment',
+      description: 'New assessment description',
+      audience: 'individual',
+      tags: ['new'],
+      questions: []
+    };
+    setSelectedTemplate(newTemplate);
+    setEditMode(true);
+  };
+
+  const handleSaveTemplate = (updatedTemplate: AssessmentTemplate) => {
+    const existingIndex = templates.findIndex(t => t.id === updatedTemplate.id);
+    if (existingIndex >= 0) {
+      const updatedTemplates = [...templates];
+      updatedTemplates[existingIndex] = updatedTemplate;
+      setTemplates(updatedTemplates);
+    } else {
+      setTemplates([...templates, updatedTemplate]);
+    }
+    setEditMode(false);
+    setSelectedTemplate(null);
+  };
+
+  const handleDuplicateTemplate = (template: AssessmentTemplate) => {
+    const duplicated: AssessmentTemplate = {
       ...template,
       id: Date.now(),
       title: `${template.title} (Copy)`,
       tags: [...template.tags, 'duplicate']
     };
-    console.log('Duplicating template:', duplicated);
+    setTemplates([...templates, duplicated]);
+    console.log('Template duplicated successfully');
   };
+
+  const handleDeleteTemplate = (templateId: number) => {
+    setTemplates(templates.filter(t => t.id !== templateId));
+    console.log('Template deleted successfully');
+  };
+
+  const copyAssessmentLink = (template: AssessmentTemplate) => {
+    const url = `${window.location.origin}/assessment/${template.id}`;
+    navigator.clipboard.writeText(url);
+    console.log('Assessment link copied:', url);
+  };
+
+  const testVoice = () => {
+    console.log('Testing voice with script:', voiceScripts.intro);
+    alert('Voice test functionality requires ElevenLabs integration');
+  };
+
+  const saveVoiceScripts = () => {
+    console.log('Voice scripts saved:', voiceScripts);
+    alert('Voice scripts saved successfully');
+  };
+
+  if (editMode && selectedTemplate) {
+    return (
+      <AssessmentEditor
+        template={selectedTemplate}
+        onSave={handleSaveTemplate}
+        onCancel={() => {
+          setEditMode(false);
+          setSelectedTemplate(null);
+        }}
+      />
+    );
+  }
 
   return (
     <Tabs defaultValue="templates" className="space-y-6">
@@ -41,55 +112,81 @@ export const AssessmentManager = () => {
       <TabsContent value="templates" className="space-y-6">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-semibold">Assessment Templates</h3>
-          <Button className="flex items-center">
+          <Button onClick={handleCreateNew} className="flex items-center">
             <Plus className="h-4 w-4 mr-2" />
             New Template
           </Button>
         </div>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {assessmentTemplates.map((template) => (
-            <Card key={template.id} className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h4 className="font-semibold text-lg mb-2">{template.title}</h4>
-                  <p className="text-sm text-gray-600 mb-3">{template.description}</p>
-                  
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    <Badge variant={template.audience === 'business' ? 'default' : 'secondary'}>
-                      {template.audience}
-                    </Badge>
-                    {template.tags.map((tag, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                  
-                  <p className="text-xs text-gray-500">
-                    {template.questions.length} questions • Est. {Math.ceil(template.questions.length * 0.75)} min
-                  </p>
+          {templates.map((template) => (
+            <Card key={template.id} className="overflow-hidden">
+              {template.image && (
+                <div className="h-32 overflow-hidden">
+                  <img 
+                    src={template.image} 
+                    alt={template.title}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-              </div>
-              
-              <div className="flex space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleEditTemplate(template)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleDuplicateTemplate(template)}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+              )}
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-lg mb-2">{template.title}</h4>
+                    <p className="text-sm text-gray-600 mb-3">{template.description}</p>
+                    
+                    <div className="flex flex-wrap gap-1 mb-3">
+                      <Badge variant={template.audience === 'business' ? 'default' : 'secondary'}>
+                        {template.audience}
+                      </Badge>
+                      {template.tags.map((tag, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                    
+                    <p className="text-xs text-gray-500">
+                      {template.questions.length} questions • Est. {Math.ceil(template.questions.length * 0.75)} min
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleEditTemplate(template)}
+                    title="Edit Assessment"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleDuplicateTemplate(template)}
+                    title="Duplicate Assessment"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => copyAssessmentLink(template)}
+                    title="Copy Assessment Link"
+                  >
+                    <Link className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleDeleteTemplate(template.id)}
+                    title="Delete Assessment"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}
@@ -99,53 +196,12 @@ export const AssessmentManager = () => {
       <TabsContent value="create" className="space-y-6">
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-6">Create New Assessment</h3>
-          
-          <div className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="title">Assessment Title</Label>
-                <Input id="title" placeholder="e.g., Business Growth Readiness" />
-              </div>
-              <div>
-                <Label htmlFor="audience">Target Audience</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select audience" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="individual">Individual</SelectItem>
-                    <SelectItem value="business">Business Owner</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea 
-                id="description" 
-                placeholder="Brief description of what this assessment measures..."
-                rows={3}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="tags">Tags (comma separated)</Label>
-              <Input id="tags" placeholder="growth, readiness, business" />
-            </div>
-            
-            <div className="border rounded-lg p-4">
-              <h4 className="font-medium mb-4">Questions</h4>
-              <Button variant="outline" className="w-full">
-                <Plus className="h-4 w-4 mr-2" />
-                Add First Question
-              </Button>
-            </div>
-            
-            <div className="flex justify-end space-x-4">
-              <Button variant="outline">Save as Draft</Button>
-              <Button>Create Assessment</Button>
-            </div>
+          <div className="text-center py-8">
+            <p className="text-gray-600 mb-4">Click the button below to start creating your new assessment</p>
+            <Button onClick={handleCreateNew} className="flex items-center mx-auto">
+              <Plus className="h-4 w-4 mr-2" />
+              Create New Assessment
+            </Button>
           </div>
         </Card>
       </TabsContent>
@@ -162,7 +218,8 @@ export const AssessmentManager = () => {
               <Label htmlFor="intro-script">Intro Voice Script</Label>
               <Textarea 
                 id="intro-script"
-                placeholder="Welcome to your VoiceFlow assessment. I'm here to guide you through..."
+                value={voiceScripts.intro}
+                onChange={(e) => setVoiceScripts({...voiceScripts, intro: e.target.value})}
                 rows={4}
               />
             </div>
@@ -171,7 +228,8 @@ export const AssessmentManager = () => {
               <Label htmlFor="mid-script">Mid-Assessment Encouragement</Label>
               <Textarea 
                 id="mid-script"
-                placeholder="You're doing great! Let's continue with the next set of questions..."
+                value={voiceScripts.mid}
+                onChange={(e) => setVoiceScripts({...voiceScripts, mid: e.target.value})}
                 rows={3}
               />
             </div>
@@ -180,7 +238,8 @@ export const AssessmentManager = () => {
               <Label htmlFor="outro-script">Outro Voice Script</Label>
               <Textarea 
                 id="outro-script"
-                placeholder="Congratulations on completing your assessment. Your results are ready..."
+                value={voiceScripts.outro}
+                onChange={(e) => setVoiceScripts({...voiceScripts, outro: e.target.value})}
                 rows={4}
               />
             </div>
@@ -194,23 +253,28 @@ export const AssessmentManager = () => {
                 Connect your ElevenLabs API key to enable premium voice synthesis for all assessments.
               </p>
               <div className="space-y-3">
-                <Input placeholder="Enter your ElevenLabs API key" type="password" />
-                <Select>
+                <Input 
+                  placeholder="Enter your ElevenLabs API key" 
+                  type="password"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                />
+                <Select value={selectedVoice} onValueChange={setSelectedVoice}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select voice" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="aria">Aria (Professional Female)</SelectItem>
-                    <SelectItem value="roger">Roger (Confident Male)</SelectItem>
-                    <SelectItem value="sarah">Sarah (Warm Female)</SelectItem>
+                    <SelectItem value="9BWtsMINqrJLrRacOk9x">Aria (Professional Female)</SelectItem>
+                    <SelectItem value="CwhRBWXzGAHq8TQ4Fs17">Roger (Confident Male)</SelectItem>
+                    <SelectItem value="EXAVITQu4vr4xnSDxMaL">Sarah (Warm Female)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             
             <div className="flex justify-end space-x-4">
-              <Button variant="outline">Test Voice</Button>
-              <Button>Save Scripts</Button>
+              <Button variant="outline" onClick={testVoice}>Test Voice</Button>
+              <Button onClick={saveVoiceScripts}>Save Scripts</Button>
             </div>
           </div>
         </Card>

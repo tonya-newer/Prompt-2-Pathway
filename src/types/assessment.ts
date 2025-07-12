@@ -13,6 +13,7 @@ export interface AssessmentTemplate {
   description: string;
   audience: string;
   tags: string[];
+  image?: string;
   questions: Question[];
 }
 

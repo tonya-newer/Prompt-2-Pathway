@@ -8,6 +8,7 @@ export const assessmentTemplates: AssessmentTemplate[] = [
     description: "Discover your path to personal and professional clarity",
     audience: "individual",
     tags: ["clarity", "personal-growth", "career"],
+    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=250&fit=crop",
     questions: [
       {
         id: 1,
@@ -66,6 +67,7 @@ export const assessmentTemplates: AssessmentTemplate[] = [
     description: "Assess your business readiness and growth opportunities",
     audience: "business",
     tags: ["business", "growth", "strategy"],
+    image: "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?w=400&h=250&fit=crop",
     questions: [
       {
         id: 1,
@@ -124,6 +126,7 @@ export const assessmentTemplates: AssessmentTemplate[] = [
     description: "Evaluate your marketing foundation and growth potential",
     audience: "business",
     tags: ["marketing", "digital", "readiness"],
+    image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=250&fit=crop",
     questions: [
       {
         id: 1,
@@ -159,6 +162,7 @@ export const assessmentTemplates: AssessmentTemplate[] = [
     description: "Assess your readiness for a career change or advancement",
     audience: "individual",
     tags: ["career", "transition", "professional"],
+    image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=400&h=250&fit=crop",
     questions: [
       {
         id: 1,

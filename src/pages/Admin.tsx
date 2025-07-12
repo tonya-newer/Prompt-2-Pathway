@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -72,6 +71,21 @@ const Admin = () => {
     setLeads(mockLeads);
   }, []);
 
+  const handleViewLead = (leadId: number) => {
+    console.log('Viewing lead:', leadId);
+    alert('Lead details functionality coming soon');
+  };
+
+  const handleEmailLead = (leadId: number) => {
+    console.log('Emailing lead:', leadId);
+    alert('Email functionality coming soon');
+  };
+
+  const handleTagLead = (leadId: number) => {
+    console.log('Tagging lead:', leadId);
+    alert('Tag functionality coming soon');
+  };
+
   const filteredLeads = leads.filter(lead => {
     const matchesSearch = lead.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          lead.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -131,7 +145,7 @@ const Admin = () => {
       {/* Header */}
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-gray-900">VoiceFlow™ Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900">VoiceFlow Admin Dashboard</h1>
           <p className="text-gray-600 mt-2">Lead intelligence and assessment management</p>
         </div>
       </header>
@@ -240,7 +254,12 @@ const Admin = () => {
               </div>
             </Card>
 
-            <LeadsList leads={filteredLeads} />
+            <LeadsList 
+              leads={filteredLeads} 
+              onView={handleViewLead}
+              onEmail={handleEmailLead}
+              onTag={handleTagLead}
+            />
           </TabsContent>
 
           <TabsContent value="analytics">
