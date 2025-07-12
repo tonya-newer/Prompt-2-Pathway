@@ -1,4 +1,3 @@
-
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
@@ -43,7 +42,7 @@ export const AnalyticsDashboard = ({ leads }: AnalyticsDashboardProps) => {
     { date: '2024-01-15', completions: 16, avgScore: 77 }
   ];
 
-  // Top performing assessments
+  // Top performing assessments - Fixed arithmetic operations with proper type checking
   const assessmentPerformance = leads.reduce((acc: any, lead) => {
     if (!acc[lead.assessmentTitle]) {
       acc[lead.assessmentTitle] = {
@@ -54,8 +53,10 @@ export const AnalyticsDashboard = ({ leads }: AnalyticsDashboardProps) => {
       };
     }
     acc[lead.assessmentTitle].count++;
-    acc[lead.assessmentTitle].totalScore += lead.overallScore;
-    acc[lead.assessmentTitle].avgScore = Math.round(acc[lead.assessmentTitle].totalScore / acc[lead.assessmentTitle].count);
+    acc[lead.assessmentTitle].totalScore += Number(lead.overallScore) || 0;
+    acc[lead.assessmentTitle].avgScore = Math.round(
+      (Number(acc[lead.assessmentTitle].totalScore) || 0) / (Number(acc[lead.assessmentTitle].count) || 1)
+    );
     return acc;
   }, {});
 
@@ -92,7 +93,7 @@ export const AnalyticsDashboard = ({ leads }: AnalyticsDashboardProps) => {
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-2">Top Source</h3>
           <div className="text-xl font-bold text-orange-600">
-            {sourceChartData.length > 0 ? sourceChartData.sort((a, b) => b.count - a.count)[0]?.source : 'N/A'}
+            {sourceChartData.length > 0 ? sourceChartData.sort((a, b) => (b.count as number) - (a.count as number))[0]?.source : 'N/A'}
           </div>
           <p className="text-sm text-gray-600">Primary lead source</p>
         </Card>

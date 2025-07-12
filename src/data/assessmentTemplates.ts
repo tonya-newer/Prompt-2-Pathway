@@ -1,5 +1,7 @@
 
-export const assessmentTemplates = [
+import { AssessmentTemplate } from '@/types/assessment';
+
+export const assessmentTemplates: AssessmentTemplate[] = [
   {
     id: 1,
     title: "Personal Clarity Flow",

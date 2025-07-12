@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -14,6 +13,7 @@ import { LeadCaptureForm } from '@/components/LeadCaptureForm';
 import { VoicePlayer } from '@/components/VoicePlayer';
 import { QuestionCard } from '@/components/QuestionCard';
 import { assessmentTemplates } from '@/data/assessmentTemplates';
+import { AssessmentTemplate, Question, LeadData, AssessmentResults } from '@/types/assessment';
 
 const Assessment = () => {
   const { audience } = useParams<{ audience: string }>();
@@ -21,17 +21,17 @@ const Assessment = () => {
   const { toast } = useToast();
   
   const [currentStep, setCurrentStep] = useState<'capture' | 'assessment' | 'results'>('capture');
-  const [leadData, setLeadData] = useState<any>(null);
+  const [leadData, setLeadData] = useState<LeadData | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, any>>({});
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
 
   // Get assessment template based on audience
-  const template = assessmentTemplates.find(t => t.audience === audience) || assessmentTemplates[0];
+  const template: AssessmentTemplate = assessmentTemplates.find(t => t.audience === audience) || assessmentTemplates[0];
   const progress = ((currentQuestion + 1) / template.questions.length) * 100;
 
-  const handleLeadCapture = (data: any) => {
+  const handleLeadCapture = (data: LeadData) => {
     setLeadData(data);
     setCurrentStep('assessment');
     toast({
@@ -67,7 +67,7 @@ const Assessment = () => {
     }
   };
 
-  const calculateResults = () => {
+  const calculateResults = (): AssessmentResults => {
     // Simple scoring system - in production this would be more sophisticated
     const totalQuestions = template.questions.length;
     const answeredQuestions = Object.keys(answers).length;
@@ -117,7 +117,7 @@ const Assessment = () => {
   }
 
   if (currentStep === 'assessment') {
-    const question = template.questions[currentQuestion];
+    const question: Question = template.questions[currentQuestion];
     
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">

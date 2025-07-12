@@ -1,4 +1,3 @@
-
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,11 +5,17 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Download, Share2, Mic, TrendingUp, Target, Lightbulb, ArrowLeft } from 'lucide-react';
 import { VoicePlayer } from '@/components/VoicePlayer';
+import { LeadData, AssessmentResults } from '@/types/assessment';
 
 const Results = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { leadData, answers, results, template } = location.state || {};
+  const { leadData, answers, results, template }: {
+    leadData: LeadData;
+    answers: Record<number, any>;
+    results: AssessmentResults;
+    template: string;
+  } = location.state || {};
 
   if (!results) {
     navigate('/');
