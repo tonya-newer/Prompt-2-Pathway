@@ -11,7 +11,7 @@ export interface AssessmentTemplate {
   id: number;
   title: string;
   description: string;
-  audience: string;
+  audience: 'individual' | 'business';
   tags: string[];
   image?: string;
   questions: Question[];
@@ -36,4 +36,13 @@ export interface AssessmentResults {
   categoryScores: CategoryScores;
   completionRate: number;
   insights: string[];
+}
+
+// Email notification interface
+export interface EmailNotification {
+  to: string;
+  subject: string;
+  body: string;
+  leadData: LeadData;
+  results: AssessmentResults;
 }

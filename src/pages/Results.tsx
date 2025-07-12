@@ -1,3 +1,4 @@
+
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,9 +33,8 @@ const Results = () => {
   const overallLabel = getScoreLabel(results.overallScore);
 
   const handleDownload = () => {
-    // Create a simple text version of results for download
     const content = `
-VoiceFlow™ Clarity Snapshot
+VoiceFlow Clarity Snapshot
 ${template} Assessment Results
 
 Overall Score: ${results.overallScore}/100 (${overallLabel.label})
@@ -95,14 +95,22 @@ Generated on: ${new Date().toLocaleDateString()}
           {/* Welcome & Voice Player */}
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold mb-4">
-              Your VoiceFlow™ 
+              Your VoiceFlow 
               <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 {" "}Clarity Snapshot
               </span>
             </h1>
-            <p className="text-lg text-gray-600 mb-6">
-              Hello {leadData?.firstName}! Here are your personalized insights from the {template} assessment.
-            </p>
+            
+            {/* Enhanced Congratulations Message */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+              <p className="text-2xl font-bold text-black mb-2">
+                🎉 Congratulations {leadData?.firstName}! 🎉
+              </p>
+              <p className="text-lg text-gray-700">
+                You've successfully completed your personalized {template} assessment. 
+                Here are your insights to guide your next steps forward.
+              </p>
+            </div>
             
             <VoicePlayer 
               text={voiceScript}
@@ -172,7 +180,7 @@ Generated on: ${new Date().toLocaleDateString()}
             </div>
           </Card>
 
-          {/* Call to Action */}
+          {/* Call to Action - Fixed visibility */}
           <Card className="p-8 text-center bg-gradient-to-r from-blue-600 to-purple-600 text-white">
             <h3 className="text-2xl font-bold mb-4">Ready to Explore More?</h3>
             <p className="mb-6 text-blue-100">
@@ -183,8 +191,12 @@ Generated on: ${new Date().toLocaleDateString()}
               <Button variant="secondary" size="lg">
                 Schedule a Clarity Call
               </Button>
-              <Button variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-blue-600">
-                Get More Resources
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="border-white text-white hover:bg-white hover:text-blue-600 bg-transparent"
+              >
+                <span className="font-medium">Access Additional Resources</span>
               </Button>
             </div>
             <p className="text-xs text-blue-200 mt-4">

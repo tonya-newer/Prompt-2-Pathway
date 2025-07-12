@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Save, X, Trash2, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Save, X, Trash2, GripVertical, ArrowUp, ArrowDown, Upload, Image } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { AssessmentTemplate, Question } from '@/types/assessment';
 
 interface AssessmentEditorProps {
@@ -19,9 +19,37 @@ interface AssessmentEditorProps {
 export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEditorProps) => {
   const [editedTemplate, setEditedTemplate] = useState<AssessmentTemplate>(template);
   const [newTag, setNewTag] = useState('');
+  const { toast } = useToast();
 
   const handleSave = () => {
+    if (!editedTemplate.title.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Assessment title is required.",
+        variant: "destructive",
+      });
+      return;
+    }
     onSave(editedTemplate);
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imageUrl = e.target?.result as string;
+        setEditedTemplate({
+          ...editedTemplate,
+          image: imageUrl
+        });
+        toast({
+          title: "Image Uploaded",
+          description: "Assessment image has been updated.",
+        });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const addQuestion = () => {
@@ -35,6 +63,10 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
       ...editedTemplate,
       questions: [...editedTemplate.questions, newQuestion]
     });
+    toast({
+      title: "Question Added",
+      description: "New question has been added to the assessment.",
+    });
   };
 
   const updateQuestion = (index: number, updatedQuestion: Question) => {
@@ -47,9 +79,14 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
   };
 
   const removeQuestion = (index: number) => {
+    const questionToRemove = editedTemplate.questions[index];
     setEditedTemplate({
       ...editedTemplate,
       questions: editedTemplate.questions.filter((_, i) => i !== index)
+    });
+    toast({
+      title: "Question Removed",
+      description: "Question has been removed from the assessment.",
     });
   };
 
@@ -108,6 +145,7 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
                 id="title"
                 value={editedTemplate.title}
                 onChange={(e) => setEditedTemplate({...editedTemplate, title: e.target.value})}
+                placeholder="Enter assessment title"
               />
             </div>
             <div>
@@ -136,7 +174,50 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
               value={editedTemplate.description}
               onChange={(e) => setEditedTemplate({...editedTemplate, description: e.target.value})}
               rows={3}
+              placeholder="Enter assessment description"
             />
+          </div>
+
+          <div>
+            <Label htmlFor="image-upload">Assessment Image</Label>
+            <div className="space-y-4">
+              {editedTemplate.image && (
+                <div className="relative">
+                  <img 
+                    src={editedTemplate.image} 
+                    alt="Assessment preview"
+                    className="w-full h-48 object-cover rounded-lg"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditedTemplate({...editedTemplate, image: ''})}
+                    className="absolute top-2 right-2"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+              <div className="flex items-center space-x-4">
+                <Input
+                  id="image-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => document.getElementById('image-upload')?.click()}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Image
+                </Button>
+                <span className="text-sm text-gray-500">
+                  {editedTemplate.image ? 'Image uploaded' : 'No image selected'}
+                </span>
+              </div>
+            </div>
           </div>
           
           <div>

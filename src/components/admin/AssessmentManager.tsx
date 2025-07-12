@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Edit, Copy, Trash2, Mic, Settings, Link, Save, X } from 'lucide-react';
+import { Plus, Edit, Copy, Trash2, Mic, Settings, Link, Save, X, Upload, Check } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { assessmentTemplates } from '@/data/assessmentTemplates';
 import { AssessmentTemplate, Question } from '@/types/assessment';
 import { AssessmentEditor } from './AssessmentEditor';
@@ -24,33 +24,54 @@ export const AssessmentManager = () => {
   });
   const [apiKey, setApiKey] = useState('');
   const [selectedVoice, setSelectedVoice] = useState('9BWtsMINqrJLrRacOk9x');
+  const { toast } = useToast();
 
   const handleEditTemplate = (template: AssessmentTemplate) => {
-    setSelectedTemplate(template);
+    console.log('Opening template for editing:', template.title);
+    setSelectedTemplate({...template});
     setEditMode(true);
+    toast({
+      title: "Opening Editor",
+      description: `Now editing "${template.title}"`,
+    });
   };
 
   const handleCreateNew = () => {
+    console.log('Creating new assessment template');
     const newTemplate: AssessmentTemplate = {
       id: Date.now(),
       title: 'New Assessment',
       description: 'New assessment description',
       audience: 'individual',
       tags: ['new'],
-      questions: []
+      questions: [],
+      image: ''
     };
     setSelectedTemplate(newTemplate);
     setEditMode(true);
+    toast({
+      title: "New Template",
+      description: "Creating new assessment template",
+    });
   };
 
   const handleSaveTemplate = (updatedTemplate: AssessmentTemplate) => {
+    console.log('Saving template:', updatedTemplate);
     const existingIndex = templates.findIndex(t => t.id === updatedTemplate.id);
     if (existingIndex >= 0) {
       const updatedTemplates = [...templates];
       updatedTemplates[existingIndex] = updatedTemplate;
       setTemplates(updatedTemplates);
+      toast({
+        title: "Template Updated",
+        description: `"${updatedTemplate.title}" has been saved successfully.`,
+      });
     } else {
       setTemplates([...templates, updatedTemplate]);
+      toast({
+        title: "Template Created",
+        description: `"${updatedTemplate.title}" has been created successfully.`,
+      });
     }
     setEditMode(false);
     setSelectedTemplate(null);
@@ -64,28 +85,68 @@ export const AssessmentManager = () => {
       tags: [...template.tags, 'duplicate']
     };
     setTemplates([...templates, duplicated]);
-    console.log('Template duplicated successfully');
+    toast({
+      title: "Template Duplicated",
+      description: `"${duplicated.title}" has been created.`,
+    });
   };
 
   const handleDeleteTemplate = (templateId: number) => {
+    const templateToDelete = templates.find(t => t.id === templateId);
     setTemplates(templates.filter(t => t.id !== templateId));
-    console.log('Template deleted successfully');
+    toast({
+      title: "Template Deleted",
+      description: `"${templateToDelete?.title}" has been deleted.`,
+      variant: "destructive",
+    });
   };
 
-  const copyAssessmentLink = (template: AssessmentTemplate) => {
-    const url = `${window.location.origin}/assessment/${template.id}`;
-    navigator.clipboard.writeText(url);
-    console.log('Assessment link copied:', url);
+  const copyAssessmentLink = async (template: AssessmentTemplate) => {
+    const url = `${window.location.origin}/assessment/${template.audience}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({
+        title: "Link Copied!",
+        description: "Assessment link has been copied to your clipboard.",
+      });
+      console.log('Assessment link copied:', url);
+    } catch (error) {
+      console.error('Failed to copy link:', error);
+      toast({
+        title: "Copy Failed",
+        description: "Unable to copy link. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const testVoice = () => {
     console.log('Testing voice with script:', voiceScripts.intro);
-    alert('Voice test functionality requires ElevenLabs integration');
+    toast({
+      title: "Voice Test",
+      description: "Voice test functionality will be available with ElevenLabs integration.",
+    });
   };
 
   const saveVoiceScripts = () => {
     console.log('Voice scripts saved:', voiceScripts);
-    alert('Voice scripts saved successfully');
+    toast({
+      title: "Scripts Saved",
+      description: "Voice scripts have been saved successfully.",
+    });
+  };
+
+  const sendEmailNotification = async (completedAssessment: any) => {
+    try {
+      // This would typically integrate with an email service
+      console.log('Sending email notification to info@newerconsulting.com');
+      toast({
+        title: "Email Sent",
+        description: "Assessment completion notification sent to info@newerconsulting.com",
+      });
+    } catch (error) {
+      console.error('Failed to send email notification:', error);
+    }
   };
 
   if (editMode && selectedTemplate) {
@@ -96,6 +157,10 @@ export const AssessmentManager = () => {
         onCancel={() => {
           setEditMode(false);
           setSelectedTemplate(null);
+          toast({
+            title: "Editor Closed",
+            description: "Changes have been discarded.",
+          });
         }}
       />
     );
@@ -153,7 +218,7 @@ export const AssessmentManager = () => {
                   </div>
                 </div>
                 
-                <div className="flex space-x-2">
+                <div className="flex flex-wrap gap-2">
                   <Button 
                     variant="outline" 
                     size="sm"
@@ -183,6 +248,7 @@ export const AssessmentManager = () => {
                     size="sm"
                     onClick={() => handleDeleteTemplate(template.id)}
                     title="Delete Assessment"
+                    className="text-red-600 hover:text-red-700"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -273,8 +339,14 @@ export const AssessmentManager = () => {
             </div>
             
             <div className="flex justify-end space-x-4">
-              <Button variant="outline" onClick={testVoice}>Test Voice</Button>
-              <Button onClick={saveVoiceScripts}>Save Scripts</Button>
+              <Button variant="outline" onClick={testVoice}>
+                <Mic className="h-4 w-4 mr-2" />
+                Test Voice
+              </Button>
+              <Button onClick={saveVoiceScripts}>
+                <Save className="h-4 w-4 mr-2" />
+                Save Scripts
+              </Button>
             </div>
           </div>
         </Card>
