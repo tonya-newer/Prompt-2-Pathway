@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,13 @@ interface Lead {
   status: 'new' | 'contacted' | 'qualified' | 'converted';
   completedAt: string;
   tags: string[];
+}
+
+interface LeadsListProps {
+  leads?: any[];
+  onView?: (leadId: number) => void;
+  onEmail?: (leadId: number) => void;
+  onTag?: (leadId: number) => void;
 }
 
 const mockLeads: Lead[] = [
@@ -104,8 +112,8 @@ const mockLeads: Lead[] = [
   }
 ];
 
-export const LeadsList = () => {
-  const [leads, setLeads] = useState(mockLeads);
+export const LeadsList = ({ leads: externalLeads, onView, onEmail, onTag }: LeadsListProps) => {
+  const [leads, setLeads] = useState(externalLeads || mockLeads);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const { toast } = useToast();
@@ -121,6 +129,12 @@ export const LeadsList = () => {
   const handleViewLead = (leadId: string) => {
     const lead = leads.find(l => l.id === leadId);
     console.log('Viewing lead details:', lead);
+    
+    // Use external handler if provided, otherwise use internal logic
+    if (onView) {
+      onView(parseInt(leadId));
+    }
+    
     toast({
       title: "Lead Details",
       description: `Viewing details for ${lead?.firstName} ${lead?.lastName}`,
@@ -130,6 +144,11 @@ export const LeadsList = () => {
   const handleEmailLead = async (leadId: string) => {
     const lead = leads.find(l => l.id === leadId);
     try {
+      // Use external handler if provided
+      if (onEmail) {
+        onEmail(parseInt(leadId));
+      }
+      
       // This would integrate with an email service
       console.log('Sending email to:', lead?.email);
       toast({
@@ -152,6 +171,12 @@ export const LeadsList = () => {
         ? { ...lead, tags: [...lead.tags, newTag] }
         : lead
     ));
+    
+    // Use external handler if provided
+    if (onTag) {
+      onTag(parseInt(leadId));
+    }
+    
     const lead = leads.find(l => l.id === leadId);
     toast({
       title: "Tag Added",
