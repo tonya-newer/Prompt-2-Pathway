@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -206,7 +205,7 @@ export const LeadCaptureForm = ({ onSubmit, audience }: LeadCaptureFormProps) =>
               size="lg"
             >
               <UserCheck className="h-5 w-5 mr-2" />
-              Begin My VoiceFlow™ Assessment
+              Begin My VoiceCard™ Assessment
             </Button>
           </form>
         </Card>
