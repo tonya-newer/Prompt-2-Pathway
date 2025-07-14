@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -35,7 +36,7 @@ const Assessment = () => {
     setLeadData(data);
     setCurrentStep('assessment');
     toast({
-      title: "Welcome to VoiceFlow™",
+      title: "Welcome to VoiceCard™",
       description: "Let's begin your personalized assessment journey.",
     });
   };
