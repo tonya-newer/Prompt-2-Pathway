@@ -1,4 +1,3 @@
-
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,7 +33,7 @@ const Results = () => {
 
   const handleDownload = () => {
     const content = `
-VoiceFlow Clarity Snapshot
+VoiceCard Clarity Snapshot
 ${template} Assessment Results
 
 Overall Score: ${results.overallScore}/100 (${overallLabel.label})
@@ -54,13 +53,13 @@ Generated on: ${new Date().toLocaleDateString()}
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'voiceflow-clarity-snapshot.txt';
+    a.download = 'voicecard-clarity-snapshot.txt';
     a.click();
     URL.revokeObjectURL(url);
   };
 
   // Distinct voice guide message - warm and conversational
-  const voiceScript = `Hello ${leadData?.firstName}, and congratulations on taking this important step! You've just completed a meaningful assessment that many people never take the time to do. Your overall clarity score of ${results.overallScore} out of 100 places you in the ${overallLabel.label.toLowerCase()} range, which is something to feel proud of. What's even more valuable are the personalized insights we've discovered about your path forward. Take a moment to review these insights - they're specifically tailored to help you move forward with greater confidence and clarity.`;
+  const voiceScript = `Hello ${leadData?.firstName}, and congratulations on completing your VoiceCard assessment! This is truly an accomplishment worth celebrating. Taking the time for this kind of self-reflection shows real commitment to your growth. Your overall clarity score of ${results.overallScore} out of 100 is a meaningful indicator of where you stand today. But what's even more valuable are the personalized insights we've discovered specifically for your journey. These aren't generic recommendations - they're tailored insights based on your unique responses. I encourage you to take your time reviewing these insights, as they could be the key to unlocking your next breakthrough.`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -96,7 +95,7 @@ Generated on: ${new Date().toLocaleDateString()}
           {/* Welcome & Voice Player */}
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold mb-4">
-              Your VoiceFlow 
+              Your VoiceCard 
               <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 {" "}Clarity Snapshot
               </span>
@@ -108,11 +107,11 @@ Generated on: ${new Date().toLocaleDateString()}
                 🎉 CONGRATULATIONS {leadData?.firstName?.toUpperCase()}! 🎉
               </p>
               <p className="text-xl font-bold text-black mb-2">
-                Assessment Complete - Your Results Are Ready!
+                Assessment Complete - Your Personalized Results Are Here!
               </p>
               <p className="text-lg font-semibold text-gray-800">
-                You've successfully completed your personalized {template} assessment. 
-                Your insights and next steps are outlined below.
+                You've successfully completed your {template} assessment. 
+                Your detailed insights and actionable next steps are outlined below.
               </p>
             </div>
             

@@ -23,7 +23,7 @@ const ContentManager = () => {
     {
       id: 'hero-title',
       title: 'Hero Title',
-      content: 'Welcome to VoiceFlow',
+      content: 'Welcome to VoiceCard',
       type: 'header'
     },
     {
@@ -45,14 +45,14 @@ const ContentManager = () => {
       type: 'button'
     },
     {
-      id: 'why-voiceflow-title',
-      title: 'Why VoiceFlow Section Title',
-      content: 'Why VoiceFlow?',
+      id: 'why-voicecard-title',
+      title: 'Why VoiceCard Section Title',
+      content: 'Why VoiceCard?',
       type: 'header'
     },
     {
-      id: 'why-voiceflow-subtitle',
-      title: 'Why VoiceFlow Subtitle',
+      id: 'why-voicecard-subtitle',
+      title: 'Why VoiceCard Subtitle',
       content: 'Our voice-guided assessments provide deeper insights through human connection and personalized experiences',
       type: 'text'
     }
@@ -62,7 +62,7 @@ const ContentManager = () => {
     {
       id: 'footer-title',
       title: 'Footer Title',
-      content: 'VoiceFlow',
+      content: 'VoiceCard',
       type: 'header'
     },
     {
@@ -77,13 +77,13 @@ const ContentManager = () => {
     {
       id: 'results-title',
       title: 'Results Page Title',
-      content: 'Your VoiceFlow Clarity Snapshot',
+      content: 'Your VoiceCard Clarity Snapshot',
       type: 'header'
     },
     {
       id: 'congratulations-message',
       title: 'Congratulations Message',
-      content: 'CONGRATULATIONS! Assessment Complete - Your Results Are Ready!',
+      content: 'CONGRATULATIONS! Assessment Complete - Your Personalized Results Are Here!',
       type: 'text'
     },
     {
@@ -127,7 +127,7 @@ const ContentManager = () => {
       {
         id: 'hero-title',
         title: 'Hero Title',
-        content: 'Welcome to VoiceFlow',
+        content: 'Welcome to VoiceCard',
         type: 'header'
       },
       {
@@ -149,14 +149,14 @@ const ContentManager = () => {
         type: 'button'
       },
       {
-        id: 'why-voiceflow-title',
-        title: 'Why VoiceFlow Section Title',
-        content: 'Why VoiceFlow?',
+        id: 'why-voicecard-title',
+        title: 'Why VoiceCard Section Title',
+        content: 'Why VoiceCard?',
         type: 'header'
       },
       {
-        id: 'why-voiceflow-subtitle',
-        title: 'Why VoiceFlow Subtitle',
+        id: 'why-voicecard-subtitle',
+        title: 'Why VoiceCard Subtitle',
         content: 'Our voice-guided assessments provide deeper insights through human connection and personalized experiences',
         type: 'text'
       }
@@ -165,7 +165,7 @@ const ContentManager = () => {
       {
         id: 'footer-title',
         title: 'Footer Title',
-        content: 'VoiceFlow',
+        content: 'VoiceCard',
         type: 'header'
       },
       {
@@ -179,13 +179,13 @@ const ContentManager = () => {
       {
         id: 'results-title',
         title: 'Results Page Title',
-        content: 'Your VoiceFlow Clarity Snapshot',
+        content: 'Your VoiceCard Clarity Snapshot',
         type: 'header'
       },
       {
         id: 'congratulations-message',
         title: 'Congratulations Message',
-        content: 'CONGRATULATIONS! Assessment Complete - Your Results Are Ready!',
+        content: 'CONGRATULATIONS! Assessment Complete - Your Personalized Results Are Here!',
         type: 'text'
       },
       {
@@ -290,7 +290,7 @@ const ContentManager = () => {
       <Card className="p-4 bg-blue-50 border-blue-200">
         <h4 className="font-medium text-blue-900 mb-2">💡 Pro Tip</h4>
         <p className="text-sm text-blue-800">
-          Changes made here will update the live content across your VoiceFlow platform. 
+          Changes made here will update the live content across your VoiceCard platform. 
           Remember to save your changes before navigating away from this page.
         </p>
       </Card>

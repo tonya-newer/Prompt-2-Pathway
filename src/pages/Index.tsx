@@ -34,7 +34,7 @@ const Index = () => {
       <header className="container mx-auto px-4 py-16 text-center">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            Welcome to VoiceFlow
+            Welcome to VoiceCard
           </h1>
           <p className="text-xl md:text-2xl text-gray-700 mb-8 leading-relaxed">
             Experience voice-guided clarity assessments that reveal insights about your path forward
@@ -56,7 +56,7 @@ const Index = () => {
       <section id="features-section" className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Why VoiceFlow?
+            Why VoiceCard?
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Our voice-guided assessments provide deeper insights through human connection and personalized experiences
@@ -171,7 +171,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="container mx-auto px-4 text-center">
-          <h3 className="text-2xl font-bold mb-4">VoiceFlow</h3>
+          <h3 className="text-2xl font-bold mb-4">VoiceCard</h3>
           <p className="text-gray-400 mb-6">
             Empowering clarity through voice-guided assessments
           </p>
@@ -179,6 +179,11 @@ const Index = () => {
             <Link to="/admin" className="text-gray-400 hover:text-white transition-colors">
               Admin Dashboard
             </Link>
+          </div>
+          <div className="mt-8 pt-4 border-t border-gray-700">
+            <p className="text-gray-400 text-sm">
+              © 2025 VoiceCard. All rights reserved.
+            </p>
           </div>
         </div>
       </footer>

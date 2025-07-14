@@ -136,7 +136,7 @@ const Admin = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'voiceflow-leads.csv';
+    a.download = 'voicecard-leads.csv';
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -146,7 +146,7 @@ const Admin = () => {
       {/* Header */}
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-gray-900">VoiceFlow Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900">VoiceCard Admin Dashboard</h1>
           <p className="text-gray-600 mt-2">Lead intelligence and assessment management</p>
         </div>
       </header>
