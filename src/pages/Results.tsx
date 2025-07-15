@@ -1,3 +1,4 @@
+
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -101,18 +102,26 @@ Generated on: ${new Date().toLocaleDateString()}
               </span>
             </h1>
             
-            {/* Enhanced Congratulations Message - Bold and prominent */}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-8 mb-6">
-              <p className="text-3xl font-black text-black mb-3">
-                🎉 CONGRATULATIONS {leadData?.firstName?.toUpperCase()}! 🎉
-              </p>
-              <p className="text-xl font-bold text-black mb-2">
-                Assessment Complete - Your Personalized Results Are Here!
-              </p>
-              <p className="text-lg font-semibold text-gray-800">
-                You've successfully completed your {template} assessment. 
-                Your detailed insights and actionable next steps are outlined below.
-              </p>
+            {/* Enhanced Congratulations Message - Even Larger and More Prominent */}
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-12 mb-8 shadow-lg">
+              <div className="text-center">
+                <div className="text-8xl mb-6">🎉</div>
+                <h2 className="text-6xl font-black text-green-800 mb-4 tracking-tight">
+                  CONGRATULATIONS!
+                </h2>
+                <p className="text-4xl font-bold text-green-700 mb-3">
+                  {leadData?.firstName?.toUpperCase()}, YOU DID IT!
+                </p>
+                <p className="text-2xl font-bold text-green-600 mb-4">
+                  Assessment Complete - Your Personalized Results Are Ready!
+                </p>
+                <div className="bg-white/80 rounded-lg p-6 mt-6">
+                  <p className="text-xl font-semibold text-gray-800">
+                    You've successfully completed your {template} assessment. 
+                    Your detailed insights and actionable next steps are outlined below.
+                  </p>
+                </div>
+              </div>
             </div>
             
             <VoicePlayer 

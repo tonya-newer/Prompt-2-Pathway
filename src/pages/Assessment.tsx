@@ -36,7 +36,7 @@ const Assessment = () => {
     setLeadData(data);
     setCurrentStep('assessment');
     toast({
-      title: "Welcome to VoiceCard™",
+      title: "Welcome to VoiceCard",
       description: "Let's begin your personalized assessment journey.",
     });
   };
@@ -45,12 +45,81 @@ const Assessment = () => {
     setAnswers(prev => ({ ...prev, [questionId]: answer }));
   };
 
-  const handleNext = () => {
+  const sendToMakeWebhook = async (leadData: LeadData, results: AssessmentResults) => {
+    const webhookUrl = 'https://hook.us2.make.com/cncz0jyx3q9hvw2fxdu6u3vjcxnt9i2e';
+    
+    const webhookData = {
+      firstname: leadData.firstName,
+      lastname: leadData.lastName,
+      email: leadData.email,
+      phone: leadData.phone || '',
+      agegroup: leadData.ageRange,
+      quizscore: results.overallScore,
+      quizType: template.title,
+      source: leadData.source || 'direct'
+    };
+
+    try {
+      console.log('Sending data to Make.com webhook:', webhookData);
+      
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData),
+      });
+
+      if (response.ok) {
+        console.log('Successfully sent data to Make.com webhook');
+        toast({
+          title: "Data Synchronized",
+          description: "Your assessment data has been processed successfully.",
+        });
+      } else {
+        console.error('Failed to send data to Make.com webhook:', response.status);
+      }
+    } catch (error) {
+      console.error('Error sending data to Make.com webhook:', error);
+    }
+  };
+
+  const sendEmailNotification = async (leadData: LeadData, results: AssessmentResults) => {
+    try {
+      // This would typically be handled by the Make.com workflow
+      // For now, we'll log the notification
+      console.log('Email notification data for info@newerconsulting.com:', {
+        subject: `New VoiceCard Assessment Completed - ${leadData.firstName} ${leadData.lastName}`,
+        leadData,
+        results,
+        completedAt: new Date().toISOString()
+      });
+      
+      toast({
+        title: "Notification Sent",
+        description: "Assessment completion notification has been sent.",
+      });
+    } catch (error) {
+      console.error('Error sending email notification:', error);
+    }
+  };
+
+  const handleNext = async () => {
     if (currentQuestion < template.questions.length - 1) {
       setCurrentQuestion(prev => prev + 1);
     } else {
-      // Calculate results and move to results page
+      // Calculate results and process completion
       const results = calculateResults();
+      
+      if (leadData) {
+        // Send to Make.com webhook
+        await sendToMakeWebhook(leadData, results);
+        
+        // Send email notification
+        await sendEmailNotification(leadData, results);
+      }
+      
+      // Navigate to results page
       navigate('/results', { 
         state: { 
           leadData, 

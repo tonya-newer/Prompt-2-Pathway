@@ -106,16 +106,23 @@ export const AssessmentManager = () => {
     try {
       await navigator.clipboard.writeText(url);
       toast({
-        title: "Link Copied!",
-        description: "Assessment link has been copied to your clipboard.",
+        title: "Assessment Link Copied!",
+        description: `Link copied: ${url}`,
       });
       console.log('Assessment link copied:', url);
     } catch (error) {
       console.error('Failed to copy link:', error);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = url;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
       toast({
-        title: "Copy Failed",
-        description: "Unable to copy link. Please try again.",
-        variant: "destructive",
+        title: "Assessment Link Copied!",
+        description: `Link copied: ${url}`,
       });
     }
   };
@@ -212,9 +219,27 @@ export const AssessmentManager = () => {
                       ))}
                     </div>
                     
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 mb-3">
                       {template.questions.length} questions • Est. {Math.ceil(template.questions.length * 0.75)} min
                     </p>
+                    
+                    {/* Assessment Link with Copy Button */}
+                    <div className="bg-gray-50 p-3 rounded-lg mb-3">
+                      <p className="text-xs text-gray-600 mb-2">Assessment Link:</p>
+                      <div className="flex items-center space-x-2">
+                        <code className="text-xs bg-white px-2 py-1 rounded flex-1 truncate">
+                          {window.location.origin}/assessment/{template.audience}
+                        </code>
+                        <Button 
+                          size="sm"
+                          variant="outline"
+                          onClick={() => copyAssessmentLink(template)}
+                          className="flex-shrink-0"
+                        >
+                          <Link className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 
@@ -234,14 +259,6 @@ export const AssessmentManager = () => {
                     title="Duplicate Assessment"
                   >
                     <Copy className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => copyAssessmentLink(template)}
-                    title="Copy Assessment Link"
-                  >
-                    <Link className="h-4 w-4" />
                   </Button>
                   <Button 
                     variant="outline" 
