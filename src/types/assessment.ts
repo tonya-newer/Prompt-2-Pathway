@@ -23,6 +23,7 @@ export interface LeadData {
   email: string;
   phone?: string;
   ageRange: string;
+  source?: string;
 }
 
 export interface CategoryScores {
