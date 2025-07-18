@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +18,7 @@ import { AssessmentTemplate, Question, LeadData, AssessmentResults } from '@/typ
 const Assessment = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   
   const [currentStep, setCurrentStep] = useState<'capture' | 'assessment' | 'results'>('capture');
@@ -27,9 +27,23 @@ const Assessment = () => {
   const [answers, setAnswers] = useState<Record<number, any>>({});
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isDirectAccess, setIsDirectAccess] = useState(false);
 
   // Get assessment template based on ID from URL
   const template: AssessmentTemplate | undefined = assessmentTemplates.find(t => t.id.toString() === id);
+  
+  // Check if user came directly to this assessment (not from dashboard)
+  useEffect(() => {
+    // Check if user came from the admin dashboard or internally
+    const referrer = document.referrer;
+    const isInternalNavigation = location.state?.fromDashboard || referrer.includes('/admin');
+    
+    // If not from internal navigation, mark as direct access
+    if (!isInternalNavigation) {
+      setIsDirectAccess(true);
+      console.log('Direct access detected - restricting navigation to dashboard');
+    }
+  }, [location]);
   
   // If no template found, redirect to home
   useEffect(() => {
@@ -143,6 +157,23 @@ const Assessment = () => {
   const handlePrevious = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(prev => prev - 1);
+    }
+  };
+
+  const handleExitAssessment = () => {
+    if (isDirectAccess) {
+      // For direct access users, stay on the same assessment page
+      setCurrentStep('capture');
+      setCurrentQuestion(0);
+      setAnswers({});
+      setLeadData(null);
+      toast({
+        title: "Assessment Reset",
+        description: "Your assessment has been reset. You can start again anytime.",
+      });
+    } else {
+      // For internal users (admins), allow navigation to dashboard
+      navigate('/');
     }
   };
 
@@ -281,11 +312,11 @@ const Assessment = () => {
             <div className="flex items-center justify-between">
               <Button 
                 variant="ghost" 
-                onClick={() => navigate('/')}
+                onClick={handleExitAssessment}
                 className="flex items-center"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Exit Assessment
+                {isDirectAccess ? 'Restart Assessment' : 'Exit Assessment'}
               </Button>
               
               <div className="flex items-center space-x-4">
