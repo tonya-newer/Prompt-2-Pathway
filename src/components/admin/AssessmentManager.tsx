@@ -193,7 +193,7 @@ export const AssessmentManager = () => {
           {templates.map((template) => (
             <Card key={template.id} className="overflow-hidden">
               {template.image && (
-                <div className="h-32 overflow-hidden">
+                <div className="h-48 overflow-hidden">
                   <img 
                     src={template.image} 
                     alt={template.title}
@@ -222,8 +222,8 @@ export const AssessmentManager = () => {
                       {template.questions.length} questions • Est. {Math.ceil(template.questions.length * 0.75)} min
                     </p>
                     
-                    {/* Fixed Assessment Link with Copy Button */}
-                    <div className="bg-gray-50 p-3 rounded-lg mb-3">
+                    {/* Assessment Link with Copy Button */}
+                    <div className="bg-gray-50 p-3 rounded-lg mb-4">
                       <p className="text-xs text-gray-600 mb-2">Assessment Link:</p>
                       <div className="flex items-center space-x-2">
                         <code className="text-xs bg-white px-2 py-1 rounded flex-1 truncate">

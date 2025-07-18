@@ -17,7 +17,7 @@ import { assessmentTemplates } from '@/data/assessmentTemplates';
 import { AssessmentTemplate, Question, LeadData, AssessmentResults } from '@/types/assessment';
 
 const Assessment = () => {
-  const { audience } = useParams<{ audience: string }>();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -28,8 +28,21 @@ const Assessment = () => {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // Get assessment template based on audience
-  const template: AssessmentTemplate = assessmentTemplates.find(t => t.audience === audience) || assessmentTemplates[0];
+  // Get assessment template based on ID from URL
+  const template: AssessmentTemplate | undefined = assessmentTemplates.find(t => t.id.toString() === id);
+  
+  // If no template found, redirect to home
+  useEffect(() => {
+    if (!template) {
+      navigate('/');
+      return;
+    }
+  }, [template, navigate]);
+
+  if (!template) {
+    return null;
+  }
+
   const progress = ((currentQuestion + 1) / template.questions.length) * 100;
 
   const handleLeadCapture = (data: LeadData) => {
@@ -54,7 +67,7 @@ const Assessment = () => {
       email: leadData.email,
       phone: leadData.phone || '',
       agegroup: leadData.ageRange,
-      quizscore: results.overallScore, // This now correctly sends the numeric score
+      quizscore: results.overallScore,
       quizType: template.title,
       source: leadData.source || 'direct'
     };
@@ -91,7 +104,7 @@ const Assessment = () => {
         leadData,
         results: {
           ...results,
-          overallScore: results.overallScore // Ensure numeric score is included
+          overallScore: results.overallScore
         },
         completedAt: new Date().toISOString()
       });
@@ -109,18 +122,13 @@ const Assessment = () => {
     if (currentQuestion < template.questions.length - 1) {
       setCurrentQuestion(prev => prev + 1);
     } else {
-      // Calculate results and process completion
       const results = calculateResults();
       
       if (leadData) {
-        // Send to Make.com webhook
         await sendToMakeWebhook(leadData, results);
-        
-        // Send email notification
         await sendEmailNotification(leadData, results);
       }
       
-      // Navigate to results page
       navigate('/results', { 
         state: { 
           leadData, 
@@ -139,12 +147,10 @@ const Assessment = () => {
   };
 
   const calculateResults = (): AssessmentResults => {
-    // Simple scoring system - in production this would be more sophisticated
     const totalQuestions = template.questions.length;
     const answeredQuestions = Object.keys(answers).length;
     const completionRate = (answeredQuestions / totalQuestions) * 100;
     
-    // Calculate category scores based on question types
     const categoryScores = {
       readiness: Math.floor(Math.random() * 30) + 70,
       confidence: Math.floor(Math.random() * 30) + 60,
@@ -184,7 +190,45 @@ const Assessment = () => {
   };
 
   if (currentStep === 'capture') {
-    return <LeadCaptureForm onSubmit={handleLeadCapture} audience={audience || 'individual'} />;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        {/* Welcome to VoiceCard Header */}
+        <header className="bg-white/80 backdrop-blur-sm border-b">
+          <div className="container mx-auto px-4 py-6 text-center">
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Welcome to VoiceCard</h1>
+            <p className="text-xl text-gray-600">Your personalized assessment journey begins here</p>
+          </div>
+        </header>
+
+        {/* Assessment Image - Vertical Display */}
+        {template.image && (
+          <div className="container mx-auto px-4 py-8">
+            <div className="max-w-md mx-auto">
+              <img 
+                src={template.image} 
+                alt={template.title}
+                className="w-full h-64 object-cover rounded-lg shadow-lg"
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">{template.title}</h2>
+              <p className="text-lg text-gray-600 mb-6">{template.description}</p>
+              <div className="flex justify-center items-center space-x-4 text-sm text-gray-500">
+                <span>{template.questions.length} questions</span>
+                <span>•</span>
+                <span>Est. {Math.ceil(template.questions.length * 0.75)} min</span>
+              </div>
+            </div>
+            <LeadCaptureForm onSubmit={handleLeadCapture} audience={template.audience} />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (currentStep === 'assessment') {

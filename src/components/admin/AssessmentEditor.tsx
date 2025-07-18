@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -179,23 +180,26 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
           </div>
 
           <div>
-            <Label htmlFor="image-upload">Assessment Image</Label>
+            <Label htmlFor="image-upload">Assessment Image (Displays Vertically)</Label>
             <div className="space-y-4">
               {editedTemplate.image && (
-                <div className="relative">
+                <div className="relative max-w-md">
                   <img 
                     src={editedTemplate.image} 
                     alt="Assessment preview"
-                    className="w-full h-48 object-cover rounded-lg"
+                    className="w-full h-64 object-cover rounded-lg border-2 border-gray-200"
                   />
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setEditedTemplate({...editedTemplate, image: ''})}
-                    className="absolute top-2 right-2"
+                    className="absolute top-2 right-2 bg-white/80 hover:bg-white"
                   >
                     <X className="h-4 w-4" />
                   </Button>
+                  <div className="mt-2 text-sm text-gray-600">
+                    This image will display vertically at the top of your assessment
+                  </div>
                 </div>
               )}
               <div className="flex items-center space-x-4">
@@ -209,12 +213,13 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
                 <Button
                   variant="outline"
                   onClick={() => document.getElementById('image-upload')?.click()}
+                  className="flex items-center"
                 >
                   <Upload className="h-4 w-4 mr-2" />
-                  Upload Image
+                  {editedTemplate.image ? 'Change Image' : 'Upload Image'}
                 </Button>
                 <span className="text-sm text-gray-500">
-                  {editedTemplate.image ? 'Image uploaded' : 'No image selected'}
+                  {editedTemplate.image ? 'Image uploaded - will display vertically' : 'Recommended: 400x600px or similar vertical format'}
                 </span>
               </div>
             </div>
