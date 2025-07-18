@@ -1,4 +1,3 @@
-
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -59,7 +58,7 @@ Generated on: ${new Date().toLocaleDateString()}
     URL.revokeObjectURL(url);
   };
 
-  // Distinct voice guide message - warm and conversational
+  // Enhanced voice script message
   const voiceScript = `Hello ${leadData?.firstName}, and congratulations on completing your VoiceCard assessment! This is truly an accomplishment worth celebrating. Taking the time for this kind of self-reflection shows real commitment to your growth. Your overall clarity score of ${results.overallScore} out of 100 is a meaningful indicator of where you stand today. But what's even more valuable are the personalized insights we've discovered specifically for your journey. These aren't generic recommendations - they're tailored insights based on your unique responses. I encourage you to take your time reviewing these insights, as they could be the key to unlocking your next breakthrough.`;
 
   return (
@@ -93,7 +92,7 @@ Generated on: ${new Date().toLocaleDateString()}
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          {/* Welcome & Voice Player */}
+          {/* Welcome & Enhanced Voice Player */}
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold mb-4">
               Your VoiceCard 
@@ -102,21 +101,21 @@ Generated on: ${new Date().toLocaleDateString()}
               </span>
             </h1>
             
-            {/* Enhanced Congratulations Message - Even Larger and More Prominent */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-12 mb-8 shadow-lg">
+            {/* Massive Congratulations Message */}
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-4 border-green-400 rounded-2xl p-16 mb-8 shadow-2xl transform hover:scale-105 transition-transform duration-300">
               <div className="text-center">
-                <div className="text-8xl mb-6">🎉</div>
-                <h2 className="text-6xl font-black text-green-800 mb-4 tracking-tight">
+                <div className="text-9xl mb-8">🎉</div>
+                <h2 className="text-7xl font-black text-green-800 mb-6 tracking-tight drop-shadow-lg">
                   CONGRATULATIONS!
                 </h2>
-                <p className="text-4xl font-bold text-green-700 mb-3">
+                <p className="text-5xl font-bold text-green-700 mb-4">
                   {leadData?.firstName?.toUpperCase()}, YOU DID IT!
                 </p>
-                <p className="text-2xl font-bold text-green-600 mb-4">
+                <p className="text-3xl font-bold text-green-600 mb-6">
                   Assessment Complete - Your Personalized Results Are Ready!
                 </p>
-                <div className="bg-white/80 rounded-lg p-6 mt-6">
-                  <p className="text-xl font-semibold text-gray-800">
+                <div className="bg-white/90 rounded-xl p-8 mt-8 shadow-lg">
+                  <p className="text-2xl font-semibold text-gray-800">
                     You've successfully completed your {template} assessment. 
                     Your detailed insights and actionable next steps are outlined below.
                   </p>
@@ -124,15 +123,30 @@ Generated on: ${new Date().toLocaleDateString()}
               </div>
             </div>
             
-            <VoicePlayer 
-              text={voiceScript}
-              autoPlay={false}
-              className="mb-8"
-            />
+            {/* Prominent Voice Guide Section */}
+            <div className="mb-8">
+              <div className="bg-gradient-to-r from-purple-100 to-blue-100 border-4 border-purple-300 rounded-xl p-8 shadow-xl">
+                <div className="flex items-center justify-center mb-6">
+                  <div className="bg-purple-600 p-4 rounded-full mr-4">
+                    <Mic className="h-8 w-8 text-white" />
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-3xl font-black text-purple-900 mb-2">🎧 YOUR PERSONALIZED VOICE MESSAGE</h3>
+                    <p className="text-xl text-purple-700 font-bold">Press play to hear a summary of your results!</p>
+                    <p className="text-lg text-purple-600 mt-2">This is your unique VoiceCard experience - tailored just for you!</p>
+                  </div>
+                </div>
+                <VoicePlayer 
+                  text={voiceScript}
+                  autoPlay={false}
+                  className="bg-white/90 shadow-lg"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Overall Score */}
-          <Card className="p-8 mb-8 text-center bg-gradient-to-r from-blue-50 to-purple-50 border-0">
+          <Card className="p-8 mb-8 text-center bg-gradient-to-r from-blue-50 to-purple-50 border-0 shadow-xl">
             <div className="mb-4">
               <div className="text-6xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 {results.overallScore}
@@ -175,7 +189,7 @@ Generated on: ${new Date().toLocaleDateString()}
           </div>
 
           {/* Key Insights */}
-          <Card className="p-8 mb-8">
+          <Card className="p-8 mb-8 shadow-xl">
             <h2 className="text-2xl font-bold mb-6 flex items-center">
               <Lightbulb className="h-6 w-6 mr-3 text-yellow-500" />
               Your Personalized Insights
@@ -192,8 +206,8 @@ Generated on: ${new Date().toLocaleDateString()}
             </div>
           </Card>
 
-          {/* Call to Action - Fixed visibility */}
-          <Card className="p-8 text-center bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+          {/* Call to Action */}
+          <Card className="p-8 text-center bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-xl">
             <h3 className="text-2xl font-bold mb-4">Ready to Explore More?</h3>
             <p className="mb-6 text-blue-100">
               Your journey doesn't end here. We're here to support your continued growth, 

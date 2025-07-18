@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -11,20 +10,16 @@ const Index = () => {
   const navigate = useNavigate();
 
   const handleStartJourney = () => {
-    // Navigate to the first available assessment
     if (assessmentTemplates.length > 0) {
       navigate(`/assessment/${assessmentTemplates[0].id}`);
     }
   };
 
   const handlePreviewVoice = () => {
-    // For now, scroll to the features section to showcase voice capabilities
-    // In a full implementation, this would open a voice preview modal
     const featuresSection = document.getElementById('features-section');
     if (featuresSection) {
       featuresSection.scrollIntoView({ behavior: 'smooth' });
     }
-    // You can replace this with actual voice preview functionality
     alert('Voice preview functionality - this would demonstrate our voice-guided experience');
   };
 
@@ -96,7 +91,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Assessment Templates */}
+      {/* Assessment Templates with Vertical Images */}
       <section className="container mx-auto px-4 py-16 bg-white">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -111,7 +106,7 @@ const Index = () => {
           {assessmentTemplates.map((template) => (
             <Card key={template.id} className="overflow-hidden hover:shadow-lg transition-shadow">
               {template.image && (
-                <div className="h-32 bg-gradient-to-r from-blue-400 to-purple-500 relative overflow-hidden">
+                <div className="h-48 w-full overflow-hidden">
                   <img 
                     src={template.image} 
                     alt={template.title}

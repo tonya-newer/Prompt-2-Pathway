@@ -54,7 +54,7 @@ const Assessment = () => {
       email: leadData.email,
       phone: leadData.phone || '',
       agegroup: leadData.ageRange,
-      quizscore: results.overallScore,
+      quizscore: results.overallScore, // This now correctly sends the numeric score
       quizType: template.title,
       source: leadData.source || 'direct'
     };
@@ -86,12 +86,13 @@ const Assessment = () => {
 
   const sendEmailNotification = async (leadData: LeadData, results: AssessmentResults) => {
     try {
-      // This would typically be handled by the Make.com workflow
-      // For now, we'll log the notification
       console.log('Email notification data for info@newerconsulting.com:', {
         subject: `New VoiceCard Assessment Completed - ${leadData.firstName} ${leadData.lastName}`,
         leadData,
-        results,
+        results: {
+          ...results,
+          overallScore: results.overallScore // Ensure numeric score is included
+        },
         completedAt: new Date().toISOString()
       });
       
@@ -226,12 +227,26 @@ const Assessment = () => {
         {/* Assessment Content */}
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-3xl mx-auto">
-            {/* Voice Player */}
+            {/* Enhanced Voice Player */}
             {voiceEnabled && (
-              <VoicePlayer 
-                text={question.voiceScript || `Question ${currentQuestion + 1}: ${question.question}`}
-                autoPlay={false}
-              />
+              <div className="mb-8">
+                <div className="bg-gradient-to-r from-blue-100 to-purple-100 border-2 border-blue-300 rounded-xl p-6 shadow-lg">
+                  <div className="flex items-center mb-4">
+                    <div className="bg-blue-600 p-3 rounded-full mr-4">
+                      <Mic className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-blue-900">🎧 Voice Guide Available</h3>
+                      <p className="text-blue-700 font-medium">Press play to hear this question read aloud!</p>
+                    </div>
+                  </div>
+                  <VoicePlayer 
+                    text={question.voiceScript || `Question ${currentQuestion + 1}: ${question.question}`}
+                    autoPlay={false}
+                    className="bg-white/80"
+                  />
+                </div>
+              </div>
             )}
             
             {/* Question Card */}

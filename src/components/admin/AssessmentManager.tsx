@@ -102,7 +102,7 @@ export const AssessmentManager = () => {
   };
 
   const copyAssessmentLink = async (template: AssessmentTemplate) => {
-    const url = `${window.location.origin}/assessment/${template.audience}`;
+    const url = `${window.location.origin}/assessment/${template.id}`;
     try {
       await navigator.clipboard.writeText(url);
       toast({
@@ -112,7 +112,6 @@ export const AssessmentManager = () => {
       console.log('Assessment link copied:', url);
     } catch (error) {
       console.error('Failed to copy link:', error);
-      // Fallback for older browsers
       const textArea = document.createElement('textarea');
       textArea.value = url;
       document.body.appendChild(textArea);
@@ -223,20 +222,21 @@ export const AssessmentManager = () => {
                       {template.questions.length} questions • Est. {Math.ceil(template.questions.length * 0.75)} min
                     </p>
                     
-                    {/* Assessment Link with Copy Button */}
+                    {/* Fixed Assessment Link with Copy Button */}
                     <div className="bg-gray-50 p-3 rounded-lg mb-3">
                       <p className="text-xs text-gray-600 mb-2">Assessment Link:</p>
                       <div className="flex items-center space-x-2">
                         <code className="text-xs bg-white px-2 py-1 rounded flex-1 truncate">
-                          {window.location.origin}/assessment/{template.audience}
+                          {window.location.origin}/assessment/{template.id}
                         </code>
                         <Button 
                           size="sm"
                           variant="outline"
                           onClick={() => copyAssessmentLink(template)}
-                          className="flex-shrink-0"
+                          className="flex-shrink-0 bg-blue-50 hover:bg-blue-100 border-blue-300"
+                          title="Copy Assessment Link"
                         >
-                          <Link className="h-3 w-3" />
+                          <Link className="h-3 w-3 text-blue-600" />
                         </Button>
                       </div>
                     </div>
