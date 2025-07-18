@@ -223,22 +223,22 @@ export const AssessmentManager = () => {
                     </p>
                     
                     {/* Assessment Link with Copy Button */}
-                    <div className="bg-gray-50 p-3 rounded-lg mb-4">
-                      <p className="text-xs text-gray-600 mb-2">Assessment Link:</p>
-                      <div className="flex items-center space-x-2">
-                        <code className="text-xs bg-white px-2 py-1 rounded flex-1 truncate">
-                          {window.location.origin}/assessment/{template.id}
-                        </code>
+                    <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm font-medium text-blue-900">Assessment Link:</p>
                         <Button 
                           size="sm"
-                          variant="outline"
                           onClick={() => copyAssessmentLink(template)}
-                          className="flex-shrink-0 bg-blue-50 hover:bg-blue-100 border-blue-300"
+                          className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
                           title="Copy Assessment Link"
                         >
-                          <Link className="h-3 w-3 text-blue-600" />
+                          <Link className="h-4 w-4" />
+                          Copy URL
                         </Button>
                       </div>
+                      <code className="text-xs bg-white px-3 py-2 rounded border block w-full text-gray-700 break-all">
+                        {window.location.origin}/assessment/{template.id}
+                      </code>
                     </div>
                   </div>
                 </div>
