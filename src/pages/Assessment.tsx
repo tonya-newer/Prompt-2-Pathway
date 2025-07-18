@@ -226,9 +226,9 @@ const Assessment = () => {
         {/* Welcome to VoiceCard Header */}
         <header className="bg-white/80 backdrop-blur-sm border-b">
           <div className="container mx-auto px-4 py-6 text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Welcome to VoiceCard</h1>
-            <p className="text-xl text-gray-600 mb-4">Your personalized assessment journey begins here</p>
-            <p className="text-lg text-gray-700 max-w-4xl mx-auto leading-relaxed">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Welcome to VoiceCard</h1>
+            <p className="text-lg sm:text-xl text-gray-600 mb-4">Your personalized assessment journey begins here</p>
+            <p className="text-base sm:text-lg text-gray-700 max-w-4xl mx-auto leading-relaxed">
               Experience voice-guided clarity assessments that reveal insights about your path forward. 
               Why VoiceCard? Our voice-guided assessments provide deeper insights through human connection and personalized experiences.
             </p>
@@ -236,34 +236,34 @@ const Assessment = () => {
         </header>
 
         {/* Core Value Boxes */}
-        <section className="container mx-auto px-4 py-8">
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-8">
-            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Brain className="h-6 w-6 text-blue-600" />
+        <section className="container mx-auto px-4 py-6 sm:py-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto mb-6 sm:mb-8">
+            <Card className="p-4 sm:p-6 text-center hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">Deep Insights</h3>
-              <p className="text-gray-600">
+              <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">Deep Insights</h3>
+              <p className="text-sm sm:text-base text-gray-600">
                 Uncover meaningful patterns and clarity about your personal or business direction
               </p>
             </Card>
 
-            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Mic className="h-6 w-6 text-green-600" />
+            <Card className="p-4 sm:p-6 text-center hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <Mic className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">Voice-Guided</h3>
-              <p className="text-gray-600">
+              <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">Voice-Guided</h3>
+              <p className="text-sm sm:text-base text-gray-600">
                 Experience a human touch with professionally crafted voice narration throughout
               </p>
             </Card>
 
-            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="h-6 w-6 text-purple-600" />
+            <Card className="p-4 sm:p-6 text-center hover:shadow-lg transition-shadow">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">Personalized</h3>
-              <p className="text-gray-600">
+              <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">Personalized</h3>
+              <p className="text-sm sm:text-base text-gray-600">
                 Tailored experiences for individuals and business owners with relevant insights
               </p>
             </Card>
@@ -272,7 +272,7 @@ const Assessment = () => {
 
         {/* Assessment Image - Vertical Display */}
         {template.image && (
-          <div className="container mx-auto px-4 py-8">
+          <div className="container mx-auto px-4 py-6 sm:py-8">
             <div className="max-w-md mx-auto">
               <img 
                 src={template.image} 
@@ -283,11 +283,11 @@ const Assessment = () => {
           </div>
         )}
 
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-6 sm:py-8">
           <div className="max-w-2xl mx-auto">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">{template.title}</h2>
-              <p className="text-lg text-gray-600 mb-6">{template.description}</p>
+            <div className="text-center mb-6 sm:mb-8">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">{template.title}</h2>
+              <p className="text-base sm:text-lg text-gray-600 mb-4 sm:mb-6">{template.description}</p>
               <div className="flex justify-center items-center space-x-4 text-sm text-gray-500">
                 <span>{template.questions.length} questions</span>
                 <span>•</span>
@@ -316,18 +316,24 @@ const Assessment = () => {
                 className="flex items-center"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                {isDirectAccess ? 'Restart Assessment' : 'Exit Assessment'}
+                <span className="hidden sm:inline">
+                  {isDirectAccess ? 'Restart Assessment' : 'Exit Assessment'}
+                </span>
+                <span className="sm:hidden">
+                  {isDirectAccess ? 'Restart' : 'Exit'}
+                </span>
               </Button>
               
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600">
-                  Question {currentQuestion + 1} of {template.questions.length}
+              <div className="flex items-center space-x-2 sm:space-x-4">
+                <span className="text-xs sm:text-sm text-gray-600">
+                  <span className="hidden sm:inline">Question </span>
+                  {currentQuestion + 1} of {template.questions.length}
                 </span>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setVoiceEnabled(!voiceEnabled)}
-                  className="flex items-center"
+                  className="flex items-center p-2"
                 >
                   {voiceEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
                 </Button>
@@ -339,19 +345,19 @@ const Assessment = () => {
         </header>
 
         {/* Assessment Content */}
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-6 sm:py-8">
           <div className="max-w-3xl mx-auto">
             {/* Enhanced Voice Player */}
             {voiceEnabled && (
-              <div className="mb-8">
-                <div className="bg-gradient-to-r from-blue-100 to-purple-100 border-2 border-blue-300 rounded-xl p-6 shadow-lg">
-                  <div className="flex items-center mb-4">
-                    <div className="bg-blue-600 p-3 rounded-full mr-4">
-                      <Mic className="h-6 w-6 text-white" />
+              <div className="mb-6 sm:mb-8">
+                <div className="bg-gradient-to-r from-blue-100 to-purple-100 border-2 border-blue-300 rounded-xl p-4 sm:p-6 shadow-lg">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center mb-4">
+                    <div className="bg-blue-600 p-2 sm:p-3 rounded-full mb-3 sm:mb-0 sm:mr-4">
+                      <Mic className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-blue-900">🎧 Voice Guide Available</h3>
-                      <p className="text-blue-700 font-medium">Press play to hear this question read aloud!</p>
+                    <div className="text-center sm:text-left">
+                      <h3 className="text-lg sm:text-xl font-bold text-blue-900">🎧 Voice Guide Available</h3>
+                      <p className="text-sm sm:text-base text-blue-700 font-medium">Press play to hear this question read aloud!</p>
                     </div>
                   </div>
                   <VoicePlayer 
@@ -371,12 +377,12 @@ const Assessment = () => {
             />
             
             {/* Navigation */}
-            <div className="flex justify-between mt-8">
+            <div className="flex flex-col sm:flex-row justify-between items-center mt-6 sm:mt-8 space-y-4 sm:space-y-0">
               <Button
                 variant="outline"
                 onClick={handlePrevious}
                 disabled={currentQuestion === 0}
-                className="flex items-center"
+                className="flex items-center w-full sm:w-auto"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Previous
@@ -385,9 +391,11 @@ const Assessment = () => {
               <Button
                 onClick={handleNext}
                 disabled={!answers[question.id]}
-                className="flex items-center bg-gradient-to-r from-blue-600 to-purple-600"
+                className="flex items-center bg-gradient-to-r from-blue-600 to-purple-600 w-full sm:w-auto"
               >
-                {currentQuestion === template.questions.length - 1 ? 'Complete Assessment' : 'Next Question'}
+                <span className="text-sm sm:text-base">
+                  {currentQuestion === template.questions.length - 1 ? 'Complete Assessment' : 'Next Question'}
+                </span>
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
