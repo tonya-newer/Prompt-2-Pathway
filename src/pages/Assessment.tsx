@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { Mic, MicOff, Play, Pause, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Mic, MicOff, Play, Pause, ArrowLeft, ArrowRight, Brain, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { LeadCaptureForm } from '@/components/LeadCaptureForm';
 import { VoicePlayer } from '@/components/VoicePlayer';
@@ -196,9 +196,48 @@ const Assessment = () => {
         <header className="bg-white/80 backdrop-blur-sm border-b">
           <div className="container mx-auto px-4 py-6 text-center">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">Welcome to VoiceCard</h1>
-            <p className="text-xl text-gray-600">Your personalized assessment journey begins here</p>
+            <p className="text-xl text-gray-600 mb-4">Your personalized assessment journey begins here</p>
+            <p className="text-lg text-gray-700 max-w-4xl mx-auto leading-relaxed">
+              Experience voice-guided clarity assessments that reveal insights about your path forward. 
+              Why VoiceCard? Our voice-guided assessments provide deeper insights through human connection and personalized experiences.
+            </p>
           </div>
         </header>
+
+        {/* Core Value Boxes */}
+        <section className="container mx-auto px-4 py-8">
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-8">
+            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Brain className="h-6 w-6 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">Deep Insights</h3>
+              <p className="text-gray-600">
+                Uncover meaningful patterns and clarity about your personal or business direction
+              </p>
+            </Card>
+
+            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Mic className="h-6 w-6 text-green-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">Voice-Guided</h3>
+              <p className="text-gray-600">
+                Experience a human touch with professionally crafted voice narration throughout
+              </p>
+            </Card>
+
+            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="h-6 w-6 text-purple-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">Personalized</h3>
+              <p className="text-gray-600">
+                Tailored experiences for individuals and business owners with relevant insights
+              </p>
+            </Card>
+          </div>
+        </section>
 
         {/* Assessment Image - Vertical Display */}
         {template.image && (
