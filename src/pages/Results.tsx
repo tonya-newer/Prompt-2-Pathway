@@ -6,6 +6,8 @@ import { Progress } from '@/components/ui/progress';
 import { Download, Share2, Mic, TrendingUp, Target, Lightbulb, ArrowLeft } from 'lucide-react';
 import { VoicePlayer } from '@/components/VoicePlayer';
 import { LeadData, AssessmentResults } from '@/types/assessment';
+import { leadStorageService } from '@/services/leadStorage';
+import { useEffect } from 'react';
 
 const Results = () => {
   const location = useLocation();
@@ -21,6 +23,14 @@ const Results = () => {
     navigate('/');
     return null;
   }
+
+  // Store the lead data when results are displayed
+  useEffect(() => {
+    if (leadData && results && template) {
+      leadStorageService.storeLead(leadData, results, template);
+      console.log('Assessment completed and stored:', { leadData, results, template });
+    }
+  }, [leadData, results, template]);
 
   const getScoreLabel = (score: number) => {
     if (score >= 80) return { label: 'Excellent', color: 'bg-green-500' };
@@ -95,7 +105,7 @@ Generated on: ${new Date().toLocaleDateString()}
         <div className="max-w-4xl mx-auto">
           {/* Welcome & Enhanced Voice Player */}
           <div className="text-center mb-6 sm:mb-8">
-            <h1 className="text-2xl sm:text-4xl font-bold mb-4">
+            <h1 className="text-xl sm:text-2xl md:text-4xl font-bold mb-4">
               Your VoiceCard 
               <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 {" "}Clarity Snapshot
@@ -103,20 +113,20 @@ Generated on: ${new Date().toLocaleDateString()}
             </h1>
             
             {/* Mobile-Optimized Congratulations Message */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 sm:border-4 border-green-400 rounded-xl sm:rounded-2xl p-6 sm:p-12 lg:p-16 mb-6 sm:mb-8 shadow-2xl transform hover:scale-105 transition-transform duration-300">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 sm:border-4 border-green-400 rounded-xl sm:rounded-2xl p-4 sm:p-8 lg:p-12 mb-6 sm:mb-8 shadow-2xl transform hover:scale-105 transition-transform duration-300">
               <div className="text-center">
-                <div className="text-4xl sm:text-6xl lg:text-9xl mb-4 sm:mb-8">🎉</div>
-                <h2 className="text-3xl sm:text-5xl lg:text-7xl font-black text-green-800 mb-3 sm:mb-6 tracking-tight drop-shadow-lg">
+                <div className="text-3xl sm:text-5xl lg:text-7xl mb-3 sm:mb-6">🎉</div>
+                <h2 className="text-xl sm:text-3xl lg:text-5xl font-black text-green-800 mb-2 sm:mb-4 tracking-tight drop-shadow-lg">
                   CONGRATULATIONS!
                 </h2>
-                <p className="text-xl sm:text-3xl lg:text-5xl font-bold text-green-700 mb-2 sm:mb-4">
+                <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-700 mb-2 sm:mb-3">
                   {leadData?.firstName?.toUpperCase()}, YOU DID IT!
                 </p>
-                <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-600 mb-4 sm:mb-6">
+                <p className="text-sm sm:text-lg lg:text-xl font-bold text-green-600 mb-3 sm:mb-4">
                   Assessment Complete - Your Results Are Ready!
                 </p>
-                <div className="bg-white/90 rounded-lg sm:rounded-xl p-4 sm:p-8 mt-4 sm:mt-8 shadow-lg">
-                  <p className="text-sm sm:text-xl lg:text-2xl font-semibold text-gray-800 leading-relaxed">
+                <div className="bg-white/90 rounded-lg sm:rounded-xl p-3 sm:p-6 mt-3 sm:mt-6 shadow-lg">
+                  <p className="text-xs sm:text-base lg:text-lg font-semibold text-gray-800 leading-relaxed">
                     You've successfully completed your {template} assessment. 
                     Your detailed insights and actionable next steps are outlined below.
                   </p>
@@ -126,15 +136,15 @@ Generated on: ${new Date().toLocaleDateString()}
             
             {/* Mobile-Optimized Voice Guide Section */}
             <div className="mb-6 sm:mb-8">
-              <div className="bg-gradient-to-r from-purple-100 to-blue-100 border-2 sm:border-4 border-purple-300 rounded-xl p-4 sm:p-8 shadow-xl">
+              <div className="bg-gradient-to-r from-purple-100 to-blue-100 border-2 sm:border-4 border-purple-300 rounded-xl p-4 sm:p-6 shadow-xl">
                 <div className="flex flex-col sm:flex-row items-center justify-center mb-4 sm:mb-6">
-                  <div className="bg-purple-600 p-3 sm:p-4 rounded-full mb-4 sm:mb-0 sm:mr-4">
-                    <Mic className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                  <div className="bg-purple-600 p-3 sm:p-4 rounded-full mb-3 sm:mb-0 sm:mr-4">
+                    <Mic className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                   <div className="text-center sm:text-left">
-                    <h3 className="text-xl sm:text-2xl lg:text-3xl font-black text-purple-900 mb-2">🎧 YOUR PERSONALIZED VOICE MESSAGE</h3>
-                    <p className="text-base sm:text-xl text-purple-700 font-bold">Press play to hear a summary of your results!</p>
-                    <p className="text-sm sm:text-lg text-purple-600 mt-2">This is your unique VoiceCard experience - tailored just for you!</p>
+                    <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-purple-900 mb-2">🎧 YOUR PERSONALIZED VOICE MESSAGE</h3>
+                    <p className="text-sm sm:text-base text-purple-700 font-bold">Press play to hear a summary of your results!</p>
+                    <p className="text-xs sm:text-sm text-purple-600 mt-1">This is your unique VoiceCard experience - tailored just for you!</p>
                   </div>
                 </div>
                 <VoicePlayer 

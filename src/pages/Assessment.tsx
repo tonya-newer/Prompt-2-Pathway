@@ -1,411 +1,367 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Progress } from '@/components/ui/progress';
-import { Mic, MicOff, Play, Pause, ArrowLeft, ArrowRight, Brain, Users } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { LeadCaptureForm } from '@/components/LeadCaptureForm';
-import { VoicePlayer } from '@/components/VoicePlayer';
-import { QuestionCard } from '@/components/QuestionCard';
-import { assessmentTemplates } from '@/data/assessmentTemplates';
-import { AssessmentTemplate, Question, LeadData, AssessmentResults } from '@/types/assessment';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { useToast } from "@/hooks/use-toast"
+import { AssessmentTemplate } from '@/types/assessment';
+
+interface Question {
+  id: number;
+  text: string;
+  type: 'radio' | 'text' | 'textarea' | 'select';
+  options?: string[];
+}
+
+interface AssessmentData {
+  title: string;
+  description: string;
+  questions: Question[];
+}
+
+interface LeadData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  ageRange: string;
+  source?: string;
+  audience?: string;
+}
 
 const Assessment = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
-  const { toast } = useToast();
-  
-  const [currentStep, setCurrentStep] = useState<'capture' | 'assessment' | 'results'>('capture');
-  const [leadData, setLeadData] = useState<LeadData | null>(null);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(null);
+  const [leadData, setLeadData] = useState<LeadData>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    ageRange: '',
+    source: '',
+    audience: ''
+  });
   const [answers, setAnswers] = useState<Record<number, any>>({});
-  const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isDirectAccess, setIsDirectAccess] = useState(false);
+  const { toast } = useToast()
 
-  // Get assessment template based on ID from URL
-  const template: AssessmentTemplate | undefined = assessmentTemplates.find(t => t.id.toString() === id);
-  
-  // Check if user came directly to this assessment (not from dashboard)
   useEffect(() => {
-    // Check if user came from the admin dashboard or internally
-    const referrer = document.referrer;
-    const isInternalNavigation = location.state?.fromDashboard || referrer.includes('/admin');
-    
-    // If not from internal navigation, mark as direct access
-    if (!isInternalNavigation) {
-      setIsDirectAccess(true);
-      console.log('Direct access detected - restricting navigation to dashboard');
-    }
-  }, [location]);
-  
-  // If no template found, redirect to home
-  useEffect(() => {
-    if (!template) {
-      navigate('/');
-      return;
-    }
-  }, [template, navigate]);
+    const fetchAssessment = async () => {
+      try {
+        // Dynamic import based on the assessment ID
+        const assessmentModule = await import(`@/data/assessments/${id}.json`);
+        const data: AssessmentTemplate = assessmentModule.default;
 
-  if (!template) {
-    return null;
-  }
+        // Transform the assessment data to match the expected structure
+        const transformedData: AssessmentData = {
+          title: data.title,
+          description: data.description,
+          questions: data.questions.map(q => ({
+            id: q.id,
+            text: q.text,
+            type: q.type,
+            options: q.options
+          }))
+        };
+        setAssessmentData(transformedData);
+      } catch (error) {
+        console.error("Error loading assessment:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load assessment. Please try again.",
+          variant: "destructive",
+        })
+        navigate('/');
+      }
+    };
 
-  const progress = ((currentQuestion + 1) / template.questions.length) * 100;
+    fetchAssessment();
+  }, [id, navigate, toast]);
 
-  const handleLeadCapture = (data: LeadData) => {
-    setLeadData(data);
-    setCurrentStep('assessment');
-    toast({
-      title: "Welcome to VoiceCard",
-      description: "Let's begin your personalized assessment journey.",
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>, questionId: number) => {
+    setAnswers({
+      ...answers,
+      [questionId]: e.target.value,
     });
   };
 
-  const handleAnswer = (questionId: number, answer: any) => {
-    setAnswers(prev => ({ ...prev, [questionId]: answer }));
+  const handleRadioChange = (value: string | null, questionId: number) => {
+    setAnswers({
+      ...answers,
+      [questionId]: value,
+    });
   };
 
-  const sendToMakeWebhook = async (leadData: LeadData, results: AssessmentResults) => {
-    const webhookUrl = 'https://hook.us2.make.com/cncz0jyx3q9hvw2fxdu6u3vjcxnt9i2e';
-    
-    const webhookData = {
-      firstname: leadData.firstName,
-      lastname: leadData.lastName,
-      email: leadData.email,
-      phone: leadData.phone || '',
-      agegroup: leadData.ageRange,
-      quizscore: results.overallScore,
-      quizType: template.title,
-      source: leadData.source || 'direct'
-    };
+  const handleLeadDataChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, field: keyof LeadData) => {
+    setLeadData({
+      ...leadData,
+      [field]: e.target.value,
+    });
+  };
 
-    try {
-      console.log('Sending data to Make.com webhook:', webhookData);
-      
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(webhookData),
-      });
+  const calculateResults = () => {
+    if (!assessmentData) return null;
 
-      if (response.ok) {
-        console.log('Successfully sent data to Make.com webhook');
-        toast({
-          title: "Data Synchronized",
-          description: "Your assessment data has been processed successfully.",
-        });
+    let overallScore = 0;
+    let readinessScore = 0;
+    let confidenceScore = 0;
+    let clarityScore = 0;
+
+    // Mock scoring logic - replace with actual scoring based on answers
+    Object.keys(answers).forEach(key => {
+      const questionId = parseInt(key);
+      const answer = answers[questionId];
+
+      // Example: Award points based on the answer
+      if (answer === 'yes' || answer === 'agree') {
+        overallScore += 5;
+        readinessScore += 3;
+        confidenceScore += 2;
+      } else if (answer === 'no' || answer === 'disagree') {
+        overallScore += 2;
+        clarityScore += 1;
       } else {
-        console.error('Failed to send data to Make.com webhook:', response.status);
+        overallScore += 3;
       }
-    } catch (error) {
-      console.error('Error sending data to Make.com webhook:', error);
-    }
-  };
+    });
 
-  const sendEmailNotification = async (leadData: LeadData, results: AssessmentResults) => {
-    try {
-      console.log('Email notification data for info@newerconsulting.com:', {
-        subject: `New VoiceCard Assessment Completed - ${leadData.firstName} ${leadData.lastName}`,
-        leadData,
-        results: {
-          ...results,
-          overallScore: results.overallScore
-        },
-        completedAt: new Date().toISOString()
-      });
-      
-      toast({
-        title: "Notification Sent",
-        description: "Assessment completion notification has been sent.",
-      });
-    } catch (error) {
-      console.error('Error sending email notification:', error);
-    }
-  };
+    // Normalize scores to 100
+    overallScore = Math.min(Math.max(overallScore, 0), 100);
+    readinessScore = Math.min(Math.max(readinessScore, 0), 100);
+    confidenceScore = Math.min(Math.max(confidenceScore, 0), 100);
+    clarityScore = Math.min(Math.max(clarityScore, 0), 100);
 
-  const handleNext = async () => {
-    if (currentQuestion < template.questions.length - 1) {
-      setCurrentQuestion(prev => prev + 1);
-    } else {
-      const results = calculateResults();
-      
-      if (leadData) {
-        await sendToMakeWebhook(leadData, results);
-        await sendEmailNotification(leadData, results);
-      }
-      
-      navigate('/results', { 
-        state: { 
-          leadData, 
-          answers, 
-          results,
-          template: template.title 
-        } 
-      });
-    }
-  };
+    const insights = [
+      "Focus on clarifying your goals and objectives.",
+      "Build confidence by celebrating small wins.",
+      "Increase readiness by setting realistic timelines."
+    ];
 
-  const handlePrevious = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(prev => prev - 1);
-    }
-  };
-
-  const handleExitAssessment = () => {
-    if (isDirectAccess) {
-      // For direct access users, stay on the same assessment page
-      setCurrentStep('capture');
-      setCurrentQuestion(0);
-      setAnswers({});
-      setLeadData(null);
-      toast({
-        title: "Assessment Reset",
-        description: "Your assessment has been reset. You can start again anytime.",
-      });
-    } else {
-      // For internal users (admins), allow navigation to dashboard
-      navigate('/');
-    }
-  };
-
-  const calculateResults = (): AssessmentResults => {
-    const totalQuestions = template.questions.length;
-    const answeredQuestions = Object.keys(answers).length;
-    const completionRate = (answeredQuestions / totalQuestions) * 100;
-    
-    const categoryScores = {
-      readiness: Math.floor(Math.random() * 30) + 70,
-      confidence: Math.floor(Math.random() * 30) + 60,
-      clarity: Math.floor(Math.random() * 30) + 65
-    };
-    
-    const overallScore = Math.floor((categoryScores.readiness + categoryScores.confidence + categoryScores.clarity) / 3);
-    
     return {
       overallScore,
-      categoryScores,
-      completionRate,
-      insights: generateInsights(overallScore, categoryScores)
+      categoryScores: {
+        readiness: readinessScore,
+        confidence: confidenceScore,
+        clarity: clarityScore,
+      },
+      insights,
     };
   };
 
-  const generateInsights = (overall: number, categories: any) => {
-    const insights = [];
-    
-    if (overall >= 80) {
-      insights.push("You're in an excellent position to move forward with confidence.");
-    } else if (overall >= 60) {
-      insights.push("You have solid foundations with room for strategic improvements.");
+  const handleStart = () => {
+    if (!assessmentData) {
+      toast({
+        title: "Error",
+        description: "Assessment data not loaded. Please try again.",
+        variant: "destructive",
+      })
+      return;
+    }
+
+    // Validate lead data
+    if (!leadData.firstName || !leadData.lastName || !leadData.email || !leadData.ageRange) {
+      toast({
+        title: "Error",
+        description: "Please fill in all lead information fields.",
+        variant: "destructive",
+      })
+      return;
+    }
+
+    // Validate answers - Ensure all questions have been answered
+    const allQuestionsAnswered = assessmentData.questions.every(question => answers[question.id] !== undefined);
+    if (!allQuestionsAnswered) {
+      toast({
+        title: "Error",
+        description: "Please answer all assessment questions.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const results = calculateResults();
+    if (results) {
+      navigate('/results', { state: { leadData, answers, results, template: assessmentData.title } });
     } else {
-      insights.push("There are key areas where focused attention could unlock significant progress.");
+      toast({
+        title: "Error",
+        description: "Could not calculate results. Please try again.",
+        variant: "destructive",
+      })
     }
-    
-    if (categories.readiness > categories.confidence) {
-      insights.push("Your readiness exceeds your confidence - it's time to trust your preparation.");
-    }
-    
-    if (categories.clarity < 70) {
-      insights.push("Gaining clearer vision of your path forward could accelerate your progress.");
-    }
-    
-    return insights;
   };
 
-  if (currentStep === 'capture') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-        {/* Welcome to VoiceCard Header */}
-        <header className="bg-white/80 backdrop-blur-sm border-b">
-          <div className="container mx-auto px-4 py-6 text-center">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Welcome to VoiceCard</h1>
-            <p className="text-lg sm:text-xl text-gray-600 mb-4">Your personalized assessment journey begins here</p>
-            <p className="text-base sm:text-lg text-gray-700 max-w-4xl mx-auto leading-relaxed">
-              Experience voice-guided clarity assessments that reveal insights about your path forward. 
-              Why VoiceCard? Our voice-guided assessments provide deeper insights through human connection and personalized experiences.
-            </p>
-          </div>
-        </header>
+  return (
+    <div className="min-h-screen bg-gray-50 py-6 sm:py-8">
+      <div className="container max-w-3xl mx-auto px-4 sm:px-6">
+        {assessmentData ? (
+          <Card className="bg-white shadow-xl rounded-lg p-6 sm:p-8">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">{assessmentData.title}</h1>
+            <p className="text-gray-700 mb-6">{assessmentData.description}</p>
 
-        {/* Core Value Boxes */}
-        <section className="container mx-auto px-4 py-6 sm:py-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto mb-6 sm:mb-8">
-            <Card className="p-4 sm:p-6 text-center hover:shadow-lg transition-shadow">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">Deep Insights</h3>
-              <p className="text-sm sm:text-base text-gray-600">
-                Uncover meaningful patterns and clarity about your personal or business direction
-              </p>
-            </Card>
-
-            <Card className="p-4 sm:p-6 text-center hover:shadow-lg transition-shadow">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                <Mic className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">Voice-Guided</h3>
-              <p className="text-sm sm:text-base text-gray-600">
-                Experience a human touch with professionally crafted voice narration throughout
-              </p>
-            </Card>
-
-            <Card className="p-4 sm:p-6 text-center hover:shadow-lg transition-shadow">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">Personalized</h3>
-              <p className="text-sm sm:text-base text-gray-600">
-                Tailored experiences for individuals and business owners with relevant insights
-              </p>
-            </Card>
-          </div>
-        </section>
-
-        {/* Assessment Image - Vertical Display */}
-        {template.image && (
-          <div className="container mx-auto px-4 py-6 sm:py-8">
-            <div className="max-w-md mx-auto">
-              <img 
-                src={template.image} 
-                alt={template.title}
-                className="w-full h-64 object-cover rounded-lg shadow-lg"
-              />
-            </div>
-          </div>
-        )}
-
-        <div className="container mx-auto px-4 py-6 sm:py-8">
-          <div className="max-w-2xl mx-auto">
-            <div className="text-center mb-6 sm:mb-8">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">{template.title}</h2>
-              <p className="text-base sm:text-lg text-gray-600 mb-4 sm:mb-6">{template.description}</p>
-              <div className="flex justify-center items-center space-x-4 text-sm text-gray-500">
-                <span>{template.questions.length} questions</span>
-                <span>•</span>
-                <span>Est. {Math.ceil(template.questions.length * 0.75)} min</span>
-              </div>
-            </div>
-            <LeadCaptureForm onSubmit={handleLeadCapture} audience={template.audience} />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (currentStep === 'assessment') {
-    const question: Question = template.questions[currentQuestion];
-    
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-        {/* Header */}
-        <header className="bg-white/80 backdrop-blur-sm border-b">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <Button 
-                variant="ghost" 
-                onClick={handleExitAssessment}
-                className="flex items-center"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">
-                  {isDirectAccess ? 'Restart Assessment' : 'Exit Assessment'}
-                </span>
-                <span className="sm:hidden">
-                  {isDirectAccess ? 'Restart' : 'Exit'}
-                </span>
-              </Button>
-              
-              <div className="flex items-center space-x-2 sm:space-x-4">
-                <span className="text-xs sm:text-sm text-gray-600">
-                  <span className="hidden sm:inline">Question </span>
-                  {currentQuestion + 1} of {template.questions.length}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setVoiceEnabled(!voiceEnabled)}
-                  className="flex items-center p-2"
-                >
-                  {voiceEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
-                </Button>
-              </div>
-            </div>
-            
-            <Progress value={progress} className="mt-4" />
-          </div>
-        </header>
-
-        {/* Assessment Content */}
-        <div className="container mx-auto px-4 py-6 sm:py-8">
-          <div className="max-w-3xl mx-auto">
-            {/* Enhanced Voice Player */}
-            {voiceEnabled && (
-              <div className="mb-6 sm:mb-8">
-                <div className="bg-gradient-to-r from-blue-100 to-purple-100 border-2 border-blue-300 rounded-xl p-4 sm:p-6 shadow-lg">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center mb-4">
-                    <div className="bg-blue-600 p-2 sm:p-3 rounded-full mb-3 sm:mb-0 sm:mr-4">
-                      <Mic className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                    </div>
-                    <div className="text-center sm:text-left">
-                      <h3 className="text-lg sm:text-xl font-bold text-blue-900">🎧 Voice Guide Available</h3>
-                      <p className="text-sm sm:text-base text-blue-700 font-medium">Press play to hear this question read aloud!</p>
-                    </div>
-                  </div>
-                  <VoicePlayer 
-                    text={question.voiceScript || `Question ${currentQuestion + 1}: ${question.question}`}
-                    autoPlay={false}
-                    className="bg-white/80"
+            {/* Lead Information Form */}
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Information</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    type="text"
+                    id="firstName"
+                    placeholder="Enter your first name"
+                    className="mt-1"
+                    value={leadData.firstName}
+                    onChange={(e) => handleLeadDataChange(e, 'firstName')}
                   />
                 </div>
+                <div>
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    type="text"
+                    id="lastName"
+                    placeholder="Enter your last name"
+                    className="mt-1"
+                    value={leadData.lastName}
+                    onChange={(e) => handleLeadDataChange(e, 'lastName')}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    type="email"
+                    id="email"
+                    placeholder="Enter your email"
+                    className="mt-1"
+                    value={leadData.email}
+                    onChange={(e) => handleLeadDataChange(e, 'email')}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="phone">Phone (Optional)</Label>
+                  <Input
+                    type="tel"
+                    id="phone"
+                    placeholder="Enter your phone number"
+                    className="mt-1"
+                    value={leadData.phone || ''}
+                    onChange={(e) => handleLeadDataChange(e, 'phone')}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="ageRange">Age Range</Label>
+                  <Select value={leadData.ageRange} onValueChange={(value) => handleLeadDataChange({ target: { value } } as any, 'ageRange')}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select age range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="18-24">18-24</SelectItem>
+                      <SelectItem value="25-34">25-34</SelectItem>
+                      <SelectItem value="35-44">35-44</SelectItem>
+                      <SelectItem value="45-54">45-54</SelectItem>
+                      <SelectItem value="55+">55+</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="source">How did you hear about us?</Label>
+                  <Input
+                    type="text"
+                    id="source"
+                    placeholder="Enter source"
+                    className="mt-1"
+                    value={leadData.source || ''}
+                    onChange={(e) => handleLeadDataChange(e, 'source')}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="audience">Intended Audience</Label>
+                  <Select value={leadData.audience} onValueChange={(value) => handleLeadDataChange({ target: { value } } as any, 'audience')}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select audience" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="individual">Individual</SelectItem>
+                      <SelectItem value="business">Business</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            )}
-            
-            {/* Question Card */}
-            <QuestionCard
-              question={question}
-              answer={answers[question.id]}
-              onAnswer={(answer) => handleAnswer(question.id, answer)}
-            />
-            
-            {/* Navigation */}
-            <div className="flex flex-col sm:flex-row justify-between items-center mt-6 sm:mt-8 space-y-4 sm:space-y-0">
-              <Button
-                variant="outline"
-                onClick={handlePrevious}
-                disabled={currentQuestion === 0}
-                className="flex items-center w-full sm:w-auto"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Previous
-              </Button>
-              
-              <Button
-                onClick={handleNext}
-                disabled={!answers[question.id]}
-                className="flex items-center bg-gradient-to-r from-blue-600 to-purple-600 w-full sm:w-auto"
-              >
-                <span className="text-sm sm:text-base">
-                  {currentQuestion === template.questions.length - 1 ? 'Complete Assessment' : 'Next Question'}
-                </span>
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
             </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
-  return null;
+            {/* Assessment Questions */}
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Assessment Questions</h2>
+              {assessmentData.questions.map(question => (
+                <div key={question.id} className="mb-6">
+                  <Label htmlFor={`question-${question.id}`} className="block text-gray-700 text-sm font-bold mb-2">{question.text}</Label>
+                  {question.type === 'radio' && question.options && (
+                    <RadioGroup onValueChange={(value) => handleRadioChange(value, question.id)} className="flex flex-col space-y-2">
+                      {question.options.map(option => (
+                        <div key={option} className="flex items-center space-x-2">
+                          <RadioGroupItem value={option} id={`question-${question.id}-${option}`} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
+                          <Label htmlFor={`question-${question.id}-${option}`} className="text-gray-700">{option}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  )}
+                  {question.type === 'text' && (
+                    <Input
+                      type="text"
+                      id={`question-${question.id}`}
+                      className="mt-1"
+                      placeholder="Your answer"
+                      value={answers[question.id] || ''}
+                      onChange={(e) => handleInputChange(e, question.id)}
+                    />
+                  )}
+                  {question.type === 'textarea' && (
+                    <Textarea
+                      id={`question-${question.id}`}
+                      className="mt-1"
+                      placeholder="Your answer"
+                      rows={4}
+                      value={answers[question.id] || ''}
+                      onChange={(e) => handleInputChange(e, question.id)}
+                    />
+                  )}
+                  {question.type === 'select' && question.options && (
+                    <Select onValueChange={(value) => handleInputChange({ target: { value } } as any, question.id)}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select an option" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {question.options.map(option => (
+                          <SelectItem key={option} value={option}>{option}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Begin Assessment Button */}
+            
+                    <Button 
+                      onClick={handleStart}
+                      size="lg"
+                      className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-4 text-base sm:text-lg font-semibold shadow-lg transform hover:scale-105 transition-all duration-200"
+                    >
+                      <span className="whitespace-nowrap">Begin My VoiceCard Assessment</span>
+                    </Button>
+          </Card>
+        ) : (
+          <Card className="bg-white shadow-xl rounded-lg p-6">
+            <p className="text-gray-700">Loading assessment...</p>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default Assessment;

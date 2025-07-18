@@ -10,6 +10,7 @@ import { LeadsList } from '@/components/admin/LeadsList';
 import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
 import { AssessmentManager } from '@/components/admin/AssessmentManager';
 import ContentManager from '@/components/admin/ContentManager';
+import { leadStorageService } from '@/services/leadStorage';
 
 const Admin = () => {
   const [leads, setLeads] = useState<any[]>([]);
@@ -17,59 +18,39 @@ const Admin = () => {
   const [filterAudience, setFilterAudience] = useState('all');
   const [filterScore, setFilterScore] = useState('all');
 
-  // Mock data - in production this would come from your backend
+  // Load real lead data from localStorage
   useEffect(() => {
-    const mockLeads = [
-      {
-        id: 1,
-        firstName: 'Sarah',
-        lastName: 'Johnson',
-        email: 'sarah.j@email.com',
-        phone: '(555) 123-4567',
-        ageRange: '35-44',
-        audience: 'business',
-        assessmentTitle: 'Marketing Readiness Flow',
-        overallScore: 85,
-        categoryScores: { readiness: 90, confidence: 80, clarity: 85 },
-        completionDate: '2024-01-15',
-        source: 'Facebook',
-        completionRate: 100,
-        tags: ['high-quality', 'ready-to-start']
-      },
-      {
-        id: 2,
-        firstName: 'Michael',
-        lastName: 'Chen',
-        email: 'mchen@business.com',
-        phone: '(555) 987-6543',
-        ageRange: '25-34',
-        audience: 'individual',
-        assessmentTitle: 'Career Clarity Flow',
-        overallScore: 72,
-        categoryScores: { readiness: 75, confidence: 65, clarity: 78 },
-        completionDate: '2024-01-14',
-        source: 'Website',
-        completionRate: 95,
-        tags: ['potential']
-      },
-      {
-        id: 3,
-        firstName: 'Emma',
-        lastName: 'Rodriguez',
-        email: 'emma@startup.co',
-        phone: '',
-        ageRange: '45-54',
-        audience: 'business',
-        assessmentTitle: 'Growth Strategy Flow',
-        overallScore: 91,
-        categoryScores: { readiness: 95, confidence: 88, clarity: 90 },
-        completionDate: '2024-01-13',
-        source: 'Instagram',
-        completionRate: 100,
-        tags: ['high-quality', 'decision-maker']
-      }
-    ];
-    setLeads(mockLeads);
+    const loadLeads = () => {
+      const storedLeads = leadStorageService.getLeads();
+      console.log('Loading leads from storage:', storedLeads);
+      
+      // Transform stored leads to match the expected format
+      const transformedLeads = storedLeads.map(lead => ({
+        id: parseInt(lead.id),
+        firstName: lead.leadData.firstName,
+        lastName: lead.leadData.lastName,
+        email: lead.leadData.email,
+        phone: lead.leadData.phone,
+        ageRange: lead.leadData.ageRange,
+        audience: lead.leadData.audience,
+        assessmentTitle: lead.assessmentTitle,
+        overallScore: lead.overallScore,
+        categoryScores: lead.categoryScores,
+        completionDate: lead.completedAt.split('T')[0], // Format date
+        source: lead.source,
+        completionRate: lead.completionRate,
+        tags: ['completed'] // Add default tags
+      }));
+
+      setLeads(transformedLeads);
+    };
+
+    loadLeads();
+
+    // Refresh leads every 10 seconds to pick up new completions
+    const interval = setInterval(loadLeads, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleViewLead = (leadId: number) => {
@@ -146,8 +127,15 @@ const Admin = () => {
       {/* Header */}
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-gray-900">VoiceCard Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">Lead intelligence and assessment management</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">VoiceCard Admin Dashboard</h1>
+              <p className="text-gray-600 mt-2">Lead intelligence and assessment management</p>
+            </div>
+            <Button onClick={() => leadStorageService.clearLeads()} variant="outline" size="sm">
+              Clear Test Data
+            </Button>
+          </div>
         </div>
       </header>
 
