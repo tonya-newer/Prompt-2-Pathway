@@ -24,6 +24,9 @@ export interface LeadData {
   phone?: string;
   ageRange: string;
   source?: string;
+  audience?: string;
+  agreedToTerms?: boolean;
+  submissionDate?: string;
 }
 
 export interface CategoryScores {

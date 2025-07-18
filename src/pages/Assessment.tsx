@@ -8,29 +8,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { AssessmentTemplate } from '@/types/assessment';
-
-interface Question {
-  id: number;
-  text: string;
-  type: 'radio' | 'text' | 'textarea' | 'select';
-  options?: string[];
-}
+import { AssessmentTemplate, Question, LeadData } from '@/types/assessment';
 
 interface AssessmentData {
   title: string;
   description: string;
   questions: Question[];
-}
-
-interface LeadData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  ageRange: string;
-  source?: string;
-  audience?: string;
 }
 
 const Assessment = () => {
@@ -62,7 +45,7 @@ const Assessment = () => {
           description: data.description,
           questions: data.questions.map(q => ({
             id: q.id,
-            text: q.text,
+            question: q.question,
             type: q.type,
             options: q.options
           }))
@@ -195,6 +178,50 @@ const Assessment = () => {
     }
   };
 
+  const renderQuestionInput = (question: Question) => {
+    switch (question.type) {
+      case 'yes-no':
+        return (
+          <RadioGroup onValueChange={(value) => handleRadioChange(value, question.id)} className="flex flex-row space-x-6">
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="yes" id={`question-${question.id}-yes`} />
+              <Label htmlFor={`question-${question.id}-yes`}>Yes</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="no" id={`question-${question.id}-no`} />
+              <Label htmlFor={`question-${question.id}-no`}>No</Label>
+            </div>
+          </RadioGroup>
+        );
+      case 'multiple-choice':
+      case 'this-that':
+      case 'rating':
+      case 'desires':
+      case 'pain-avoidance':
+        return (
+          <RadioGroup onValueChange={(value) => handleRadioChange(value, question.id)} className="flex flex-col space-y-2">
+            {question.options?.map((option, index) => (
+              <div key={index} className="flex items-center space-x-2">
+                <RadioGroupItem value={option} id={`question-${question.id}-${index}`} />
+                <Label htmlFor={`question-${question.id}-${index}`} className="text-gray-700">{option}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+        );
+      default:
+        return (
+          <Input
+            type="text"
+            id={`question-${question.id}`}
+            className="mt-1"
+            placeholder="Your answer"
+            value={answers[question.id] || ''}
+            onChange={(e) => handleInputChange(e, question.id)}
+          />
+        );
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-6 sm:py-8">
       <div className="container max-w-3xl mx-auto px-4 sm:px-6">
@@ -279,7 +306,7 @@ const Assessment = () => {
                 </div>
                 <div>
                   <Label htmlFor="audience">Intended Audience</Label>
-                  <Select value={leadData.audience} onValueChange={(value) => handleLeadDataChange({ target: { value } } as any, 'audience')}>
+                  <Select value={leadData.audience || ''} onValueChange={(value) => handleLeadDataChange({ target: { value } } as any, 'audience')}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select audience" />
                     </SelectTrigger>
@@ -297,62 +324,20 @@ const Assessment = () => {
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Assessment Questions</h2>
               {assessmentData.questions.map(question => (
                 <div key={question.id} className="mb-6">
-                  <Label htmlFor={`question-${question.id}`} className="block text-gray-700 text-sm font-bold mb-2">{question.text}</Label>
-                  {question.type === 'radio' && question.options && (
-                    <RadioGroup onValueChange={(value) => handleRadioChange(value, question.id)} className="flex flex-col space-y-2">
-                      {question.options.map(option => (
-                        <div key={option} className="flex items-center space-x-2">
-                          <RadioGroupItem value={option} id={`question-${question.id}-${option}`} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
-                          <Label htmlFor={`question-${question.id}-${option}`} className="text-gray-700">{option}</Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  )}
-                  {question.type === 'text' && (
-                    <Input
-                      type="text"
-                      id={`question-${question.id}`}
-                      className="mt-1"
-                      placeholder="Your answer"
-                      value={answers[question.id] || ''}
-                      onChange={(e) => handleInputChange(e, question.id)}
-                    />
-                  )}
-                  {question.type === 'textarea' && (
-                    <Textarea
-                      id={`question-${question.id}`}
-                      className="mt-1"
-                      placeholder="Your answer"
-                      rows={4}
-                      value={answers[question.id] || ''}
-                      onChange={(e) => handleInputChange(e, question.id)}
-                    />
-                  )}
-                  {question.type === 'select' && question.options && (
-                    <Select onValueChange={(value) => handleInputChange({ target: { value } } as any, question.id)}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select an option" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {question.options.map(option => (
-                          <SelectItem key={option} value={option}>{option}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
+                  <Label htmlFor={`question-${question.id}`} className="block text-gray-700 text-sm font-bold mb-2">{question.question}</Label>
+                  {renderQuestionInput(question)}
                 </div>
               ))}
             </div>
 
             {/* Begin Assessment Button */}
-            
-                    <Button 
-                      onClick={handleStart}
-                      size="lg"
-                      className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-4 text-base sm:text-lg font-semibold shadow-lg transform hover:scale-105 transition-all duration-200"
-                    >
-                      <span className="whitespace-nowrap">Begin My VoiceCard Assessment</span>
-                    </Button>
+            <Button 
+              onClick={handleStart}
+              size="lg"
+              className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-4 text-sm sm:text-lg font-semibold shadow-lg transform hover:scale-105 transition-all duration-200"
+            >
+              <span className="text-center leading-tight">Begin My VoiceCard Assessment</span>
+            </Button>
           </Card>
         ) : (
           <Card className="bg-white shadow-xl rounded-lg p-6">
