@@ -192,9 +192,43 @@ const Assessment = () => {
 
   const renderQuestionInput = (question: Question) => {
     switch (question.type) {
-      case 'radio':
+      case 'yes-no':
         return (
-          <RadioGroup onValueChange={(value) => handleRadioChange(value, question.id)} className="flex flex-col space-y-2">
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <Button
+              variant={answers[question.id] === 'yes' ? 'default' : 'outline'}
+              onClick={() => handleRadioChange('yes', question.id)}
+              className="h-12 text-base"
+            >
+              Yes
+            </Button>
+            <Button
+              variant={answers[question.id] === 'no' ? 'default' : 'outline'}
+              onClick={() => handleRadioChange('no', question.id)}
+              className="h-12 text-base"
+            >
+              No
+            </Button>
+          </div>
+        );
+      case 'this-that':
+        return (
+          <div className="grid grid-cols-1 gap-3 mt-4">
+            {question.options?.map((option, index) => (
+              <Button
+                key={index}
+                variant={answers[question.id] === option ? 'default' : 'outline'}
+                onClick={() => handleRadioChange(option, question.id)}
+                className="h-auto p-4 text-left whitespace-normal justify-start"
+              >
+                {option}
+              </Button>
+            ))}
+          </div>
+        );
+      case 'multiple-choice':
+        return (
+          <RadioGroup onValueChange={(value) => handleRadioChange(value, question.id)} className="flex flex-col space-y-2 mt-4">
             {question.options?.map((option, index) => (
               <div key={index} className="flex items-center space-x-2">
                 <RadioGroupItem value={option} id={`question-${question.id}-${index}`} />
@@ -203,36 +237,61 @@ const Assessment = () => {
             ))}
           </RadioGroup>
         );
-      case 'select':
+      case 'rating':
         return (
-          <Select value={answers[question.id] || ''} onValueChange={(value) => handleRadioChange(value, question.id)}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select an option" />
-            </SelectTrigger>
-            <SelectContent>
-              {question.options?.map((option, index) => (
-                <SelectItem key={index} value={option}>{option}</SelectItem>
+          <div className="mt-4">
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-sm text-gray-500">1 - Strongly Disagree</span>
+              <span className="text-sm text-gray-500">10 - Strongly Agree</span>
+            </div>
+            <div className="flex justify-center space-x-2 flex-wrap">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
+                <Button
+                  key={rating}
+                  variant={answers[question.id] === rating ? 'default' : 'outline'}
+                  onClick={() => handleRadioChange(rating, question.id)}
+                  className="w-12 h-12 p-0 mb-2"
+                >
+                  {rating}
+                </Button>
               ))}
-            </SelectContent>
-          </Select>
+            </div>
+          </div>
         );
-      case 'textarea':
+      case 'desires':
+      case 'pain-avoidance':
         return (
-          <textarea
-            id={`question-${question.id}`}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            rows={4}
-            placeholder="Your answer"
-            value={answers[question.id] || ''}
-            onChange={(e) => handleInputChange(e, question.id)}
-          />
+          <div className="mt-4 space-y-3">
+            <p className="text-sm text-gray-600 mb-4">Select all that apply:</p>
+            {question.options?.map((option, index) => (
+              <div key={index} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50">
+                <input
+                  type="checkbox"
+                  id={`question-${question.id}-${index}`}
+                  checked={Array.isArray(answers[question.id]) && answers[question.id].includes(option)}
+                  onChange={(e) => {
+                    const currentAnswers = answers[question.id] || [];
+                    if (e.target.checked) {
+                      handleRadioChange([...currentAnswers, option], question.id);
+                    } else {
+                      handleRadioChange(currentAnswers.filter((a: string) => a !== option), question.id);
+                    }
+                  }}
+                  className="mt-1"
+                />
+                <Label htmlFor={`question-${question.id}-${index}`} className="text-base cursor-pointer flex-1">
+                  {option}
+                </Label>
+              </div>
+            ))}
+          </div>
         );
       default:
         return (
           <Input
             type="text"
             id={`question-${question.id}`}
-            className="mt-1"
+            className="mt-4"
             placeholder="Your answer"
             value={answers[question.id] || ''}
             onChange={(e) => handleInputChange(e, question.id)}
@@ -355,7 +414,7 @@ const Assessment = () => {
               size="lg"
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-4 text-base sm:text-lg font-semibold shadow-lg transform hover:scale-105 transition-all duration-200"
             >
-              <span className="text-center leading-tight whitespace-normal sm:whitespace-nowrap">
+              <span className="text-center leading-tight">
                 Begin My VoiceCard Assessment
               </span>
             </Button>
