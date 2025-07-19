@@ -9,14 +9,18 @@ import { useToast } from "@/hooks/use-toast";
 import { AssessmentManager } from '@/components/admin/AssessmentManager';
 import { LeadsList } from '@/components/admin/LeadsList';
 import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
-import { ContentManager } from '@/components/admin/ContentManager';
+import ContentManager from '@/components/admin/ContentManager';
 import { Settings, Users, BarChart3, FileText, Key } from 'lucide-react';
+import { getLeads } from '@/services/leadStorage';
 
 const Admin = () => {
   const [apiKey, setApiKey] = useState(() => {
     return localStorage.getItem('elevenlabs-api-key') || '';
   });
   const { toast } = useToast();
+
+  // Get leads data for analytics
+  const leads = getLeads();
 
   const handleSaveApiKey = () => {
     if (apiKey.trim()) {
@@ -71,7 +75,7 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="analytics">
-            <AnalyticsDashboard />
+            <AnalyticsDashboard leads={leads} />
           </TabsContent>
 
           <TabsContent value="settings">
