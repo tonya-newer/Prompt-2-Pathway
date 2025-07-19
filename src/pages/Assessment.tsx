@@ -11,7 +11,7 @@ import { AssessmentTemplate, Question, LeadData } from '@/types/assessment';
 import { assessmentTemplates } from '@/data/assessmentTemplates';
 import { VoicePlayer } from '@/components/VoicePlayer';
 import { QuestionCard } from '@/components/QuestionCard';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Heart } from 'lucide-react';
 
 interface AssessmentData {
   title: string;
@@ -206,15 +206,24 @@ const Assessment = () => {
     return currentQuestion.voiceScript || currentQuestion.question;
   };
 
+  const getWelcomeVoiceScript = () => {
+    if (!assessmentData) return "";
+    return `Welcome to your ${assessmentData.title}! I'm excited to guide you through this personalized experience. This assessment has been designed specifically to help you gain valuable insights about your unique situation. Before we begin with the questions, I'll need to gather some basic information about you. This helps me personalize your experience and ensure you get the most relevant insights. Please take your time filling out the form below, and when you're ready, we'll begin your guided assessment journey together.`;
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-6 sm:py-8">
-      <div className="container max-w-4xl mx-auto px-4 sm:px-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+      <div className="container max-w-4xl mx-auto px-4 py-6 sm:py-8">
         {assessmentData ? (
           <>
             {/* Header with Progress */}
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{assessmentData.title}</h1>
-              <p className="text-gray-600 mb-4">{assessmentData.description}</p>
+            <div className="text-center mb-6 sm:mb-8">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                {assessmentData.title}
+              </h1>
+              <p className="text-base sm:text-lg text-gray-600 mb-6 max-w-2xl mx-auto leading-relaxed">
+                {assessmentData.description}
+              </p>
               
               {currentQuestionIndex >= 0 && (
                 <div className="max-w-md mx-auto">
@@ -222,9 +231,9 @@ const Assessment = () => {
                     <span>Question {currentQuestionIndex + 1} of {assessmentData.questions.length}</span>
                     <span>{Math.round(getProgressPercentage())}% Complete</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 rounded-full h-3">
                     <div 
-                      className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-300"
+                      className="bg-gradient-to-r from-purple-600 to-blue-600 h-3 rounded-full transition-all duration-500 shadow-lg"
                       style={{ width: `${getProgressPercentage()}%` }}
                     ></div>
                   </div>
@@ -232,109 +241,150 @@ const Assessment = () => {
               )}
             </div>
 
-            {/* Lead Information Form */}
+            {/* Enhanced Lead Information Form */}
             {currentQuestionIndex === -1 && (
-              <Card className="bg-white shadow-xl rounded-lg p-8 mb-8">
-                <div className="text-center mb-8">
-                  <h2 className="text-2xl font-semibold text-gray-900 mb-4">Welcome to Your VoiceCard Assessment</h2>
-                  <p className="text-gray-600">Let's start by getting to know you better. This information helps us personalize your experience.</p>
+              <div className="space-y-6 sm:space-y-8">
+                {/* Welcome Voice Guide */}
+                <div className="mb-6 sm:mb-8">
+                  <VoicePlayer 
+                    text={getWelcomeVoiceScript()}
+                    autoPlay={false}
+                    className="shadow-2xl border-4 border-purple-200"
+                  />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <Label htmlFor="firstName" className="text-base font-medium">First Name *</Label>
-                    <Input
-                      type="text"
-                      id="firstName"
-                      placeholder="Enter your first name"
-                      className="mt-2 h-12 text-base"
-                      value={leadData.firstName}
-                      onChange={(e) => handleLeadDataChange(e, 'firstName')}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="lastName" className="text-base font-medium">Last Name *</Label>
-                    <Input
-                      type="text"
-                      id="lastName"
-                      placeholder="Enter your last name"
-                      className="mt-2 h-12 text-base"
-                      value={leadData.lastName}
-                      onChange={(e) => handleLeadDataChange(e, 'lastName')}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email" className="text-base font-medium">Email *</Label>
-                    <Input
-                      type="email"
-                      id="email"
-                      placeholder="Enter your email"
-                      className="mt-2 h-12 text-base"
-                      value={leadData.email}
-                      onChange={(e) => handleLeadDataChange(e, 'email')}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="phone" className="text-base font-medium">Phone (Optional)</Label>
-                    <Input
-                      type="tel"
-                      id="phone"
-                      placeholder="Enter your phone number"
-                      className="mt-2 h-12 text-base"
-                      value={leadData.phone || ''}
-                      onChange={(e) => handleLeadDataChange(e, 'phone')}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="ageRange" className="text-base font-medium">Age Range *</Label>
-                    <Select value={leadData.ageRange} onValueChange={(value) => handleLeadDataChange({ target: { value } } as any, 'ageRange')}>
-                      <SelectTrigger className="w-full mt-2 h-12 text-base">
-                        <SelectValue placeholder="Select age range" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="18-24">18-24</SelectItem>
-                        <SelectItem value="25-34">25-34</SelectItem>
-                        <SelectItem value="35-44">35-44</SelectItem>
-                        <SelectItem value="45-54">45-54</SelectItem>
-                        <SelectItem value="55+">55+</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="source" className="text-base font-medium">How did you hear about us?</Label>
-                    <Input
-                      type="text"
-                      id="source"
-                      placeholder="Enter source"
-                      className="mt-2 h-12 text-base"
-                      value={leadData.source || ''}
-                      onChange={(e) => handleLeadDataChange(e, 'source')}
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <Label htmlFor="audience" className="text-base font-medium">Intended Audience</Label>
-                    <Select value={leadData.audience || ''} onValueChange={(value) => handleLeadDataChange({ target: { value } } as any, 'audience')}>
-                      <SelectTrigger className="w-full mt-2 h-12 text-base">
-                        <SelectValue placeholder="Select audience" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="individual">Individual</SelectItem>
-                        <SelectItem value="business">Business</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+                {/* Enhanced Welcome Card */}
+                <Card className="bg-white/95 backdrop-blur-sm shadow-2xl rounded-2xl p-6 sm:p-8 lg:p-10 border-0 relative overflow-hidden">
+                  {/* Decorative Background Elements */}
+                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-purple-500 via-blue-500 to-indigo-500"></div>
+                  <div className="absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-br from-purple-200 to-blue-200 rounded-full opacity-50"></div>
+                  <div className="absolute -bottom-8 -left-8 w-16 h-16 bg-gradient-to-br from-indigo-200 to-purple-200 rounded-full opacity-30"></div>
+                  
+                  <div className="relative z-10">
+                    <div className="text-center mb-8">
+                      <div className="flex items-center justify-center mb-4">
+                        <div className="bg-gradient-to-r from-purple-100 to-blue-100 p-4 rounded-full">
+                          <Heart className="h-8 w-8 text-purple-600" />
+                        </div>
+                        <Sparkles className="h-6 w-6 text-blue-500 ml-2" />
+                      </div>
+                      <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 leading-tight">
+                        Welcome to Your 
+                        <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                          {" "}VoiceCard Experience
+                        </span>
+                      </h2>
+                      <p className="text-base sm:text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto">
+                        Let's start by getting to know you better. This information helps us create a completely personalized assessment experience just for you.
+                      </p>
+                    </div>
 
-                <div className="mt-8 text-center">
-                  <Button 
-                    onClick={startAssessment}
-                    size="lg"
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 text-lg font-semibold shadow-lg transform hover:scale-105 transition-all duration-200"
-                  >
-                    Start My VoiceCard Assessment
-                  </Button>
-                </div>
-              </Card>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-8">
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName" className="text-base font-semibold text-gray-700 flex items-center">
+                          First Name <span className="text-red-500 ml-1">*</span>
+                        </Label>
+                        <Input
+                          type="text"
+                          id="firstName"
+                          placeholder="Enter your first name"
+                          className="h-12 text-base border-2 border-gray-200 focus:border-purple-400 rounded-xl transition-all duration-200"
+                          value={leadData.firstName}
+                          onChange={(e) => handleLeadDataChange(e, 'firstName')}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="lastName" className="text-base font-semibold text-gray-700 flex items-center">
+                          Last Name <span className="text-red-500 ml-1">*</span>
+                        </Label>
+                        <Input
+                          type="text"
+                          id="lastName"
+                          placeholder="Enter your last name"
+                          className="h-12 text-base border-2 border-gray-200 focus:border-purple-400 rounded-xl transition-all duration-200"
+                          value={leadData.lastName}
+                          onChange={(e) => handleLeadDataChange(e, 'lastName')}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="email" className="text-base font-semibold text-gray-700 flex items-center">
+                          Email Address <span className="text-red-500 ml-1">*</span>
+                        </Label>
+                        <Input
+                          type="email"
+                          id="email"
+                          placeholder="Enter your email address"
+                          className="h-12 text-base border-2 border-gray-200 focus:border-purple-400 rounded-xl transition-all duration-200"
+                          value={leadData.email}
+                          onChange={(e) => handleLeadDataChange(e, 'email')}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="phone" className="text-base font-semibold text-gray-700">
+                          Phone Number (Optional)
+                        </Label>
+                        <Input
+                          type="tel"
+                          id="phone"
+                          placeholder="Enter your phone number"
+                          className="h-12 text-base border-2 border-gray-200 focus:border-purple-400 rounded-xl transition-all duration-200"
+                          value={leadData.phone || ''}
+                          onChange={(e) => handleLeadDataChange(e, 'phone')}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="ageRange" className="text-base font-semibold text-gray-700 flex items-center">
+                          Age Range <span className="text-red-500 ml-1">*</span>
+                        </Label>
+                        <Select value={leadData.ageRange} onValueChange={(value) => handleLeadDataChange({ target: { value } } as any, 'ageRange')}>
+                          <SelectTrigger className="h-12 text-base border-2 border-gray-200 focus:border-purple-400 rounded-xl">
+                            <SelectValue placeholder="Select your age range" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="18-24">18-24</SelectItem>
+                            <SelectItem value="25-34">25-34</SelectItem>
+                            <SelectItem value="35-44">35-44</SelectItem>
+                            <SelectItem value="45-54">45-54</SelectItem>
+                            <SelectItem value="55+">55+</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="source" className="text-base font-semibold text-gray-700">
+                          How did you hear about us?
+                        </Label>
+                        <Input
+                          type="text"
+                          id="source"
+                          placeholder="Social media, referral, search, etc."
+                          className="h-12 text-base border-2 border-gray-200 focus:border-purple-400 rounded-xl transition-all duration-200"
+                          value={leadData.source || ''}
+                          onChange={(e) => handleLeadDataChange(e, 'source')}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-10 text-center">
+                      <Button 
+                        onClick={startAssessment}
+                        size="lg"
+                        className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-4 text-lg font-bold shadow-2xl transform hover:scale-105 transition-all duration-300 rounded-xl border-0 w-full sm:w-auto"
+                      >
+                        <Sparkles className="h-5 w-5 mr-3" />
+                        Begin My VoiceCard Journey
+                      </Button>
+                      <p className="text-sm text-gray-500 mt-4">
+                        🎧 Grab your headphones for the ultimate VoiceCard experience
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              </div>
             )}
 
             {/* Question Display */}
@@ -344,7 +394,7 @@ const Assessment = () => {
                 <VoicePlayer
                   text={getCurrentVoiceScript()}
                   autoPlay={true}
-                  className="animate-fade-in"
+                  className="animate-fade-in shadow-xl"
                 />
 
                 {/* Question Card */}
@@ -361,7 +411,7 @@ const Assessment = () => {
                   <Button
                     variant="outline"
                     onClick={previousQuestion}
-                    className="flex items-center space-x-2 px-6 py-3"
+                    className="flex items-center space-x-2 px-6 py-3 border-2 border-gray-300 hover:border-purple-400 rounded-xl"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     <span>Previous</span>
@@ -369,7 +419,7 @@ const Assessment = () => {
 
                   <Button
                     onClick={nextQuestion}
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white flex items-center space-x-2 px-6 py-3"
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white flex items-center space-x-2 px-6 py-3 rounded-xl shadow-lg"
                   >
                     <span>
                       {currentQuestionIndex === assessmentData.questions.length - 1 ? 'Complete Assessment' : 'Next Question'}
@@ -381,9 +431,9 @@ const Assessment = () => {
             )}
           </>
         ) : (
-          <Card className="bg-white shadow-xl rounded-lg p-8">
+          <Card className="bg-white/95 backdrop-blur-sm shadow-2xl rounded-2xl p-8">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
               <p className="text-lg text-gray-700">Loading your VoiceCard experience...</p>
             </div>
           </Card>
