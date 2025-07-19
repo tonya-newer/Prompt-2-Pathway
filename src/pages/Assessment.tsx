@@ -11,7 +11,7 @@ import { AssessmentTemplate, Question, LeadData } from '@/types/assessment';
 import { assessmentTemplates } from '@/data/assessmentTemplates';
 import { VoicePlayer } from '@/components/VoicePlayer';
 import { QuestionCard } from '@/components/QuestionCard';
-import { ArrowLeft, ArrowRight, Sparkles, Heart } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Heart, AlertCircle } from 'lucide-react';
 
 interface AssessmentData {
   title: string;
@@ -23,7 +23,9 @@ const Assessment = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(null);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1); // Start with lead form
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1);
   const [leadData, setLeadData] = useState<LeadData>({
     firstName: '',
     lastName: '',
@@ -39,44 +41,48 @@ const Assessment = () => {
   useEffect(() => {
     const fetchAssessment = async () => {
       try {
-        console.log('Loading assessment with ID:', id);
+        setLoading(true);
+        setError(null);
+        console.log('Loading public assessment with ID:', id);
         
-        const template = assessmentTemplates.find(t => t.id === parseInt(id || '0'));
-        
-        if (!template) {
-          console.error('Assessment template not found for ID:', id);
-          toast({
-            title: "Assessment Not Found",
-            description: "The requested assessment could not be found.",
-            variant: "destructive",
-          });
-          navigate('/');
+        // Ensure ID is provided
+        if (!id) {
+          setError('Assessment ID is required');
           return;
         }
 
+        // Find the assessment template - this is public data
+        const template = assessmentTemplates.find(t => t.id === parseInt(id));
+        
+        if (!template) {
+          console.warn('Assessment template not found for ID:', id);
+          setError('Assessment not found. Please check the link and try again.');
+          return;
+        }
+
+        // Transform template data for public use
         const transformedData: AssessmentData = {
           title: template.title,
           description: template.description,
-          questions: template.questions
+          questions: template.questions || []
         };
         
-        console.log('Assessment loaded successfully:', transformedData);
+        console.log('Public assessment loaded successfully:', transformedData.title);
         setAssessmentData(transformedData);
+        
+        // Track assessment access (no personal data)
+        console.log(`Public assessment accessed: ${template.title} (ID: ${id})`);
+        
       } catch (error) {
-        console.error("Error loading assessment:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load assessment. Please try again.",
-          variant: "destructive",
-        });
-        navigate('/');
+        console.error("Error loading public assessment:", error);
+        setError('Unable to load assessment at this time. Please try refreshing the page.');
+      } finally {
+        setLoading(false);
       }
     };
 
-    if (id) {
-      fetchAssessment();
-    }
-  }, [id, navigate, toast]);
+    fetchAssessment();
+  }, [id]);
 
   const handleLeadDataChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, field: keyof LeadData) => {
     setLeadData({
@@ -132,7 +138,7 @@ const Assessment = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
     } else {
-      setCurrentQuestionIndex(-1); // Go back to lead form
+      setCurrentQuestionIndex(-1);
     }
   };
 
@@ -211,6 +217,51 @@ const Assessment = () => {
     return `Welcome to your ${assessmentData.title}! I'm excited to guide you through this personalized experience. This assessment has been designed specifically to help you gain valuable insights about your unique situation. Before we begin with the questions, I'll need to gather some basic information about you. This helps me personalize your experience and ensure you get the most relevant insights. Please take your time filling out the form below, and when you're ready, we'll begin your guided assessment journey together.`;
   };
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+        <div className="container max-w-4xl mx-auto px-4 py-6 sm:py-8">
+          <Card className="bg-white/95 backdrop-blur-sm shadow-2xl rounded-2xl p-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+              <p className="text-lg text-gray-700">Loading your VoiceCard experience...</p>
+              <p className="text-sm text-gray-500 mt-2">Please wait while we prepare your assessment</p>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state with helpful messaging
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+        <div className="container max-w-4xl mx-auto px-4 py-6 sm:py-8">
+          <Card className="bg-white/95 backdrop-blur-sm shadow-2xl rounded-2xl p-8">
+            <div className="text-center">
+              <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Assessment Unavailable</h2>
+              <p className="text-lg text-gray-700 mb-6">{error}</p>
+              <div className="space-y-4">
+                <Button 
+                  onClick={() => window.location.reload()} 
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+                >
+                  Try Again
+                </Button>
+                <p className="text-sm text-gray-500">
+                  If this problem persists, please contact support or try a different assessment link.
+                </p>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       <div className="container max-w-4xl mx-auto px-4 py-6 sm:py-8">
@@ -241,7 +292,7 @@ const Assessment = () => {
               )}
             </div>
 
-            {/* Enhanced Lead Information Form */}
+            {/* Welcome Form - Public Access */}
             {currentQuestionIndex === -1 && (
               <div className="space-y-6 sm:space-y-8">
                 {/* Welcome Voice Guide */}
@@ -430,14 +481,7 @@ const Assessment = () => {
               </div>
             )}
           </>
-        ) : (
-          <Card className="bg-white/95 backdrop-blur-sm shadow-2xl rounded-2xl p-8">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-              <p className="text-lg text-gray-700">Loading your VoiceCard experience...</p>
-            </div>
-          </Card>
-        )}
+        ) : null}
       </div>
     </div>
   );
