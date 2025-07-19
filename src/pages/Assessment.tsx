@@ -84,7 +84,7 @@ const Assessment = () => {
     });
   };
 
-  const handleRadioChange = (value: string | null, questionId: number) => {
+  const handleRadioChange = (value: any, questionId: number) => {
     setAnswers({
       ...answers,
       [questionId]: value,
