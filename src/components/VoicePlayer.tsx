@@ -19,21 +19,21 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
   // Get API key from localStorage (set in admin dashboard)
   const getApiKey = () => localStorage.getItem('elevenlabs-api-key') || '';
   
-  // Voice configuration - Apple - Quirky & Relatable (Female Voice) ONLY
-  const VOICE_ID = '9BWtsMINqrJLrRacOk9x'; // Aria - Quirky & Relatable (Apple voice)
+  // Voice configuration - ONLY Apple - Quirky & Relatable (Female Voice)
+  const VOICE_ID = '9BWtsMINqrJLrRacOk9x'; // Aria - Apple - Quirky & Relatable (Female)
   const MODEL_ID = 'eleven_multilingual_v2';
 
   const generateSpeech = async () => {
     const apiKey = getApiKey();
     
     if (!apiKey || apiKey.trim() === '') {
-      console.log('No ElevenLabs API key found, using browser speech synthesis');
+      console.log('No ElevenLabs API key found, using browser speech synthesis with female voice');
       return speakWithBrowserAPI();
     }
 
     try {
       setIsLoading(true);
-      console.log('Generating premium voice with ElevenLabs for voice:', VOICE_ID);
+      console.log('Generating premium voice with ElevenLabs - Aria (Apple - Quirky & Relatable Female):', VOICE_ID);
       
       const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
         method: 'POST',
@@ -46,9 +46,9 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
           text: text,
           model_id: MODEL_ID,
           voice_settings: {
-            stability: 0.7,
-            similarity_boost: 0.9,
-            style: 0.6,
+            stability: 0.75,
+            similarity_boost: 0.85,
+            style: 0.7,
             use_speaker_boost: true
           },
         }),
@@ -56,7 +56,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
 
       if (!response.ok) {
         if (response.status === 401) {
-          console.error('Invalid ElevenLabs API key');
+          console.error('Invalid ElevenLabs API key, falling back to browser female voice');
           return speakWithBrowserAPI();
         }
         throw new Error(`ElevenLabs API request failed: ${response.status}`);
@@ -70,7 +70,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
         await audioRef.current.play();
       }
     } catch (error) {
-      console.error('ElevenLabs error, falling back to browser speech:', error);
+      console.error('ElevenLabs error, falling back to browser female voice:', error);
       speakWithBrowserAPI();
     } finally {
       setIsLoading(false);
@@ -83,21 +83,48 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
     }
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9;
-    utterance.pitch = 1.1;
+    utterance.rate = 0.85;
+    utterance.pitch = 1.2;
     utterance.volume = isMuted ? 0 : 1;
 
     const voices = speechSynthesis.getVoices();
-    // Only use female voices to match the Apple - Quirky & Relatable requirement
-    const preferredVoice = voices.find(voice => 
+    
+    // STRICTLY enforce female voice selection - NO MALE VOICES ALLOWED
+    const femaleVoice = voices.find(voice => 
+      // Prioritize high-quality female voices
       voice.name.includes('Samantha') || 
       voice.name.includes('Karen') ||
       voice.name.includes('Victoria') ||
-      (voice.lang === 'en-US' && voice.name.toLowerCase().includes('female'))
-    ) || voices.find(voice => voice.lang === 'en-US' && !voice.name.toLowerCase().includes('male'));
+      voice.name.includes('Susan') ||
+      voice.name.includes('Allison') ||
+      voice.name.includes('Ava') ||
+      voice.name.includes('Serena') ||
+      // Generic female voice patterns
+      (voice.lang.startsWith('en') && voice.name.toLowerCase().includes('female')) ||
+      // Exclude any male-sounding names and prioritize female
+      (voice.lang.startsWith('en') && 
+       !voice.name.toLowerCase().includes('male') && 
+       !voice.name.toLowerCase().includes('daniel') &&
+       !voice.name.toLowerCase().includes('alex') &&
+       !voice.name.toLowerCase().includes('fred') &&
+       !voice.name.toLowerCase().includes('junior') &&
+       voice.name.toLowerCase().includes('us'))
+    );
     
-    if (preferredVoice) {
-      utterance.voice = preferredVoice;
+    if (femaleVoice) {
+      utterance.voice = femaleVoice;
+      console.log('Using female browser voice:', femaleVoice.name);
+    } else {
+      // Last resort: find any English voice that's not explicitly male
+      const fallbackVoice = voices.find(voice => 
+        voice.lang.startsWith('en') && 
+        !voice.name.toLowerCase().includes('male') &&
+        !voice.name.toLowerCase().includes('daniel')
+      );
+      if (fallbackVoice) {
+        utterance.voice = fallbackVoice;
+        console.log('Using fallback voice (should be female):', fallbackVoice.name);
+      }
     }
 
     utterance.onstart = () => setIsPlaying(true);
@@ -128,6 +155,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
     const newMutedState = !isMuted;
     setIsMuted(newMutedState);
     
+    // Properly handle muting for ElevenLabs audio
     if (audioRef.current) {
       audioRef.current.volume = newMutedState ? 0 : 1;
       if (newMutedState) {
@@ -136,7 +164,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
       }
     }
     
-    // Also handle browser speech synthesis
+    // Handle browser speech synthesis muting
     if (newMutedState && speechSynthesis.speaking) {
       speechSynthesis.cancel();
       setIsPlaying(false);
@@ -214,7 +242,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
               <Headphones className="h-5 w-5 text-blue-600 mr-2" />
               <Sparkles className="h-4 w-4 text-purple-600 mr-2" />
               <p className="text-base font-bold text-blue-900">
-                {getApiKey() ? 'Premium AI Voice Guide' : 'Voice Guide'}
+                {getApiKey() ? 'Premium AI Voice Guide (Apple - Quirky & Relatable)' : 'Voice Guide (Female)'}
               </p>
             </div>
             <p className="text-sm text-blue-700 leading-relaxed bg-blue-50 p-3 rounded-lg">
@@ -242,7 +270,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
         {/* Voice Guide Instructions */}
         <div className="text-center">
           <p className="text-xs text-gray-500">
-            🎧 Put on headphones for the best VoiceCard experience
+            🎧 Put on headphones for the best VoiceCard experience • Using Apple - Quirky & Relatable Female Voice
           </p>
         </div>
       </div>
