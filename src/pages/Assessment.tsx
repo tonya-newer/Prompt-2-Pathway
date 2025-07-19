@@ -5,11 +5,13 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { AssessmentTemplate, Question, LeadData } from '@/types/assessment';
 import { assessmentTemplates } from '@/data/assessmentTemplates';
+import { VoicePlayer } from '@/components/VoicePlayer';
+import { QuestionCard } from '@/components/QuestionCard';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface AssessmentData {
   title: string;
@@ -21,6 +23,7 @@ const Assessment = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1); // Start with lead form
   const [leadData, setLeadData] = useState<LeadData>({
     firstName: '',
     lastName: '',
@@ -38,7 +41,6 @@ const Assessment = () => {
       try {
         console.log('Loading assessment with ID:', id);
         
-        // Find the assessment template by ID
         const template = assessmentTemplates.find(t => t.id === parseInt(id || '0'));
         
         if (!template) {
@@ -52,7 +54,6 @@ const Assessment = () => {
           return;
         }
 
-        // Transform the assessment data to match the expected structure
         const transformedData: AssessmentData = {
           title: template.title,
           description: template.description,
@@ -77,25 +78,62 @@ const Assessment = () => {
     }
   }, [id, navigate, toast]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>, questionId: number) => {
-    setAnswers({
-      ...answers,
-      [questionId]: e.target.value,
-    });
-  };
-
-  const handleRadioChange = (value: any, questionId: number) => {
-    setAnswers({
-      ...answers,
-      [questionId]: value,
-    });
-  };
-
   const handleLeadDataChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, field: keyof LeadData) => {
     setLeadData({
       ...leadData,
       [field]: e.target.value,
     });
+  };
+
+  const handleAnswer = (questionId: number, answer: any) => {
+    setAnswers({
+      ...answers,
+      [questionId]: answer,
+    });
+  };
+
+  const validateLeadData = () => {
+    return leadData.firstName && leadData.lastName && leadData.email && leadData.ageRange;
+  };
+
+  const startAssessment = () => {
+    if (!validateLeadData()) {
+      toast({
+        title: "Required Information Missing",
+        description: "Please fill in all required fields before starting the assessment.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setCurrentQuestionIndex(0);
+  };
+
+  const nextQuestion = () => {
+    if (!assessmentData) return;
+    
+    const currentQuestion = assessmentData.questions[currentQuestionIndex];
+    if (answers[currentQuestion.id] === undefined) {
+      toast({
+        title: "Answer Required",
+        description: "Please answer the current question before proceeding.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (currentQuestionIndex < assessmentData.questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    } else {
+      completeAssessment();
+    }
+  };
+
+  const previousQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    } else {
+      setCurrentQuestionIndex(-1); // Go back to lead form
+    }
   };
 
   const calculateResults = () => {
@@ -106,12 +144,10 @@ const Assessment = () => {
     let confidenceScore = 0;
     let clarityScore = 0;
 
-    // Mock scoring logic - replace with actual scoring based on answers
     Object.keys(answers).forEach(key => {
       const questionId = parseInt(key);
       const answer = answers[questionId];
 
-      // Example: Award points based on the answer
       if (answer === 'yes' || answer === 'agree') {
         overallScore += 5;
         readinessScore += 3;
@@ -124,7 +160,6 @@ const Assessment = () => {
       }
     });
 
-    // Normalize scores to 100
     overallScore = Math.min(Math.max(overallScore, 0), 100);
     readinessScore = Math.min(Math.max(readinessScore, 0), 100);
     confidenceScore = Math.min(Math.max(confidenceScore, 0), 100);
@@ -147,283 +182,209 @@ const Assessment = () => {
     };
   };
 
-  const handleStart = () => {
-    if (!assessmentData) {
-      toast({
-        title: "Error",
-        description: "Assessment data not loaded. Please try again.",
-        variant: "destructive",
-      })
-      return;
-    }
-
-    // Validate lead data
-    if (!leadData.firstName || !leadData.lastName || !leadData.email || !leadData.ageRange) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      })
-      return;
-    }
-
-    // Validate answers - Ensure all questions have been answered
-    const allQuestionsAnswered = assessmentData.questions.every(question => answers[question.id] !== undefined);
-    if (!allQuestionsAnswered) {
-      toast({
-        title: "Error",
-        description: "Please answer all assessment questions.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const completeAssessment = () => {
     const results = calculateResults();
     if (results) {
-      navigate('/results', { state: { leadData, answers, results, template: assessmentData.title } });
+      navigate('/results', { state: { leadData, answers, results, template: assessmentData?.title } });
     } else {
       toast({
         title: "Error",
         description: "Could not calculate results. Please try again.",
         variant: "destructive",
-      })
+      });
     }
   };
 
-  const renderQuestionInput = (question: Question) => {
-    switch (question.type) {
-      case 'yes-no':
-        return (
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            <Button
-              variant={answers[question.id] === 'yes' ? 'default' : 'outline'}
-              onClick={() => handleRadioChange('yes', question.id)}
-              className="h-12 text-base"
-            >
-              Yes
-            </Button>
-            <Button
-              variant={answers[question.id] === 'no' ? 'default' : 'outline'}
-              onClick={() => handleRadioChange('no', question.id)}
-              className="h-12 text-base"
-            >
-              No
-            </Button>
-          </div>
-        );
-      case 'this-that':
-        return (
-          <div className="grid grid-cols-1 gap-3 mt-4">
-            {question.options?.map((option, index) => (
-              <Button
-                key={index}
-                variant={answers[question.id] === option ? 'default' : 'outline'}
-                onClick={() => handleRadioChange(option, question.id)}
-                className="h-auto p-4 text-left whitespace-normal justify-start"
-              >
-                {option}
-              </Button>
-            ))}
-          </div>
-        );
-      case 'multiple-choice':
-        return (
-          <RadioGroup onValueChange={(value) => handleRadioChange(value, question.id)} className="flex flex-col space-y-2 mt-4">
-            {question.options?.map((option, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <RadioGroupItem value={option} id={`question-${question.id}-${index}`} />
-                <Label htmlFor={`question-${question.id}-${index}`} className="text-gray-700">{option}</Label>
-              </div>
-            ))}
-          </RadioGroup>
-        );
-      case 'rating':
-        return (
-          <div className="mt-4">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-sm text-gray-500">1 - Strongly Disagree</span>
-              <span className="text-sm text-gray-500">10 - Strongly Agree</span>
-            </div>
-            <div className="flex justify-center space-x-2 flex-wrap">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
-                <Button
-                  key={rating}
-                  variant={answers[question.id] === rating ? 'default' : 'outline'}
-                  onClick={() => handleRadioChange(rating, question.id)}
-                  className="w-12 h-12 p-0 mb-2"
-                >
-                  {rating}
-                </Button>
-              ))}
-            </div>
-          </div>
-        );
-      case 'desires':
-      case 'pain-avoidance':
-        return (
-          <div className="mt-4 space-y-3">
-            <p className="text-sm text-gray-600 mb-4">Select all that apply:</p>
-            {question.options?.map((option, index) => (
-              <div key={index} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50">
-                <input
-                  type="checkbox"
-                  id={`question-${question.id}-${index}`}
-                  checked={Array.isArray(answers[question.id]) && answers[question.id].includes(option)}
-                  onChange={(e) => {
-                    const currentAnswers = answers[question.id] || [];
-                    if (e.target.checked) {
-                      handleRadioChange([...currentAnswers, option], question.id);
-                    } else {
-                      handleRadioChange(currentAnswers.filter((a: string) => a !== option), question.id);
-                    }
-                  }}
-                  className="mt-1"
-                />
-                <Label htmlFor={`question-${question.id}-${index}`} className="text-base cursor-pointer flex-1">
-                  {option}
-                </Label>
-              </div>
-            ))}
-          </div>
-        );
-      default:
-        return (
-          <Input
-            type="text"
-            id={`question-${question.id}`}
-            className="mt-4"
-            placeholder="Your answer"
-            value={answers[question.id] || ''}
-            onChange={(e) => handleInputChange(e, question.id)}
-          />
-        );
-    }
+  const getProgressPercentage = () => {
+    if (!assessmentData || currentQuestionIndex === -1) return 0;
+    return ((currentQuestionIndex + 1) / assessmentData.questions.length) * 100;
+  };
+
+  const getCurrentVoiceScript = () => {
+    if (!assessmentData || currentQuestionIndex === -1) return "";
+    const currentQuestion = assessmentData.questions[currentQuestionIndex];
+    return currentQuestion.voiceScript || currentQuestion.question;
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6 sm:py-8">
-      <div className="container max-w-3xl mx-auto px-4 sm:px-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-6 sm:py-8">
+      <div className="container max-w-4xl mx-auto px-4 sm:px-6">
         {assessmentData ? (
-          <Card className="bg-white shadow-xl rounded-lg p-6 sm:p-8">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">{assessmentData.title}</h1>
-            <p className="text-gray-700 mb-6">{assessmentData.description}</p>
+          <>
+            {/* Header with Progress */}
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{assessmentData.title}</h1>
+              <p className="text-gray-600 mb-4">{assessmentData.description}</p>
+              
+              {currentQuestionIndex >= 0 && (
+                <div className="max-w-md mx-auto">
+                  <div className="flex justify-between text-sm text-gray-500 mb-2">
+                    <span>Question {currentQuestionIndex + 1} of {assessmentData.questions.length}</span>
+                    <span>{Math.round(getProgressPercentage())}% Complete</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${getProgressPercentage()}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Lead Information Form */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Information</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="firstName">First Name *</Label>
-                  <Input
-                    type="text"
-                    id="firstName"
-                    placeholder="Enter your first name"
-                    className="mt-1"
-                    value={leadData.firstName}
-                    onChange={(e) => handleLeadDataChange(e, 'firstName')}
+            {currentQuestionIndex === -1 && (
+              <Card className="bg-white shadow-xl rounded-lg p-8 mb-8">
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl font-semibold text-gray-900 mb-4">Welcome to Your VoiceCard Assessment</h2>
+                  <p className="text-gray-600">Let's start by getting to know you better. This information helps us personalize your experience.</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="firstName" className="text-base font-medium">First Name *</Label>
+                    <Input
+                      type="text"
+                      id="firstName"
+                      placeholder="Enter your first name"
+                      className="mt-2 h-12 text-base"
+                      value={leadData.firstName}
+                      onChange={(e) => handleLeadDataChange(e, 'firstName')}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lastName" className="text-base font-medium">Last Name *</Label>
+                    <Input
+                      type="text"
+                      id="lastName"
+                      placeholder="Enter your last name"
+                      className="mt-2 h-12 text-base"
+                      value={leadData.lastName}
+                      onChange={(e) => handleLeadDataChange(e, 'lastName')}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email" className="text-base font-medium">Email *</Label>
+                    <Input
+                      type="email"
+                      id="email"
+                      placeholder="Enter your email"
+                      className="mt-2 h-12 text-base"
+                      value={leadData.email}
+                      onChange={(e) => handleLeadDataChange(e, 'email')}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone" className="text-base font-medium">Phone (Optional)</Label>
+                    <Input
+                      type="tel"
+                      id="phone"
+                      placeholder="Enter your phone number"
+                      className="mt-2 h-12 text-base"
+                      value={leadData.phone || ''}
+                      onChange={(e) => handleLeadDataChange(e, 'phone')}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="ageRange" className="text-base font-medium">Age Range *</Label>
+                    <Select value={leadData.ageRange} onValueChange={(value) => handleLeadDataChange({ target: { value } } as any, 'ageRange')}>
+                      <SelectTrigger className="w-full mt-2 h-12 text-base">
+                        <SelectValue placeholder="Select age range" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="18-24">18-24</SelectItem>
+                        <SelectItem value="25-34">25-34</SelectItem>
+                        <SelectItem value="35-44">35-44</SelectItem>
+                        <SelectItem value="45-54">45-54</SelectItem>
+                        <SelectItem value="55+">55+</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="source" className="text-base font-medium">How did you hear about us?</Label>
+                    <Input
+                      type="text"
+                      id="source"
+                      placeholder="Enter source"
+                      className="mt-2 h-12 text-base"
+                      value={leadData.source || ''}
+                      onChange={(e) => handleLeadDataChange(e, 'source')}
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="audience" className="text-base font-medium">Intended Audience</Label>
+                    <Select value={leadData.audience || ''} onValueChange={(value) => handleLeadDataChange({ target: { value } } as any, 'audience')}>
+                      <SelectTrigger className="w-full mt-2 h-12 text-base">
+                        <SelectValue placeholder="Select audience" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="individual">Individual</SelectItem>
+                        <SelectItem value="business">Business</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="mt-8 text-center">
+                  <Button 
+                    onClick={startAssessment}
+                    size="lg"
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 text-lg font-semibold shadow-lg transform hover:scale-105 transition-all duration-200"
+                  >
+                    Start My VoiceCard Assessment
+                  </Button>
+                </div>
+              </Card>
+            )}
+
+            {/* Question Display */}
+            {currentQuestionIndex >= 0 && assessmentData.questions[currentQuestionIndex] && (
+              <div className="space-y-6">
+                {/* Voice Guide */}
+                <VoicePlayer
+                  text={getCurrentVoiceScript()}
+                  autoPlay={true}
+                  className="animate-fade-in"
+                />
+
+                {/* Question Card */}
+                <div className="animate-scale-in">
+                  <QuestionCard
+                    question={assessmentData.questions[currentQuestionIndex]}
+                    answer={answers[assessmentData.questions[currentQuestionIndex].id]}
+                    onAnswer={(answer) => handleAnswer(assessmentData.questions[currentQuestionIndex].id, answer)}
                   />
                 </div>
-                <div>
-                  <Label htmlFor="lastName">Last Name *</Label>
-                  <Input
-                    type="text"
-                    id="lastName"
-                    placeholder="Enter your last name"
-                    className="mt-1"
-                    value={leadData.lastName}
-                    onChange={(e) => handleLeadDataChange(e, 'lastName')}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    type="email"
-                    id="email"
-                    placeholder="Enter your email"
-                    className="mt-1"
-                    value={leadData.email}
-                    onChange={(e) => handleLeadDataChange(e, 'email')}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Phone (Optional)</Label>
-                  <Input
-                    type="tel"
-                    id="phone"
-                    placeholder="Enter your phone number"
-                    className="mt-1"
-                    value={leadData.phone || ''}
-                    onChange={(e) => handleLeadDataChange(e, 'phone')}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="ageRange">Age Range *</Label>
-                  <Select value={leadData.ageRange} onValueChange={(value) => handleLeadDataChange({ target: { value } } as any, 'ageRange')}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select age range" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="18-24">18-24</SelectItem>
-                      <SelectItem value="25-34">25-34</SelectItem>
-                      <SelectItem value="35-44">35-44</SelectItem>
-                      <SelectItem value="45-54">45-54</SelectItem>
-                      <SelectItem value="55+">55+</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="source">How did you hear about us?</Label>
-                  <Input
-                    type="text"
-                    id="source"
-                    placeholder="Enter source"
-                    className="mt-1"
-                    value={leadData.source || ''}
-                    onChange={(e) => handleLeadDataChange(e, 'source')}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="audience">Intended Audience</Label>
-                  <Select value={leadData.audience || ''} onValueChange={(value) => handleLeadDataChange({ target: { value } } as any, 'audience')}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select audience" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="individual">Individual</SelectItem>
-                      <SelectItem value="business">Business</SelectItem>
-                    </SelectContent>
-                  </Select>
+
+                {/* Navigation */}
+                <div className="flex justify-between items-center mt-8">
+                  <Button
+                    variant="outline"
+                    onClick={previousQuestion}
+                    className="flex items-center space-x-2 px-6 py-3"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    <span>Previous</span>
+                  </Button>
+
+                  <Button
+                    onClick={nextQuestion}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white flex items-center space-x-2 px-6 py-3"
+                  >
+                    <span>
+                      {currentQuestionIndex === assessmentData.questions.length - 1 ? 'Complete Assessment' : 'Next Question'}
+                    </span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-            </div>
-
-            {/* Assessment Questions */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Assessment Questions</h2>
-              {assessmentData.questions.map(question => (
-                <div key={question.id} className="mb-6">
-                  <Label htmlFor={`question-${question.id}`} className="block text-gray-700 text-sm font-bold mb-2">{question.question}</Label>
-                  {renderQuestionInput(question)}
-                </div>
-              ))}
-            </div>
-
-            {/* Begin Assessment Button */}
-            <Button 
-              onClick={handleStart}
-              size="lg"
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-4 text-base sm:text-lg font-semibold shadow-lg transform hover:scale-105 transition-all duration-200"
-            >
-              <span className="text-center leading-tight">
-                Begin My VoiceCard Assessment
-              </span>
-            </Button>
-          </Card>
+            )}
+          </>
         ) : (
-          <Card className="bg-white shadow-xl rounded-lg p-6">
+          <Card className="bg-white shadow-xl rounded-lg p-8">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-700">Loading assessment...</p>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-lg text-gray-700">Loading your VoiceCard experience...</p>
             </div>
           </Card>
         )}

@@ -1,7 +1,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, Volume2, VolumeX, Headphones } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Headphones, Sparkles } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 
 interface VoicePlayerProps {
@@ -19,8 +19,8 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
   // Get API key from localStorage (set in admin dashboard)
   const getApiKey = () => localStorage.getItem('elevenlabs-api-key') || '';
   
-  // Voice configuration - using the specified voice
-  const VOICE_ID = 'rhKGiHCLeAC5KPBEZiUq'; // Apple – Quirky & Relatable
+  // Voice configuration - using the specified premium voice
+  const VOICE_ID = 'EXAVITQu4vr4xnSDxMaL'; // Sarah - Professional & Clear
   const MODEL_ID = 'eleven_multilingual_v2';
 
   const generateSpeech = async () => {
@@ -33,7 +33,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
 
     try {
       setIsLoading(true);
-      console.log('Generating speech with ElevenLabs for voice:', VOICE_ID);
+      console.log('Generating premium voice with ElevenLabs for voice:', VOICE_ID);
       
       const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
         method: 'POST',
@@ -46,9 +46,9 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
           text: text,
           model_id: MODEL_ID,
           voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.75,
-            style: 0.5,
+            stability: 0.6,
+            similarity_boost: 0.8,
+            style: 0.4,
             use_speaker_boost: true
           },
         }),
@@ -84,7 +84,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = 0.9;
-    utterance.pitch = 1;
+    utterance.pitch = 1.1;
     utterance.volume = isMuted ? 0 : 1;
 
     const voices = speechSynthesis.getVoices();
@@ -107,7 +107,11 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
   };
 
   const handlePlay = () => {
-    generateSpeech();
+    if (isPlaying) {
+      handleStop();
+    } else {
+      generateSpeech();
+    }
   };
 
   const handleStop = () => {
@@ -135,66 +139,98 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
     }
   }, []);
 
+  // Auto-play functionality
+  useEffect(() => {
+    if (autoPlay && text.trim()) {
+      const timer = setTimeout(() => {
+        generateSpeech();
+      }, 1000); // Small delay for better UX
+      
+      return () => clearTimeout(timer);
+    }
+  }, [text, autoPlay]);
+
   return (
-    <Card className={`p-3 sm:p-4 md:p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 shadow-lg ${className}`}>
+    <Card className={`p-6 bg-gradient-to-r from-blue-50 via-white to-purple-50 border-2 border-blue-200 shadow-lg ${className}`}>
       <div className="flex flex-col space-y-4">
-        {/* Voice Guide Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+        {/* Premium Voice Guide Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
           <div className="flex items-center space-x-3 w-full sm:w-auto">
             <Button
               variant="default"
               size="lg"
-              onClick={isPlaying ? handleStop : handlePlay}
+              onClick={handlePlay}
               disabled={isLoading}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 sm:px-6 sm:py-3 w-full sm:w-auto text-sm sm:text-base"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 w-full sm:w-auto text-base font-semibold shadow-lg"
             >
               {isLoading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                  <span>Loading Voice...</span>
+                </>
               ) : isPlaying ? (
-                <Pause className="h-4 w-4 mr-2" />
+                <>
+                  <Pause className="h-5 w-5 mr-3" />
+                  <span>Pause Voice Guide</span>
+                </>
               ) : (
-                <Play className="h-4 w-4 mr-2" />
+                <>
+                  <Play className="h-5 w-5 mr-3" />
+                  <span>Play Voice Guide</span>
+                </>
               )}
-              <span className="whitespace-nowrap">
-                {isLoading ? 'Loading...' : isPlaying ? 'Pause Audio' : 'Play Audio'}
-              </span>
             </Button>
             
             <Button
               variant="outline"
               size="lg"
               onClick={toggleMute}
-              className="hover:bg-blue-100 border-blue-300 p-2 sm:p-3 flex-shrink-0"
+              className="hover:bg-blue-100 border-blue-300 p-3 flex-shrink-0"
             >
               {isMuted ? (
-                <VolumeX className="h-4 w-4 text-gray-400" />
+                <VolumeX className="h-5 w-5 text-gray-400" />
               ) : (
-                <Volume2 className="h-4 w-4 text-blue-600" />
+                <Volume2 className="h-5 w-5 text-blue-600" />
               )}
             </Button>
           </div>
           
-          {/* Voice Status */}
+          {/* Voice Status & Preview */}
           <div className="flex-1 w-full">
-            <div className="flex items-center mb-2">
-              <Headphones className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mr-2" />
-              <p className="text-sm sm:text-base font-bold text-blue-900">
-                {getApiKey() ? 'Premium Voice Ready' : 'Voice Guide Ready'}
+            <div className="flex items-center mb-3">
+              <Headphones className="h-5 w-5 text-blue-600 mr-2" />
+              <Sparkles className="h-4 w-4 text-purple-600 mr-2" />
+              <p className="text-base font-bold text-blue-900">
+                {getApiKey() ? 'Premium AI Voice Guide' : 'Voice Guide'}
               </p>
             </div>
-            <p className="text-xs sm:text-sm text-blue-700 leading-relaxed">
-              {text.length > 80 ? `${text.substring(0, 80)}...` : text}
+            <p className="text-sm text-blue-700 leading-relaxed bg-blue-50 p-3 rounded-lg">
+              {text.length > 120 ? `${text.substring(0, 120)}...` : text}
             </p>
           </div>
           
           {/* Audio Visualizer */}
           {isPlaying && (
             <div className="flex space-x-1 flex-shrink-0">
-              <div className="w-1 h-3 sm:w-2 sm:h-4 bg-blue-500 animate-pulse rounded-full"></div>
-              <div className="w-1 h-4 sm:w-2 sm:h-6 bg-blue-500 animate-pulse delay-75 rounded-full"></div>
-              <div className="w-1 h-3 sm:w-2 sm:h-4 bg-blue-500 animate-pulse delay-150 rounded-full"></div>
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={i}
+                  className="w-2 bg-gradient-to-t from-blue-500 to-purple-500 animate-pulse rounded-full"
+                  style={{
+                    height: `${Math.random() * 20 + 15}px`,
+                    animationDelay: `${i * 0.1}s`
+                  }}
+                ></div>
+              ))}
             </div>
           )}
+        </div>
+
+        {/* Voice Guide Instructions */}
+        <div className="text-center">
+          <p className="text-xs text-gray-500">
+            🎧 Put on headphones for the best VoiceCard experience
+          </p>
         </div>
       </div>
       
