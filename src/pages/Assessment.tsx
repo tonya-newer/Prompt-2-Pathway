@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -6,9 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { AssessmentTemplate, Question, LeadData } from '@/types/assessment';
+import { assessmentTemplates } from '@/data/assessmentTemplates';
 
 interface AssessmentData {
   title: string;
@@ -27,7 +28,7 @@ const Assessment = () => {
     phone: '',
     ageRange: '',
     source: '',
-    audience: ''
+    audience: 'individual'
   });
   const [answers, setAnswers] = useState<Record<number, any>>({});
   const { toast } = useToast()
@@ -35,21 +36,30 @@ const Assessment = () => {
   useEffect(() => {
     const fetchAssessment = async () => {
       try {
-        // Dynamic import based on the assessment ID
-        const assessmentModule = await import(`@/data/assessments/${id}.json`);
-        const data: AssessmentTemplate = assessmentModule.default;
+        console.log('Loading assessment with ID:', id);
+        
+        // Find the assessment template by ID
+        const template = assessmentTemplates.find(t => t.id === parseInt(id || '0'));
+        
+        if (!template) {
+          console.error('Assessment template not found for ID:', id);
+          toast({
+            title: "Assessment Not Found",
+            description: "The requested assessment could not be found.",
+            variant: "destructive",
+          });
+          navigate('/');
+          return;
+        }
 
         // Transform the assessment data to match the expected structure
         const transformedData: AssessmentData = {
-          title: data.title,
-          description: data.description,
-          questions: data.questions.map(q => ({
-            id: q.id,
-            question: q.question,
-            type: q.type,
-            options: q.options
-          }))
+          title: template.title,
+          description: template.description,
+          questions: template.questions
         };
+        
+        console.log('Assessment loaded successfully:', transformedData);
         setAssessmentData(transformedData);
       } catch (error) {
         console.error("Error loading assessment:", error);
@@ -57,12 +67,14 @@ const Assessment = () => {
           title: "Error",
           description: "Failed to load assessment. Please try again.",
           variant: "destructive",
-        })
+        });
         navigate('/');
       }
     };
 
-    fetchAssessment();
+    if (id) {
+      fetchAssessment();
+    }
   }, [id, navigate, toast]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>, questionId: number) => {
@@ -149,7 +161,7 @@ const Assessment = () => {
     if (!leadData.firstName || !leadData.lastName || !leadData.email || !leadData.ageRange) {
       toast({
         title: "Error",
-        description: "Please fill in all lead information fields.",
+        description: "Please fill in all required fields.",
         variant: "destructive",
       })
       return;
@@ -180,24 +192,7 @@ const Assessment = () => {
 
   const renderQuestionInput = (question: Question) => {
     switch (question.type) {
-      case 'yes-no':
-        return (
-          <RadioGroup onValueChange={(value) => handleRadioChange(value, question.id)} className="flex flex-row space-x-6">
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="yes" id={`question-${question.id}-yes`} />
-              <Label htmlFor={`question-${question.id}-yes`}>Yes</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="no" id={`question-${question.id}-no`} />
-              <Label htmlFor={`question-${question.id}-no`}>No</Label>
-            </div>
-          </RadioGroup>
-        );
-      case 'multiple-choice':
-      case 'this-that':
-      case 'rating':
-      case 'desires':
-      case 'pain-avoidance':
+      case 'radio':
         return (
           <RadioGroup onValueChange={(value) => handleRadioChange(value, question.id)} className="flex flex-col space-y-2">
             {question.options?.map((option, index) => (
@@ -207,6 +202,30 @@ const Assessment = () => {
               </div>
             ))}
           </RadioGroup>
+        );
+      case 'select':
+        return (
+          <Select value={answers[question.id] || ''} onValueChange={(value) => handleRadioChange(value, question.id)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select an option" />
+            </SelectTrigger>
+            <SelectContent>
+              {question.options?.map((option, index) => (
+                <SelectItem key={index} value={option}>{option}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      case 'textarea':
+        return (
+          <textarea
+            id={`question-${question.id}`}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            rows={4}
+            placeholder="Your answer"
+            value={answers[question.id] || ''}
+            onChange={(e) => handleInputChange(e, question.id)}
+          />
         );
       default:
         return (
@@ -235,7 +254,7 @@ const Assessment = () => {
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Information</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="firstName">First Name</Label>
+                  <Label htmlFor="firstName">First Name *</Label>
                   <Input
                     type="text"
                     id="firstName"
@@ -246,7 +265,7 @@ const Assessment = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="lastName">Last Name</Label>
+                  <Label htmlFor="lastName">Last Name *</Label>
                   <Input
                     type="text"
                     id="lastName"
@@ -257,7 +276,7 @@ const Assessment = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Email *</Label>
                   <Input
                     type="email"
                     id="email"
@@ -279,7 +298,7 @@ const Assessment = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="ageRange">Age Range</Label>
+                  <Label htmlFor="ageRange">Age Range *</Label>
                   <Select value={leadData.ageRange} onValueChange={(value) => handleLeadDataChange({ target: { value } } as any, 'ageRange')}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select age range" />
@@ -334,14 +353,19 @@ const Assessment = () => {
             <Button 
               onClick={handleStart}
               size="lg"
-              className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-4 text-sm sm:text-lg font-semibold shadow-lg transform hover:scale-105 transition-all duration-200"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-4 text-base sm:text-lg font-semibold shadow-lg transform hover:scale-105 transition-all duration-200"
             >
-              <span className="text-center leading-tight">Begin My VoiceCard Assessment</span>
+              <span className="text-center leading-tight whitespace-normal sm:whitespace-nowrap">
+                Begin My VoiceCard Assessment
+              </span>
             </Button>
           </Card>
         ) : (
           <Card className="bg-white shadow-xl rounded-lg p-6">
-            <p className="text-gray-700">Loading assessment...</p>
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-700">Loading assessment...</p>
+            </div>
           </Card>
         )}
       </div>

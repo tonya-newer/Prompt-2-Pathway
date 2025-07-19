@@ -14,27 +14,21 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('elevenlabs-api-key') || '');
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Your specific voice configuration
+  // Get API key from localStorage (set in admin dashboard)
+  const getApiKey = () => localStorage.getItem('elevenlabs-api-key') || '';
+  
+  // Voice configuration - using the specified voice
   const VOICE_ID = 'rhKGiHCLeAC5KPBEZiUq'; // Apple – Quirky & Relatable
   const MODEL_ID = 'eleven_multilingual_v2';
 
-  const saveApiKey = (key: string) => {
-    localStorage.setItem('elevenlabs-api-key', key);
-    setApiKey(key);
-  };
-
   const generateSpeech = async () => {
+    const apiKey = getApiKey();
+    
     if (!apiKey || apiKey.trim() === '') {
-      const userKey = prompt('Please enter your ElevenLabs API key:');
-      if (userKey) {
-        saveApiKey(userKey);
-        return generateSpeech();
-      } else {
-        return speakWithBrowserAPI();
-      }
+      console.log('No ElevenLabs API key found, using browser speech synthesis');
+      return speakWithBrowserAPI();
     }
 
     try {
@@ -62,10 +56,8 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
 
       if (!response.ok) {
         if (response.status === 401) {
-          alert('Invalid API key. Please check your ElevenLabs API key.');
-          localStorage.removeItem('elevenlabs-api-key');
-          setApiKey('');
-          return;
+          console.error('Invalid ElevenLabs API key');
+          return speakWithBrowserAPI();
         }
         throw new Error(`ElevenLabs API request failed: ${response.status}`);
       }
@@ -146,39 +138,6 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
   return (
     <Card className={`p-3 sm:p-4 md:p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 shadow-lg ${className}`}>
       <div className="flex flex-col space-y-4">
-        {/* API Key Management */}
-        {!apiKey && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-            <p className="text-sm text-yellow-800 mb-2">Enter your ElevenLabs API key for premium voice experience:</p>
-            <div className="flex gap-2">
-              <input
-                type="password"
-                placeholder="Enter API key..."
-                className="flex-1 text-sm p-2 border rounded"
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    const target = e.target as HTMLInputElement;
-                    if (target.value.trim()) {
-                      saveApiKey(target.value.trim());
-                    }
-                  }
-                }}
-              />
-              <Button
-                size="sm"
-                onClick={() => {
-                  const input = document.querySelector('input[type="password"]') as HTMLInputElement;
-                  if (input?.value.trim()) {
-                    saveApiKey(input.value.trim());
-                  }
-                }}
-              >
-                Save
-              </Button>
-            </div>
-          </div>
-        )}
-
         {/* Voice Guide Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
           <div className="flex items-center space-x-3 w-full sm:w-auto">
@@ -220,7 +179,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
             <div className="flex items-center mb-2">
               <Headphones className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mr-2" />
               <p className="text-sm sm:text-base font-bold text-blue-900">
-                {apiKey ? 'Premium Voice Ready' : 'Voice Guide Ready'}
+                {getApiKey() ? 'Premium Voice Ready' : 'Voice Guide Ready'}
               </p>
             </div>
             <p className="text-xs sm:text-sm text-blue-700 leading-relaxed">

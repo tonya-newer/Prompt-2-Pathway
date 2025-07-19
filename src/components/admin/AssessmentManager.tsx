@@ -18,12 +18,12 @@ export const AssessmentManager = () => {
   const [editMode, setEditMode] = useState(false);
   const [templates, setTemplates] = useState(assessmentTemplates);
   const [voiceScripts, setVoiceScripts] = useState({
-    intro: "Welcome to your VoiceFlow assessment. I'm here to guide you through a personalized experience that will help you gain clarity on your path forward. Let's begin this journey together.",
+    intro: "Welcome to your VoiceCard assessment. I'm here to guide you through a personalized experience that will help you gain clarity on your path forward. Let's begin this journey together.",
     mid: "You're doing great! These insights are helping us understand your unique situation. Let's continue with the next set of questions.",
     outro: "Congratulations on completing your assessment. Your personalized results are ready, and I'm excited to share the insights we've discovered about your journey."
   });
-  const [apiKey, setApiKey] = useState('');
-  const [selectedVoice, setSelectedVoice] = useState('9BWtsMINqrJLrRacOk9x');
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('elevenlabs-api-key') || '');
+  const [selectedVoice, setSelectedVoice] = useState('rhKGiHCLeAC5KPBEZiUq'); // Apple – Quirky & Relatable
   const { toast } = useToast();
 
   const handleEditTemplate = (template: AssessmentTemplate) => {
@@ -126,32 +126,88 @@ export const AssessmentManager = () => {
     }
   };
 
-  const testVoice = () => {
-    console.log('Testing voice with script:', voiceScripts.intro);
-    toast({
-      title: "Voice Test",
-      description: "Voice test functionality will be available with ElevenLabs integration.",
-    });
+  const testVoice = async () => {
+    if (!apiKey || apiKey.trim() === '') {
+      toast({
+        title: "API Key Required",
+        description: "Please enter your ElevenLabs API key first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      console.log('Testing voice with ElevenLabs API');
+      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoice}`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'audio/mpeg',
+          'Content-Type': 'application/json',
+          'xi-api-key': apiKey,
+        },
+        body: JSON.stringify({
+          text: voiceScripts.intro.substring(0, 100) + "...", // Test with shortened text
+          model_id: 'eleven_multilingual_v2',
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.75,
+            style: 0.5,
+            use_speaker_boost: true
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      await audio.play();
+
+      toast({
+        title: "Voice Test Successful",
+        description: "ElevenLabs voice synthesis is working correctly!",
+      });
+    } catch (error) {
+      console.error('Voice test failed:', error);
+      toast({
+        title: "Voice Test Failed",
+        description: "Please check your API key and try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const saveVoiceScripts = () => {
-    console.log('Voice scripts saved:', voiceScripts);
-    toast({
-      title: "Scripts Saved",
-      description: "Voice scripts have been saved successfully.",
-    });
-  };
-
-  const sendEmailNotification = async (completedAssessment: any) => {
     try {
-      // This would typically integrate with an email service
-      console.log('Sending email notification to info@newerconsulting.com');
+      // Save API key to localStorage
+      if (apiKey && apiKey.trim()) {
+        localStorage.setItem('elevenlabs-api-key', apiKey.trim());
+      }
+      
+      // Save voice scripts to localStorage
+      localStorage.setItem('voice-scripts', JSON.stringify(voiceScripts));
+      localStorage.setItem('selected-voice', selectedVoice);
+      
+      console.log('Voice configuration saved:', { 
+        apiKeySet: !!apiKey, 
+        selectedVoice, 
+        scripts: voiceScripts 
+      });
+      
       toast({
-        title: "Email Sent",
-        description: "Assessment completion notification sent to info@newerconsulting.com",
+        title: "Configuration Saved",
+        description: "Voice scripts and settings have been saved successfully.",
       });
     } catch (error) {
-      console.error('Failed to send email notification:', error);
+      console.error('Failed to save voice configuration:', error);
+      toast({
+        title: "Save Failed",
+        description: "Could not save voice configuration. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -336,22 +392,30 @@ export const AssessmentManager = () => {
                 Connect your ElevenLabs API key to enable premium voice synthesis for all assessments.
               </p>
               <div className="space-y-3">
-                <Input 
-                  placeholder="Enter your ElevenLabs API key" 
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                />
-                <Select value={selectedVoice} onValueChange={setSelectedVoice}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select voice" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="9BWtsMINqrJLrRacOk9x">Aria (Professional Female)</SelectItem>
-                    <SelectItem value="CwhRBWXzGAHq8TQ4Fs17">Roger (Confident Male)</SelectItem>
-                    <SelectItem value="EXAVITQu4vr4xnSDxMaL">Sarah (Warm Female)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div>
+                  <Label htmlFor="api-key">ElevenLabs API Key</Label>
+                  <Input 
+                    id="api-key"
+                    placeholder="Enter your ElevenLabs API key" 
+                    type="password"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="voice-select">Selected Voice</Label>
+                  <Select value={selectedVoice} onValueChange={setSelectedVoice}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select voice" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="rhKGiHCLeAC5KPBEZiUq">Apple – Quirky & Relatable</SelectItem>
+                      <SelectItem value="9BWtsMINqrJLrRacOk9x">Aria (Professional Female)</SelectItem>
+                      <SelectItem value="CwhRBWXzGAHq8TQ4Fs17">Roger (Confident Male)</SelectItem>
+                      <SelectItem value="EXAVITQu4vr4xnSDxMaL">Sarah (Warm Female)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
             
