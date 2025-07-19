@@ -52,13 +52,14 @@ const Assessment = () => {
         }
 
         // Find the assessment template - this is public data, case-insensitive
-        const template = assessmentTemplates.find(t => t.id === parseInt(id)) || 
-                         assessmentTemplates.find(t => t.id.toString() === id);
+        // Fix the routing issue by properly parsing the ID
+        const numericId = parseInt(id);
+        const template = assessmentTemplates.find(t => t.id === numericId);
         
         if (!template) {
           console.warn('Assessment template not found for ID:', id);
-          // More descriptive error for admins
-          setError('Assessment not found. This could be because the assessment ID doesn\'t exist or the assessment has been removed.');
+          // More descriptive error for users
+          setError('Assessment not found. Please check the assessment link and try again.');
           return;
         }
 
@@ -355,7 +356,7 @@ const Assessment = () => {
             {/* Welcome Form - Public Access */}
             {currentQuestionIndex === -1 && (
               <div className="space-y-6 sm:space-y-8">
-                {/* Welcome Voice Guide */}
+                {/* Welcome Voice Guide - AUTO-PLAY */}
                 <div className="mb-6 sm:mb-8">
                   <VoicePlayer 
                     text={getWelcomeVoiceScript()}
@@ -506,7 +507,7 @@ const Assessment = () => {
             {/* Question Display */}
             {currentQuestionIndex >= 0 && assessmentData.questions[currentQuestionIndex] && (
               <div className="space-y-6">
-                {/* Voice Guide */}
+                {/* Voice Guide - AUTO-PLAY */}
                 <VoicePlayer
                   text={getCurrentVoiceScript()}
                   autoPlay={true}
