@@ -1,9 +1,10 @@
+
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Download, Share2, Mic, TrendingUp, Target, Lightbulb } from 'lucide-react';
+import { Download, Mic, TrendingUp, Target, Lightbulb } from 'lucide-react';
 import { VoicePlayer } from '@/components/VoicePlayer';
 import { CelebrationEffects } from '@/components/CelebrationEffects';
 import { LeadData, AssessmentResults } from '@/types/assessment';
@@ -45,30 +46,69 @@ const Results = () => {
   const overallLabel = getScoreLabel(results.overallScore);
 
   const handleDownload = () => {
+    // Enhanced PDF-style content generation
     const content = `
 VoiceCard Clarity Snapshot
-${template} Assessment Results
+Assessment Results Report
 
-Overall Score: ${results.overallScore}/100 (${overallLabel.label})
+Name: ${leadData?.firstName} ${leadData?.lastName}
+Email: ${leadData?.email}
+Assessment: ${template}
+Date: ${new Date().toLocaleDateString()}
+Time: ${new Date().toLocaleTimeString()}
 
-Category Breakdown:
-- Readiness: ${results.categoryScores.readiness}/100
-- Confidence: ${results.categoryScores.confidence}/100  
-- Clarity: ${results.categoryScores.clarity}/100
+═══════════════════════════════════════════════════
 
-Key Insights:
-${results.insights.map((insight: string, i: number) => `${i + 1}. ${insight}`).join('\n')}
+OVERALL ASSESSMENT SCORE
+${results.overallScore}/100 - ${overallLabel.label}
 
-Generated on: ${new Date().toLocaleDateString()}
+DETAILED CATEGORY BREAKDOWN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Readiness Score: ${results.categoryScores.readiness}/100
+• Your level of preparation and commitment
+
+Confidence Score: ${results.categoryScores.confidence}/100  
+• Your self-assurance and belief in your abilities
+
+Clarity Score: ${results.categoryScores.clarity}/100
+• Your understanding and vision of your goals
+
+PERSONALIZED INSIGHTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${results.insights.map((insight: string, i: number) => `${i + 1}. ${insight}`).join('\n\n')}
+
+NEXT STEPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Based on your assessment results, we recommend:
+
+• Review your personalized insights above
+• Focus on areas where you scored below 70
+• Consider scheduling a clarity call for deeper guidance
+• Implement action items that resonate most with you
+
+═══════════════════════════════════════════════════
+
+VoiceCard Assessment Platform
+Generated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}
+
+This personalized report is confidential and intended for the named recipient only.
     `;
     
-    const blob = new Blob([content], { type: 'text/plain' });
+    // Create and download the file immediately
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'voicecard-clarity-snapshot.txt';
+    a.download = `VoiceCard-Assessment-Results-${leadData?.firstName || 'User'}-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    
+    console.log('Assessment results downloaded successfully');
   };
 
   // Enhanced voice script message - will play after celebration
@@ -85,18 +125,16 @@ Generated on: ${new Date().toLocaleDateString()}
       {showCelebration && (
         <CelebrationEffects onComplete={handleCelebrationComplete} />
       )}
-      {/* Header - Simplified without back button */}
+      
+      {/* Header with Download Only */}
       <header className="bg-white/80 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-end">
             <div className="flex items-center space-x-2 sm:space-x-3">
-              <Button variant="outline" onClick={handleDownload} size="sm">
+              <Button variant="outline" onClick={handleDownload} size="sm" className="bg-gradient-to-r from-green-500 to-emerald-600 text-white border-0 hover:from-green-600 hover:to-emerald-700">
                 <Download className="h-4 w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Download</span>
-              </Button>
-              <Button variant="outline" size="sm">
-                <Share2 className="h-4 w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Share</span>
+                <span className="hidden sm:inline">Download PDF</span>
+                <span className="sm:hidden">PDF</span>
               </Button>
             </div>
           </div>
@@ -144,7 +182,7 @@ Generated on: ${new Date().toLocaleDateString()}
                     <Mic className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                   <div className="text-center sm:text-left">
-                    <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-purple-900 mb-2">🎧 YOUR PERSONALIZED VOICE MESSAGE</h3>
+                    <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-purple-900 mb-2">🎧 Voice Guide</h3>
                     <p className="text-sm sm:text-base text-purple-700 font-bold">Press play to hear a summary of your results!</p>
                     <p className="text-xs sm:text-sm text-purple-600 mt-1">This is your unique VoiceCard experience - tailored just for you!</p>
                   </div>

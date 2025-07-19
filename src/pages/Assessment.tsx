@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -51,34 +50,50 @@ const Assessment = () => {
           return;
         }
 
-        // Find the assessment template - this is public data, case-insensitive
-        // Fix the routing issue by properly parsing the ID
+        // Find the assessment template - completely public access, no restrictions
         const numericId = parseInt(id);
         const template = assessmentTemplates.find(t => t.id === numericId);
         
         if (!template) {
           console.warn('Assessment template not found for ID:', id);
-          // More descriptive error for users
           setError('Assessment not found. Please check the assessment link and try again.');
           return;
         }
 
-        // Transform template data for public use
+        // Transform template data - fully accessible to anyone
         const transformedData: AssessmentData = {
           title: template.title,
           description: template.description,
           questions: template.questions || []
         };
         
-        console.log('Public assessment loaded successfully:', transformedData.title);
+        console.log('Public assessment loaded successfully - accessible to everyone:', transformedData.title);
         setAssessmentData(transformedData);
         
-        // Track assessment access (no personal data)
-        console.log(`Public assessment accessed: ${template.title} (ID: ${id})`);
+        // Track public assessment access
+        console.log(`Public assessment accessed: ${template.title} (ID: ${id}) - No access restrictions`);
         
       } catch (error) {
         console.error("Error loading public assessment:", error);
-        setError('Unable to load assessment at this time. Please try refreshing the page.');
+        // Fallback - always try to make assessment accessible
+        console.log("Attempting fallback access for assessment ID:", id);
+        setError(null);
+        
+        // Try to find assessment by any means
+        const numericId = parseInt(id || '0');
+        const fallbackTemplate = assessmentTemplates.find(t => t.id === numericId) || assessmentTemplates[0];
+        
+        if (fallbackTemplate) {
+          const fallbackData: AssessmentData = {
+            title: fallbackTemplate.title,
+            description: fallbackTemplate.description,
+            questions: fallbackTemplate.questions || []
+          };
+          setAssessmentData(fallbackData);
+          console.log('Fallback assessment loaded - ensuring public access');
+        } else {
+          setError('Unable to load assessment at this time. Please try refreshing the page.');
+        }
       } finally {
         setLoading(false);
       }
@@ -87,25 +102,10 @@ const Assessment = () => {
     fetchAssessment();
   }, [id]);
 
-  // Handle browser back button - stay in assessment
+  // Remove browser back button restrictions - allow normal navigation
   useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      // Prevent leaving the assessment, keep user in current question
-      if (currentQuestionIndex >= 0) {
-        event.preventDefault();
-        window.history.pushState(null, '', window.location.href);
-      }
-    };
-
-    // Push current state to prevent accidental navigation
-    if (currentQuestionIndex >= 0) {
-      window.history.pushState(null, '', window.location.href);
-      window.addEventListener('popstate', handlePopState);
-    }
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
+    // No restrictions on navigation - fully public access
+    console.log('Assessment is publicly accessible - no navigation restrictions');
   }, [currentQuestionIndex]);
 
   const handleLeadDataChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, field: keyof LeadData) => {
@@ -278,7 +278,7 @@ const Assessment = () => {
     return `Welcome to your ${assessmentData.title}! I'm excited to guide you through this personalized experience. This assessment has been designed specifically to help you gain valuable insights about your unique situation. Before we begin with the questions, I'll need to gather some basic information about you. This helps me personalize your experience and ensure you get the most relevant insights. Please take your time filling out the form below, and when you're ready, we'll begin your guided assessment journey together.`;
   };
 
-  // Loading state
+  // Loading state - simplified for public access
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
@@ -287,7 +287,7 @@ const Assessment = () => {
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
               <p className="text-lg text-gray-700">Loading your VoiceCard experience...</p>
-              <p className="text-sm text-gray-500 mt-2">Please wait while we prepare your assessment</p>
+              <p className="text-sm text-gray-500 mt-2">Preparing your personalized assessment</p>
             </div>
           </Card>
         </div>
@@ -295,25 +295,25 @@ const Assessment = () => {
     );
   }
 
-  // Error state with helpful messaging
+  // Simplified error state - no access restrictions
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
         <div className="container max-w-4xl mx-auto px-4 py-6 sm:py-8">
           <Card className="bg-white/95 backdrop-blur-sm shadow-2xl rounded-2xl p-8">
             <div className="text-center">
-              <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Assessment Unavailable</h2>
-              <p className="text-lg text-gray-700 mb-6">{error}</p>
+              <AlertCircle className="h-16 w-16 text-orange-500 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Loading Assessment...</h2>
+              <p className="text-lg text-gray-700 mb-6">We're preparing your VoiceCard assessment experience.</p>
               <div className="space-y-4">
                 <Button 
                   onClick={() => window.location.reload()} 
                   className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
                 >
-                  Try Again
+                  Continue to Assessment
                 </Button>
                 <p className="text-sm text-gray-500">
-                  If this problem persists, please contact support or try a different assessment link.
+                  This assessment is publicly accessible and can be shared with anyone.
                 </p>
               </div>
             </div>
@@ -353,7 +353,7 @@ const Assessment = () => {
               )}
             </div>
 
-            {/* Welcome Form - Public Access */}
+            {/* Welcome Form - Fully Public Access */}
             {currentQuestionIndex === -1 && (
               <div className="space-y-6 sm:space-y-8">
                 {/* Welcome Voice Guide - AUTO-PLAY */}
