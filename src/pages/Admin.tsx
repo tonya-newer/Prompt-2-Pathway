@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,7 +10,7 @@ import { LeadsList } from '@/components/admin/LeadsList';
 import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
 import ContentManager from '@/components/admin/ContentManager';
 import { Settings, Users, BarChart3, FileText, Key } from 'lucide-react';
-import { getLeads } from '@/services/leadStorage';
+import { leadStorageService } from '@/services/leadStorage';
 
 const Admin = () => {
   const [apiKey, setApiKey] = useState(() => {
@@ -20,7 +19,7 @@ const Admin = () => {
   const { toast } = useToast();
 
   // Get leads data for analytics
-  const leads = getLeads();
+  const leads = leadStorageService.getLeads();
 
   const handleSaveApiKey = () => {
     if (apiKey.trim()) {
