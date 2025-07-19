@@ -19,8 +19,8 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
   // Get API key from localStorage (set in admin dashboard)
   const getApiKey = () => localStorage.getItem('elevenlabs-api-key') || '';
   
-  // Voice configuration - using the specified premium voice
-  const VOICE_ID = 'EXAVITQu4vr4xnSDxMaL'; // Sarah - Professional & Clear
+  // Voice configuration - using Apple voice as specified
+  const VOICE_ID = '9BWtsMINqrJLrRacOk9x'; // Aria - Quirky & Relatable (Apple voice)
   const MODEL_ID = 'eleven_multilingual_v2';
 
   const generateSpeech = async () => {
@@ -46,9 +46,9 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
           text: text,
           model_id: MODEL_ID,
           voice_settings: {
-            stability: 0.6,
-            similarity_boost: 0.8,
-            style: 0.4,
+            stability: 0.7,
+            similarity_boost: 0.9,
+            style: 0.6,
             use_speaker_boost: true
           },
         }),
@@ -124,9 +124,21 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
   };
 
   const toggleMute = () => {
-    setIsMuted(!isMuted);
+    const newMutedState = !isMuted;
+    setIsMuted(newMutedState);
+    
     if (audioRef.current) {
-      audioRef.current.volume = !isMuted ? 0 : 1;
+      audioRef.current.volume = newMutedState ? 0 : 1;
+      if (newMutedState) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      }
+    }
+    
+    // Also handle browser speech synthesis
+    if (newMutedState && speechSynthesis.speaking) {
+      speechSynthesis.cancel();
+      setIsPlaying(false);
     }
   };
 

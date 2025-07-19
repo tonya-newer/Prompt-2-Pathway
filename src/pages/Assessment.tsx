@@ -84,6 +84,27 @@ const Assessment = () => {
     fetchAssessment();
   }, [id]);
 
+  // Handle browser back button - stay in assessment
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      // Prevent leaving the assessment, keep user in current question
+      if (currentQuestionIndex >= 0) {
+        event.preventDefault();
+        window.history.pushState(null, '', window.location.href);
+      }
+    };
+
+    // Push current state to prevent accidental navigation
+    if (currentQuestionIndex >= 0) {
+      window.history.pushState(null, '', window.location.href);
+      window.addEventListener('popstate', handlePopState);
+    }
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [currentQuestionIndex]);
+
   const handleLeadDataChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, field: keyof LeadData) => {
     setLeadData({
       ...leadData,
@@ -145,31 +166,68 @@ const Assessment = () => {
   const calculateResults = () => {
     if (!assessmentData) return null;
 
-    let overallScore = 0;
+    let totalPoints = 0;
+    let maxPossiblePoints = 0;
     let readinessScore = 0;
     let confidenceScore = 0;
     let clarityScore = 0;
 
-    Object.keys(answers).forEach(key => {
-      const questionId = parseInt(key);
-      const answer = answers[questionId];
+    // Calculate scores based on question types and answers
+    assessmentData.questions.forEach((question) => {
+      const answer = answers[question.id];
+      if (answer === undefined) return;
 
-      if (answer === 'yes' || answer === 'agree') {
-        overallScore += 5;
-        readinessScore += 3;
-        confidenceScore += 2;
-      } else if (answer === 'no' || answer === 'disagree') {
-        overallScore += 2;
-        clarityScore += 1;
-      } else {
-        overallScore += 3;
+      switch (question.type) {
+        case 'yes-no':
+          maxPossiblePoints += 10;
+          if (answer === 'yes') {
+            totalPoints += 10;
+            readinessScore += 10;
+          } else {
+            totalPoints += 3;
+            clarityScore += 3;
+          }
+          break;
+        
+        case 'rating':
+          maxPossiblePoints += 10;
+          const rating = parseInt(answer) || 0;
+          totalPoints += rating;
+          confidenceScore += rating;
+          break;
+        
+        case 'this-that':
+          maxPossiblePoints += 8;
+          totalPoints += 8; // Both options are positive
+          readinessScore += 4;
+          confidenceScore += 4;
+          break;
+        
+        case 'multiple-choice':
+        case 'desires':
+        case 'pain-avoidance':
+          maxPossiblePoints += 6;
+          if (Array.isArray(answer)) {
+            // Multiple selections - more selections = higher clarity
+            totalPoints += Math.min(answer.length * 2, 6);
+            clarityScore += Math.min(answer.length * 3, 9);
+          } else {
+            totalPoints += 6;
+            clarityScore += 6;
+          }
+          break;
+        
+        default:
+          maxPossiblePoints += 5;
+          totalPoints += 5;
       }
     });
 
-    overallScore = Math.min(Math.max(overallScore, 0), 100);
-    readinessScore = Math.min(Math.max(readinessScore, 0), 100);
-    confidenceScore = Math.min(Math.max(confidenceScore, 0), 100);
-    clarityScore = Math.min(Math.max(clarityScore, 0), 100);
+    // Calculate final scores as percentages
+    const overallScore = maxPossiblePoints > 0 ? Math.round((totalPoints / maxPossiblePoints) * 100) : 0;
+    readinessScore = Math.min(Math.round((readinessScore / (assessmentData.questions.length * 3)) * 100), 100);
+    confidenceScore = Math.min(Math.round((confidenceScore / (assessmentData.questions.length * 3)) * 100), 100);
+    clarityScore = Math.min(Math.round((clarityScore / (assessmentData.questions.length * 3)) * 100), 100);
 
     const insights = [
       "Focus on clarifying your goals and objectives.",
@@ -299,7 +357,7 @@ const Assessment = () => {
                 <div className="mb-6 sm:mb-8">
                   <VoicePlayer 
                     text={getWelcomeVoiceScript()}
-                    autoPlay={false}
+                    autoPlay={true}
                     className="shadow-2xl border-4 border-purple-200"
                   />
                 </div>
@@ -409,14 +467,19 @@ const Assessment = () => {
                         <Label htmlFor="source" className="text-base font-semibold text-gray-700">
                           How did you hear about us?
                         </Label>
-                        <Input
-                          type="text"
-                          id="source"
-                          placeholder="Social media, referral, search, etc."
-                          className="h-12 text-base border-2 border-gray-200 focus:border-purple-400 rounded-xl transition-all duration-200"
-                          value={leadData.source || ''}
-                          onChange={(e) => handleLeadDataChange(e, 'source')}
-                        />
+                        <Select value={leadData.source} onValueChange={(value) => handleLeadDataChange({ target: { value } } as any, 'source')}>
+                          <SelectTrigger className="h-12 text-base border-2 border-gray-200 focus:border-purple-400 rounded-xl">
+                            <SelectValue placeholder="Select how you found us" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="social-media">Social Media</SelectItem>
+                            <SelectItem value="website">Website</SelectItem>
+                            <SelectItem value="google">Google</SelectItem>
+                            <SelectItem value="referral">Referral</SelectItem>
+                            <SelectItem value="email">Email</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 

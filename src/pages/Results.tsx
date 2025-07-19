@@ -5,13 +5,16 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Download, Share2, Mic, TrendingUp, Target, Lightbulb, ArrowLeft } from 'lucide-react';
 import { VoicePlayer } from '@/components/VoicePlayer';
+import { CelebrationEffects } from '@/components/CelebrationEffects';
 import { LeadData, AssessmentResults } from '@/types/assessment';
 import { leadStorageService } from '@/services/leadStorage';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const Results = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [showCelebration, setShowCelebration] = useState(true);
+  const [celebrationComplete, setCelebrationComplete] = useState(false);
   const { leadData, answers, results, template }: {
     leadData: LeadData;
     answers: Record<number, any>;
@@ -68,11 +71,20 @@ Generated on: ${new Date().toLocaleDateString()}
     URL.revokeObjectURL(url);
   };
 
-  // Enhanced voice script message
+  // Enhanced voice script message - will play after celebration
   const voiceScript = `Hello ${leadData?.firstName}, and congratulations on completing your VoiceCard assessment! This is truly an accomplishment worth celebrating. Taking the time for this kind of self-reflection shows real commitment to your growth. Your overall clarity score of ${results.overallScore} out of 100 is a meaningful indicator of where you stand today. But what's even more valuable are the personalized insights we've discovered specifically for your journey. These aren't generic recommendations - they're tailored insights based on your unique responses. I encourage you to take your time reviewing these insights, as they could be the key to unlocking your next breakthrough.`;
+
+  const handleCelebrationComplete = () => {
+    setCelebrationComplete(true);
+    setShowCelebration(false);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      {/* Celebration Effects */}
+      {showCelebration && (
+        <CelebrationEffects onComplete={handleCelebrationComplete} />
+      )}
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 py-4">
@@ -149,7 +161,7 @@ Generated on: ${new Date().toLocaleDateString()}
                 </div>
                 <VoicePlayer 
                   text={voiceScript}
-                  autoPlay={false}
+                  autoPlay={celebrationComplete}
                   className="bg-white/90 shadow-lg"
                 />
               </div>
