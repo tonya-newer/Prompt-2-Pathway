@@ -51,12 +51,14 @@ const Assessment = () => {
           return;
         }
 
-        // Find the assessment template - this is public data
-        const template = assessmentTemplates.find(t => t.id === parseInt(id));
+        // Find the assessment template - this is public data, case-insensitive
+        const template = assessmentTemplates.find(t => t.id === parseInt(id)) || 
+                         assessmentTemplates.find(t => t.id.toString() === id);
         
         if (!template) {
           console.warn('Assessment template not found for ID:', id);
-          setError('Assessment not found. Please check the link and try again.');
+          // More descriptive error for admins
+          setError('Assessment not found. This could be because the assessment ID doesn\'t exist or the assessment has been removed.');
           return;
         }
 

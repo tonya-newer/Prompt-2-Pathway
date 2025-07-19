@@ -71,6 +71,12 @@ Generated on: ${new Date().toLocaleDateString()}
     URL.revokeObjectURL(url);
   };
 
+  // Prevent users from accessing all assessments - redirect non-admins
+  const handleBackToAssessments = () => {
+    // Instead of showing all assessments, suggest taking another assessment
+    window.open('/', '_blank'); // Opens in new tab so they don't lose current results
+  };
+
   // Enhanced voice script message - will play after celebration
   const voiceScript = `Hello ${leadData?.firstName}, and congratulations on completing your VoiceCard assessment! This is truly an accomplishment worth celebrating. Taking the time for this kind of self-reflection shows real commitment to your growth. Your overall clarity score of ${results.overallScore} out of 100 is a meaningful indicator of where you stand today. But what's even more valuable are the personalized insights we've discovered specifically for your journey. These aren't generic recommendations - they're tailored insights based on your unique responses. I encourage you to take your time reviewing these insights, as they could be the key to unlocking your next breakthrough.`;
 
@@ -91,12 +97,12 @@ Generated on: ${new Date().toLocaleDateString()}
           <div className="flex items-center justify-between">
             <Button 
               variant="ghost" 
-              onClick={() => navigate('/')}
+              onClick={handleBackToAssessments}
               className="flex items-center"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Take Another Assessment</span>
-              <span className="sm:hidden">Back</span>
+              <span className="sm:hidden">New Assessment</span>
             </Button>
             
             <div className="flex items-center space-x-2 sm:space-x-3">

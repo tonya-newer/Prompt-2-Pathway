@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Sparkles, Star, Heart } from 'lucide-react';
+import celebrationAudio from '@/assets/celebration-audio.mp3';
 
 interface CelebrationEffectsProps {
   onComplete?: () => void;
@@ -10,76 +11,41 @@ export const CelebrationEffects = ({ onComplete }: CelebrationEffectsProps) => {
   const [audioPlayed, setAudioPlayed] = useState(false);
 
   useEffect(() => {
-    // Play celebration audio
+    // Play the downloaded celebration audio file
     if (!audioPlayed) {
       const playCelebrationAudio = () => {
-        // Create a short celebration sound using Web Audio API
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        
-        // Create a simple celebration melody
-        const frequencies = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-        const duration = 0.15;
-        
-        frequencies.forEach((freq, index) => {
-          const oscillator = audioContext.createOscillator();
-          const gainNode = audioContext.createGain();
+        try {
+          const audio = new Audio(celebrationAudio);
+          audio.volume = 0.7;
           
-          oscillator.connect(gainNode);
-          gainNode.connect(audioContext.destination);
+          audio.onloadeddata = () => {
+            console.log('Celebration audio loaded and playing');
+            audio.play().catch(error => {
+              console.log('Could not play celebration audio:', error);
+            });
+          };
           
-          oscillator.frequency.value = freq;
-          oscillator.type = 'sine';
+          audio.onerror = () => {
+            console.log('Error loading celebration audio, skipping');
+          };
           
-          const startTime = audioContext.currentTime + (index * 0.2);
-          const endTime = startTime + duration;
-          
-          gainNode.gain.setValueAtTime(0, startTime);
-          gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.01);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, endTime);
-          
-          oscillator.start(startTime);
-          oscillator.stop(endTime);
-        });
-        
-        // Add a final triumphant note
-        setTimeout(() => {
-          const finalOscillator = audioContext.createOscillator();
-          const finalGain = audioContext.createGain();
-          
-          finalOscillator.connect(finalGain);
-          finalGain.connect(audioContext.destination);
-          
-          finalOscillator.frequency.value = 1046.50; // C6
-          finalOscillator.type = 'triangle';
-          
-          const startTime = audioContext.currentTime;
-          const endTime = startTime + 0.8;
-          
-          finalGain.gain.setValueAtTime(0, startTime);
-          finalGain.gain.linearRampToValueAtTime(0.4, startTime + 0.05);
-          finalGain.gain.exponentialRampToValueAtTime(0.01, endTime);
-          
-          finalOscillator.start(startTime);
-          finalOscillator.stop(endTime);
-        }, 800);
+          setAudioPlayed(true);
+        } catch (error) {
+          console.log('Audio not supported, skipping celebration audio');
+          setAudioPlayed(true);
+        }
       };
 
-      try {
-        playCelebrationAudio();
-        setAudioPlayed(true);
-      } catch (error) {
-        console.log('Audio context not supported, skipping celebration audio');
-        setAudioPlayed(true);
-      }
+      playCelebrationAudio();
     }
 
-    // Hide effects after 3 seconds and call onComplete
+    // Show sparkles for 5 seconds, then hide and call onComplete
     const timer = setTimeout(() => {
       setShowEffects(false);
       if (onComplete) {
-        setTimeout(onComplete, 500); // Small delay after effects fade
+        setTimeout(onComplete, 1000); // 1 second pause before voice guide
       }
-    }, 3000);
+    }, 5000); // 5 seconds of sparkles
 
     return () => clearTimeout(timer);
   }, [audioPlayed, onComplete]);

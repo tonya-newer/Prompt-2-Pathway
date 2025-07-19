@@ -19,7 +19,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
   // Get API key from localStorage (set in admin dashboard)
   const getApiKey = () => localStorage.getItem('elevenlabs-api-key') || '';
   
-  // Voice configuration - using Apple voice as specified
+  // Voice configuration - Apple - Quirky & Relatable (Female Voice) ONLY
   const VOICE_ID = '9BWtsMINqrJLrRacOk9x'; // Aria - Quirky & Relatable (Apple voice)
   const MODEL_ID = 'eleven_multilingual_v2';
 
@@ -88,12 +88,13 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
     utterance.volume = isMuted ? 0 : 1;
 
     const voices = speechSynthesis.getVoices();
+    // Only use female voices to match the Apple - Quirky & Relatable requirement
     const preferredVoice = voices.find(voice => 
       voice.name.includes('Samantha') || 
-      voice.name.includes('Alex') || 
       voice.name.includes('Karen') ||
-      voice.lang === 'en-US'
-    );
+      voice.name.includes('Victoria') ||
+      (voice.lang === 'en-US' && voice.name.toLowerCase().includes('female'))
+    ) || voices.find(voice => voice.lang === 'en-US' && !voice.name.toLowerCase().includes('male'));
     
     if (preferredVoice) {
       utterance.voice = preferredVoice;
