@@ -8,9 +8,10 @@ interface VoicePlayerProps {
   text: string;
   autoPlay?: boolean;
   className?: string;
+  showTranscript?: boolean;
 }
 
-export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePlayerProps) => {
+export const VoicePlayer = ({ text, autoPlay = false, className = '', showTranscript = false }: VoicePlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -19,21 +20,21 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
   // Get API key from localStorage (set in admin dashboard)
   const getApiKey = () => localStorage.getItem('elevenlabs-api-key') || '';
   
-  // Voice configuration - ONLY Apple - Quirky & Relatable
-  const VOICE_ID = '9BWtsMINqrJLrRacOk9x'; // Aria - Apple - Quirky & Relatable
+  // STRICT Voice configuration - ONLY Apple - Quirky & Relatable Female Voice
+  const VOICE_ID = '9BWtsMINqrJLrRacOk9x'; // Aria - Apple - Quirky & Relatable (FEMALE ONLY)
   const MODEL_ID = 'eleven_multilingual_v2';
 
   const generateSpeech = async () => {
     const apiKey = getApiKey();
     
     if (!apiKey || apiKey.trim() === '') {
-      console.log('No ElevenLabs API key found, using browser speech synthesis');
+      console.log('No ElevenLabs API key found, using browser speech synthesis with FEMALE voice only');
       return speakWithBrowserAPI();
     }
 
     try {
       setIsLoading(true);
-      console.log('Generating premium voice with ElevenLabs - Apple Quirky & Relatable:', VOICE_ID);
+      console.log('Generating FEMALE voice with ElevenLabs - Apple Quirky & Relatable ONLY:', VOICE_ID);
       
       const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
         method: 'POST',
@@ -48,7 +49,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
           voice_settings: {
             stability: 0.75,
             similarity_boost: 0.85,
-            style: 0.7,
+            style: 0.8,
             use_speaker_boost: true
           },
         }),
@@ -56,7 +57,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
 
       if (!response.ok) {
         if (response.status === 401) {
-          console.error('Invalid ElevenLabs API key, falling back to browser voice');
+          console.error('Invalid ElevenLabs API key, falling back to FEMALE browser voice');
           return speakWithBrowserAPI();
         }
         throw new Error(`ElevenLabs API request failed: ${response.status}`);
@@ -70,7 +71,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
         await audioRef.current.play();
       }
     } catch (error) {
-      console.error('ElevenLabs error, falling back to browser voice:', error);
+      console.error('ElevenLabs error, falling back to FEMALE browser voice:', error);
       speakWithBrowserAPI();
     } finally {
       setIsLoading(false);
@@ -89,9 +90,9 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
 
     const voices = speechSynthesis.getVoices();
     
-    // STRICTLY enforce female voice selection - NO MALE VOICES ALLOWED
+    // STRICTLY enforce FEMALE voice selection - ABSOLUTELY NO MALE VOICES
     const femaleVoice = voices.find(voice => 
-      // Prioritize high-quality female voices
+      // Prioritize high-quality FEMALE voices ONLY
       voice.name.includes('Samantha') || 
       voice.name.includes('Karen') ||
       voice.name.includes('Victoria') ||
@@ -99,31 +100,38 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
       voice.name.includes('Allison') ||
       voice.name.includes('Ava') ||
       voice.name.includes('Serena') ||
-      // Generic female voice patterns
+      voice.name.includes('Zoe') ||
+      voice.name.includes('Fiona') ||
+      // Generic female voice patterns - FEMALE ONLY
       (voice.lang.startsWith('en') && voice.name.toLowerCase().includes('female')) ||
-      // Exclude any male-sounding names and prioritize female
+      // Exclude ALL male-sounding names and prioritize FEMALE ONLY
       (voice.lang.startsWith('en') && 
        !voice.name.toLowerCase().includes('male') && 
        !voice.name.toLowerCase().includes('daniel') &&
        !voice.name.toLowerCase().includes('alex') &&
        !voice.name.toLowerCase().includes('fred') &&
        !voice.name.toLowerCase().includes('junior') &&
+       !voice.name.toLowerCase().includes('david') &&
+       !voice.name.toLowerCase().includes('tom') &&
+       !voice.name.toLowerCase().includes('john') &&
        voice.name.toLowerCase().includes('us'))
     );
     
     if (femaleVoice) {
       utterance.voice = femaleVoice;
-      console.log('Using browser voice:', femaleVoice.name);
+      console.log('Using FEMALE browser voice:', femaleVoice.name);
     } else {
-      // Last resort: find any English voice that's not explicitly male
+      // Last resort: find any English voice that's GUARANTEED not male
       const fallbackVoice = voices.find(voice => 
         voice.lang.startsWith('en') && 
         !voice.name.toLowerCase().includes('male') &&
-        !voice.name.toLowerCase().includes('daniel')
+        !voice.name.toLowerCase().includes('daniel') &&
+        !voice.name.toLowerCase().includes('david') &&
+        !voice.name.toLowerCase().includes('tom')
       );
       if (fallbackVoice) {
         utterance.voice = fallbackVoice;
-        console.log('Using fallback voice:', fallbackVoice.name);
+        console.log('Using fallback FEMALE voice:', fallbackVoice.name);
       }
     }
 
@@ -155,7 +163,6 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
     const newMutedState = !isMuted;
     setIsMuted(newMutedState);
     
-    // Properly handle muting for ElevenLabs audio
     if (audioRef.current) {
       audioRef.current.volume = newMutedState ? 0 : 1;
       if (newMutedState) {
@@ -164,7 +171,6 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
       }
     }
     
-    // Handle browser speech synthesis muting
     if (newMutedState && speechSynthesis.speaking) {
       speechSynthesis.cancel();
       setIsPlaying(false);
@@ -185,7 +191,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
     if (autoPlay && text.trim()) {
       const timer = setTimeout(() => {
         generateSpeech();
-      }, 1000); // Small delay for better UX
+      }, 1500); // Slightly longer delay for better UX
       
       return () => clearTimeout(timer);
     }
@@ -194,7 +200,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
   return (
     <Card className={`p-6 bg-gradient-to-r from-blue-50 via-white to-purple-50 border-2 border-blue-200 shadow-lg ${className}`}>
       <div className="flex flex-col space-y-4">
-        {/* Voice Guide Header */}
+        {/* Voice Guide Header - Simplified */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
           <div className="flex items-center space-x-3 w-full sm:w-auto">
             <Button
@@ -236,7 +242,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
             </Button>
           </div>
           
-          {/* Voice Status & Preview */}
+          {/* Voice Status - NO transcript here */}
           <div className="flex-1 w-full">
             <div className="flex items-center mb-3">
               <Headphones className="h-5 w-5 text-blue-600 mr-2" />
@@ -245,9 +251,29 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '' }: VoicePla
                 Voice Guide
               </p>
             </div>
-            <p className="text-sm text-blue-700 leading-relaxed bg-blue-50 p-3 rounded-lg">
-              {text.length > 120 ? `${text.substring(0, 120)}...` : text}
-            </p>
+            
+            {/* Visual Audio Indicator - NO transcript */}
+            <div className="bg-blue-50 p-3 rounded-lg">
+              {isPlaying ? (
+                <div className="flex items-center space-x-2">
+                  <div className="text-sm text-blue-700 font-medium">🎵 Playing voice guide...</div>
+                  <div className="flex space-x-1">
+                    {[...Array(5)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-1 bg-gradient-to-t from-blue-500 to-purple-500 animate-pulse rounded-full"
+                        style={{
+                          height: `${Math.random() * 12 + 8}px`,
+                          animationDelay: `${i * 0.1}s`
+                        }}
+                      ></div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-blue-700">Ready to play your personalized voice guide</p>
+              )}
+            </div>
           </div>
           
           {/* Audio Visualizer */}

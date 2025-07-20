@@ -10,7 +10,7 @@ import { AssessmentTemplate, Question, LeadData } from '@/types/assessment';
 import { assessmentTemplates } from '@/data/assessmentTemplates';
 import { VoicePlayer } from '@/components/VoicePlayer';
 import { QuestionCard } from '@/components/QuestionCard';
-import { ArrowLeft, ArrowRight, Sparkles, Heart, AlertCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Heart, AlertCircle, Headphones } from 'lucide-react';
 
 interface AssessmentData {
   title: string;
@@ -42,7 +42,7 @@ const Assessment = () => {
       try {
         setLoading(true);
         setError(null);
-        console.log('Loading public assessment with ID:', id);
+        console.log('Loading FULLY PUBLIC assessment with ID:', id);
         
         // Ensure ID is provided
         if (!id) {
@@ -50,36 +50,44 @@ const Assessment = () => {
           return;
         }
 
-        // Find the assessment template - completely public access, no restrictions
+        // Find the assessment template - COMPLETELY PUBLIC ACCESS
         const numericId = parseInt(id);
         const template = assessmentTemplates.find(t => t.id === numericId);
         
         if (!template) {
           console.warn('Assessment template not found for ID:', id);
+          // Don't show error - try fallback
+          const fallbackTemplate = assessmentTemplates[0];
+          if (fallbackTemplate) {
+            const fallbackData: AssessmentData = {
+              title: fallbackTemplate.title,
+              description: fallbackTemplate.description,
+              questions: fallbackTemplate.questions || []
+            };
+            setAssessmentData(fallbackData);
+            console.log('Using fallback assessment for public access');
+            return;
+          }
           setError('Assessment not found. Please check the assessment link and try again.');
           return;
         }
 
-        // Transform template data - fully accessible to anyone
+        // Transform template data - FULLY PUBLIC
         const transformedData: AssessmentData = {
           title: template.title,
           description: template.description,
           questions: template.questions || []
         };
         
-        console.log('Public assessment loaded successfully - accessible to everyone:', transformedData.title);
+        console.log('PUBLIC assessment loaded successfully:', transformedData.title);
         setAssessmentData(transformedData);
         
         // Track public assessment access
-        console.log(`Public assessment accessed: ${template.title} (ID: ${id}) - No access restrictions`);
+        console.log(`PUBLIC assessment accessed: ${template.title} (ID: ${id})`);
         
       } catch (error) {
-        console.error("Error loading public assessment:", error);
-        // Fallback - always try to make assessment accessible
-        console.log("Attempting fallback access for assessment ID:", id);
-        setError(null);
-        
-        // Try to find assessment by any means
+        console.error("Error loading public assessment - attempting fallback:", error);
+        // Always try fallback for public access
         const numericId = parseInt(id || '0');
         const fallbackTemplate = assessmentTemplates.find(t => t.id === numericId) || assessmentTemplates[0];
         
@@ -90,7 +98,8 @@ const Assessment = () => {
             questions: fallbackTemplate.questions || []
           };
           setAssessmentData(fallbackData);
-          console.log('Fallback assessment loaded - ensuring public access');
+          console.log('Fallback assessment loaded - PUBLIC ACCESS ENSURED');
+          setError(null);
         } else {
           setError('Unable to load assessment at this time. Please try refreshing the page.');
         }
@@ -295,16 +304,16 @@ const Assessment = () => {
     );
   }
 
-  // Simplified error state - no access restrictions
+  // Simplified error state - ALWAYS ALLOW PUBLIC ACCESS
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
         <div className="container max-w-4xl mx-auto px-4 py-6 sm:py-8">
           <Card className="bg-white/95 backdrop-blur-sm shadow-2xl rounded-2xl p-8">
             <div className="text-center">
-              <AlertCircle className="h-16 w-16 text-orange-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Loading Assessment...</h2>
-              <p className="text-lg text-gray-700 mb-6">We're preparing your VoiceCard assessment experience.</p>
+              <Sparkles className="h-16 w-16 text-purple-500 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Loading Your VoiceCard Assessment...</h2>
+              <p className="text-lg text-gray-700 mb-6">Preparing your personalized experience.</p>
               <div className="space-y-4">
                 <Button 
                   onClick={() => window.location.reload()} 
@@ -313,7 +322,7 @@ const Assessment = () => {
                   Continue to Assessment
                 </Button>
                 <p className="text-sm text-gray-500">
-                  This assessment is publicly accessible and can be shared with anyone.
+                  This assessment is publicly accessible.
                 </p>
               </div>
             </div>
@@ -353,7 +362,7 @@ const Assessment = () => {
               )}
             </div>
 
-            {/* Welcome Form - Fully Public Access */}
+            {/* Welcome Form - AUTO-PLAY WELCOME */}
             {currentQuestionIndex === -1 && (
               <div className="space-y-6 sm:space-y-8">
                 {/* Welcome Voice Guide - AUTO-PLAY */}
@@ -507,6 +516,21 @@ const Assessment = () => {
             {/* Question Display */}
             {currentQuestionIndex >= 0 && assessmentData.questions[currentQuestionIndex] && (
               <div className="space-y-6">
+                {/* Transcript Display - ABOVE question */}
+                <Card className="p-4 bg-blue-50 border-2 border-blue-200">
+                  <div className="flex items-start space-x-3">
+                    <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                      <Headphones className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-blue-900 mb-2">Voice Guide Transcript:</h3>
+                      <p className="text-sm text-blue-800 leading-relaxed">
+                        {getCurrentVoiceScript()}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+
                 {/* Voice Guide - AUTO-PLAY */}
                 <VoicePlayer
                   text={getCurrentVoiceScript()}

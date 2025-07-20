@@ -1,10 +1,9 @@
-
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Download, Mic, TrendingUp, Target, Lightbulb } from 'lucide-react';
+import { Download, Mic, TrendingUp, Target, Lightbulb, Headphones } from 'lucide-react';
 import { VoicePlayer } from '@/components/VoicePlayer';
 import { CelebrationEffects } from '@/components/CelebrationEffects';
 import { LeadData, AssessmentResults } from '@/types/assessment';
@@ -45,72 +44,6 @@ const Results = () => {
 
   const overallLabel = getScoreLabel(results.overallScore);
 
-  const handleDownload = () => {
-    // Enhanced PDF-style content generation
-    const content = `
-VoiceCard Clarity Snapshot
-Assessment Results Report
-
-Name: ${leadData?.firstName} ${leadData?.lastName}
-Email: ${leadData?.email}
-Assessment: ${template}
-Date: ${new Date().toLocaleDateString()}
-Time: ${new Date().toLocaleTimeString()}
-
-═══════════════════════════════════════════════════
-
-OVERALL ASSESSMENT SCORE
-${results.overallScore}/100 - ${overallLabel.label}
-
-DETAILED CATEGORY BREAKDOWN
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Readiness Score: ${results.categoryScores.readiness}/100
-• Your level of preparation and commitment
-
-Confidence Score: ${results.categoryScores.confidence}/100  
-• Your self-assurance and belief in your abilities
-
-Clarity Score: ${results.categoryScores.clarity}/100
-• Your understanding and vision of your goals
-
-PERSONALIZED INSIGHTS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-${results.insights.map((insight: string, i: number) => `${i + 1}. ${insight}`).join('\n\n')}
-
-NEXT STEPS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Based on your assessment results, we recommend:
-
-• Review your personalized insights above
-• Focus on areas where you scored below 70
-• Consider scheduling a clarity call for deeper guidance
-• Implement action items that resonate most with you
-
-═══════════════════════════════════════════════════
-
-VoiceCard Assessment Platform
-Generated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}
-
-This personalized report is confidential and intended for the named recipient only.
-    `;
-    
-    // Create and download the file immediately
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `VoiceCard-Assessment-Results-${leadData?.firstName || 'User'}-${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    console.log('Assessment results downloaded successfully');
-  };
-
   // Enhanced voice script message - will play after celebration
   const voiceScript = `Hello ${leadData?.firstName}, and congratulations on completing your VoiceCard assessment! This is truly an accomplishment worth celebrating. Taking the time for this kind of self-reflection shows real commitment to your growth. Your overall clarity score of ${results.overallScore} out of 100 is a meaningful indicator of where you stand today. But what's even more valuable are the personalized insights we've discovered specifically for your journey. These aren't generic recommendations - they're tailored insights based on your unique responses. I encourage you to take your time reviewing these insights, as they could be the key to unlocking your next breakthrough.`;
 
@@ -126,17 +59,11 @@ This personalized report is confidential and intended for the named recipient on
         <CelebrationEffects onComplete={handleCelebrationComplete} />
       )}
       
-      {/* Header with Download Only */}
+      {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-end">
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <Button variant="outline" onClick={handleDownload} size="sm" className="bg-gradient-to-r from-green-500 to-emerald-600 text-white border-0 hover:from-green-600 hover:to-emerald-700">
-                <Download className="h-4 w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Download PDF</span>
-                <span className="sm:hidden">PDF</span>
-              </Button>
-            </div>
+            {/* Download button removed per user request */}
           </div>
         </div>
       </header>
@@ -173,6 +100,21 @@ This personalized report is confidential and intended for the named recipient on
                 </div>
               </div>
             </div>
+            
+            {/* Voice Guide Transcript - ABOVE Voice Player */}
+            <Card className="p-4 bg-purple-50 border-2 border-purple-200 mb-4">
+              <div className="flex items-start space-x-3">
+                <div className="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                  <Headphones className="h-4 w-4" />
+                </div>
+                <div className="flex-1 text-left">
+                  <h3 className="font-semibold text-purple-900 mb-2">Voice Guide Transcript:</h3>
+                  <p className="text-sm text-purple-800 leading-relaxed">
+                    {voiceScript}
+                  </p>
+                </div>
+              </div>
+            </Card>
             
             {/* Mobile-Optimized Voice Guide Section */}
             <div className="mb-6 sm:mb-8">
