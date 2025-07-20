@@ -58,15 +58,6 @@ const Results = () => {
       {showCelebration && (
         <CelebrationEffects onComplete={handleCelebrationComplete} />
       )}
-      
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-end">
-            {/* Download button removed per user request */}
-          </div>
-        </div>
-      </header>
 
       <div className="container mx-auto px-4 py-4 sm:py-8">
         <div className="max-w-4xl mx-auto">
@@ -101,40 +92,22 @@ const Results = () => {
               </div>
             </div>
             
-            {/* Voice Guide Transcript - ABOVE Voice Player */}
-            <Card className="p-4 bg-purple-50 border-2 border-purple-200 mb-4">
-              <div className="flex items-start space-x-3">
-                <div className="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm flex-shrink-0">
-                  <Headphones className="h-4 w-4" />
-                </div>
-                <div className="flex-1 text-left">
-                  <h3 className="font-semibold text-purple-900 mb-2">Voice Guide Transcript:</h3>
-                  <p className="text-sm text-purple-800 leading-relaxed">
+            {/* Simplified Voice Guide Section - Remove redundant labels */}
+            <div className="mb-6 sm:mb-8">
+              <Card className="p-6 bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200 shadow-xl rounded-xl">
+                <div className="mb-4 p-4 bg-purple-100 border-l-4 border-purple-500 rounded-r-lg">
+                  <p className="text-sm text-purple-800 leading-relaxed italic">
                     {voiceScript}
                   </p>
                 </div>
-              </div>
-            </Card>
-            
-            {/* Mobile-Optimized Voice Guide Section */}
-            <div className="mb-6 sm:mb-8">
-              <div className="bg-gradient-to-r from-purple-100 to-blue-100 border-2 sm:border-4 border-purple-300 rounded-xl p-4 sm:p-6 shadow-xl">
-                <div className="flex flex-col sm:flex-row items-center justify-center mb-4 sm:mb-6">
-                  <div className="bg-purple-600 p-3 sm:p-4 rounded-full mb-3 sm:mb-0 sm:mr-4">
-                    <Mic className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                  </div>
-                  <div className="text-center sm:text-left">
-                    <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-purple-900 mb-2">🎧 Voice Guide</h3>
-                    <p className="text-sm sm:text-base text-purple-700 font-bold">Press play to hear a summary of your results!</p>
-                    <p className="text-xs sm:text-sm text-purple-600 mt-1">This is your unique VoiceCard experience - tailored just for you!</p>
-                  </div>
-                </div>
+                
                 <VoicePlayer 
                   text={voiceScript}
                   autoPlay={celebrationComplete}
                   className="bg-white/90 shadow-lg"
+                  isResultsPage={true}
                 />
-              </div>
+              </Card>
             </div>
           </div>
 

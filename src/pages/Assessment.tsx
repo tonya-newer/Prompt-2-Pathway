@@ -516,21 +516,6 @@ const Assessment = () => {
             {/* Question Display */}
             {currentQuestionIndex >= 0 && assessmentData.questions[currentQuestionIndex] && (
               <div className="space-y-6">
-                {/* Transcript Display - ABOVE question */}
-                <Card className="p-4 bg-blue-50 border-2 border-blue-200">
-                  <div className="flex items-start space-x-3">
-                    <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm flex-shrink-0">
-                      <Headphones className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-blue-900 mb-2">Voice Guide Transcript:</h3>
-                      <p className="text-sm text-blue-800 leading-relaxed">
-                        {getCurrentVoiceScript()}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-
                 {/* Voice Guide - AUTO-PLAY */}
                 <VoicePlayer
                   text={getCurrentVoiceScript()}
@@ -538,13 +523,33 @@ const Assessment = () => {
                   className="animate-fade-in shadow-xl"
                 />
 
-                {/* Question Card */}
+                {/* Question Card with Integrated Transcript */}
                 <div className="animate-scale-in">
-                  <QuestionCard
-                    question={assessmentData.questions[currentQuestionIndex]}
-                    answer={answers[assessmentData.questions[currentQuestionIndex].id]}
-                    onAnswer={(answer) => handleAnswer(assessmentData.questions[currentQuestionIndex].id, answer)}
-                  />
+                  <Card className="p-8 max-w-4xl mx-auto">
+                    <div className="mb-6">
+                      <Badge variant="secondary" className="mb-4">
+                        {getQuestionTypeLabel(assessmentData.questions[currentQuestionIndex].type)}
+                      </Badge>
+                      
+                      {/* Voice transcript integrated into question area */}
+                      <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
+                        <p className="text-sm text-blue-800 italic leading-relaxed">
+                          {getCurrentVoiceScript()}
+                        </p>
+                      </div>
+                      
+                      <h2 className="text-2xl font-bold leading-relaxed mb-3">
+                        {assessmentData.questions[currentQuestionIndex].question}
+                      </h2>
+                      {assessmentData.questions[currentQuestionIndex].description && (
+                        <p className="text-gray-600 leading-relaxed">
+                          {assessmentData.questions[currentQuestionIndex].description}
+                        </p>
+                      )}
+                    </div>
+
+                    {renderQuestion(assessmentData.questions[currentQuestionIndex])}
+                  </Card>
                 </div>
 
                 {/* Navigation */}
@@ -575,6 +580,120 @@ const Assessment = () => {
       </div>
     </div>
   );
+
+  // Helper functions
+  function getQuestionTypeLabel(type: string) {
+    const labels = {
+      'yes-no': 'Quick Decision',
+      'this-that': 'Choose One',
+      'multiple-choice': 'Select Option',
+      'rating': 'Rate Agreement',
+      'desires': 'Multiple Select',
+      'pain-avoidance': 'Priority Check'
+    };
+    return labels[type as keyof typeof labels] || 'Question';
+  }
+
+  function renderQuestion(question: any) {
+    switch (question.type) {
+      case 'yes-no':
+        return (
+          <div className="grid grid-cols-2 gap-4 mt-6">
+            <Button
+              variant={answers[question.id] === 'yes' ? 'default' : 'outline'}
+              onClick={() => handleAnswer(question.id, 'yes')}
+              className="h-16 text-lg"
+            >
+              Yes
+            </Button>
+            <Button
+              variant={answers[question.id] === 'no' ? 'default' : 'outline'}
+              onClick={() => handleAnswer(question.id, 'no')}
+              className="h-16 text-lg"
+            >
+              No
+            </Button>
+          </div>
+        );
+      case 'this-that':
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            {question.options?.map((option, index) => (
+              <Button
+                key={index}
+                variant={answers[question.id] === option ? 'default' : 'outline'}
+                onClick={() => handleAnswer(question.id, option)}
+                className="h-20 text-left p-4 whitespace-normal"
+              >
+                {option}
+              </Button>
+            ))}
+          </div>
+        );
+      case 'multiple-choice':
+        return (
+          <RadioGroup value={answers[question.id]} onValueChange={(value) => handleAnswer(question.id, value)} className="mt-6 space-y-3">
+            {question.options?.map((option, index) => (
+              <div key={index} className="flex items-center space-x-2">
+                <RadioGroupItem value={option} id={`option-${index}`} />
+                <Label htmlFor={`option-${index}`} className="text-base cursor-pointer">
+                  {option}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+        );
+      case 'rating':
+        return (
+          <div className="mt-6">
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-sm text-gray-500">Strongly Disagree</span>
+              <span className="text-sm text-gray-500">Strongly Agree</span>
+            </div>
+            <div className="flex justify-center space-x-2">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
+                <Button
+                  key={rating}
+                  variant={answers[question.id] === rating ? 'default' : 'outline'}
+                  onClick={() => handleAnswer(question.id, rating)}
+                  className="w-12 h-12 p-0"
+                >
+                  {rating}
+                </Button>
+              ))}
+            </div>
+          </div>
+        );
+      case 'desires':
+      case 'pain-avoidance':
+        return (
+          <div className="mt-6 space-y-3">
+            <p className="text-sm text-gray-600 mb-4">Select all that resonate with you:</p>
+            {question.options?.map((option, index) => (
+              <div key={index} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50">
+                <Checkbox
+                  id={`desire-${index}`}
+                  checked={answers[question.id]?.includes(option) || false}
+                  onCheckedChange={(checked) => {
+                    const currentAnswers = answers[question.id] || [];
+                    if (checked) {
+                      handleAnswer(question.id, [...currentAnswers, option]);
+                    } else {
+                      handleAnswer(question.id, currentAnswers.filter((a: string) => a !== option));
+                    }
+                  }}
+                />
+                <Label htmlFor={`desire-${index}`} className="text-base cursor-pointer flex-1">
+                  {option}
+                </Label>
+              </div>
+            ))}
+          </div>
+        );
+      default:
+        return null;
+    }
+  }
 };
 
 export default Assessment;
