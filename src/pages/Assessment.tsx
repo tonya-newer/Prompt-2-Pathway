@@ -4,6 +4,9 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { AssessmentTemplate, Question, LeadData } from '@/types/assessment';
@@ -332,6 +335,119 @@ const Assessment = () => {
     );
   }
 
+  const getQuestionTypeLabel = (type: string) => {
+    const labels = {
+      'yes-no': 'Quick Decision',
+      'this-that': 'Choose One',
+      'multiple-choice': 'Select Option',
+      'rating': 'Rate Agreement',
+      'desires': 'Multiple Select',
+      'pain-avoidance': 'Priority Check'
+    };
+    return labels[type as keyof typeof labels] || 'Question';
+  };
+
+  const renderQuestion = (question: Question) => {
+    switch (question.type) {
+      case 'yes-no':
+        return (
+          <div className="grid grid-cols-2 gap-4 mt-6">
+            <Button
+              variant={answers[question.id] === 'yes' ? 'default' : 'outline'}
+              onClick={() => handleAnswer(question.id, 'yes')}
+              className="h-16 text-lg"
+            >
+              Yes
+            </Button>
+            <Button
+              variant={answers[question.id] === 'no' ? 'default' : 'outline'}
+              onClick={() => handleAnswer(question.id, 'no')}
+              className="h-16 text-lg"
+            >
+              No
+            </Button>
+          </div>
+        );
+      case 'this-that':
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            {question.options?.map((option, index) => (
+              <Button
+                key={index}
+                variant={answers[question.id] === option ? 'default' : 'outline'}
+                onClick={() => handleAnswer(question.id, option)}
+                className="h-20 text-left p-4 whitespace-normal"
+              >
+                {option}
+              </Button>
+            ))}
+          </div>
+        );
+      case 'multiple-choice':
+        return (
+          <RadioGroup value={answers[question.id]} onValueChange={(value) => handleAnswer(question.id, value)} className="mt-6 space-y-3">
+            {question.options?.map((option, index) => (
+              <div key={index} className="flex items-center space-x-2">
+                <RadioGroupItem value={option} id={`option-${index}`} />
+                <Label htmlFor={`option-${index}`} className="text-base cursor-pointer">
+                  {option}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+        );
+      case 'rating':
+        return (
+          <div className="mt-6">
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-sm text-gray-500">Strongly Disagree</span>
+              <span className="text-sm text-gray-500">Strongly Agree</span>
+            </div>
+            <div className="flex justify-center space-x-2">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
+                <Button
+                  key={rating}
+                  variant={answers[question.id] === rating ? 'default' : 'outline'}
+                  onClick={() => handleAnswer(question.id, rating)}
+                  className="w-12 h-12 p-0"
+                >
+                  {rating}
+                </Button>
+              ))}
+            </div>
+          </div>
+        );
+      case 'desires':
+      case 'pain-avoidance':
+        return (
+          <div className="mt-6 space-y-3">
+            <p className="text-sm text-gray-600 mb-4">Select all that resonate with you:</p>
+            {question.options?.map((option, index) => (
+              <div key={index} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50">
+                <Checkbox
+                  id={`desire-${index}`}
+                  checked={answers[question.id]?.includes(option) || false}
+                  onCheckedChange={(checked) => {
+                    const currentAnswers = answers[question.id] || [];
+                    if (checked) {
+                      handleAnswer(question.id, [...currentAnswers, option]);
+                    } else {
+                      handleAnswer(question.id, currentAnswers.filter((a: string) => a !== option));
+                    }
+                  }}
+                />
+                <Label htmlFor={`desire-${index}`} className="text-base cursor-pointer flex-1">
+                  {option}
+                </Label>
+              </div>
+            ))}
+          </div>
+        );
+      default:
+        return null;
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       <div className="container max-w-4xl mx-auto px-4 py-6 sm:py-8">
@@ -580,120 +696,6 @@ const Assessment = () => {
       </div>
     </div>
   );
-
-  // Helper functions
-  function getQuestionTypeLabel(type: string) {
-    const labels = {
-      'yes-no': 'Quick Decision',
-      'this-that': 'Choose One',
-      'multiple-choice': 'Select Option',
-      'rating': 'Rate Agreement',
-      'desires': 'Multiple Select',
-      'pain-avoidance': 'Priority Check'
-    };
-    return labels[type as keyof typeof labels] || 'Question';
-  }
-
-  function renderQuestion(question: any) {
-    switch (question.type) {
-      case 'yes-no':
-        return (
-          <div className="grid grid-cols-2 gap-4 mt-6">
-            <Button
-              variant={answers[question.id] === 'yes' ? 'default' : 'outline'}
-              onClick={() => handleAnswer(question.id, 'yes')}
-              className="h-16 text-lg"
-            >
-              Yes
-            </Button>
-            <Button
-              variant={answers[question.id] === 'no' ? 'default' : 'outline'}
-              onClick={() => handleAnswer(question.id, 'no')}
-              className="h-16 text-lg"
-            >
-              No
-            </Button>
-          </div>
-        );
-      case 'this-that':
-        return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-            {question.options?.map((option, index) => (
-              <Button
-                key={index}
-                variant={answers[question.id] === option ? 'default' : 'outline'}
-                onClick={() => handleAnswer(question.id, option)}
-                className="h-20 text-left p-4 whitespace-normal"
-              >
-                {option}
-              </Button>
-            ))}
-          </div>
-        );
-      case 'multiple-choice':
-        return (
-          <RadioGroup value={answers[question.id]} onValueChange={(value) => handleAnswer(question.id, value)} className="mt-6 space-y-3">
-            {question.options?.map((option, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <RadioGroupItem value={option} id={`option-${index}`} />
-                <Label htmlFor={`option-${index}`} className="text-base cursor-pointer">
-                  {option}
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
-        );
-      case 'rating':
-        return (
-          <div className="mt-6">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-sm text-gray-500">Strongly Disagree</span>
-              <span className="text-sm text-gray-500">Strongly Agree</span>
-            </div>
-            <div className="flex justify-center space-x-2">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
-                <Button
-                  key={rating}
-                  variant={answers[question.id] === rating ? 'default' : 'outline'}
-                  onClick={() => handleAnswer(question.id, rating)}
-                  className="w-12 h-12 p-0"
-                >
-                  {rating}
-                </Button>
-              ))}
-            </div>
-          </div>
-        );
-      case 'desires':
-      case 'pain-avoidance':
-        return (
-          <div className="mt-6 space-y-3">
-            <p className="text-sm text-gray-600 mb-4">Select all that resonate with you:</p>
-            {question.options?.map((option, index) => (
-              <div key={index} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50">
-                <Checkbox
-                  id={`desire-${index}`}
-                  checked={answers[question.id]?.includes(option) || false}
-                  onCheckedChange={(checked) => {
-                    const currentAnswers = answers[question.id] || [];
-                    if (checked) {
-                      handleAnswer(question.id, [...currentAnswers, option]);
-                    } else {
-                      handleAnswer(question.id, currentAnswers.filter((a: string) => a !== option));
-                    }
-                  }}
-                />
-                <Label htmlFor={`desire-${index}`} className="text-base cursor-pointer flex-1">
-                  {option}
-                </Label>
-              </div>
-            ))}
-          </div>
-        );
-      default:
-        return null;
-    }
-  }
 };
 
 export default Assessment;

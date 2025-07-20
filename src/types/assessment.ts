@@ -4,6 +4,7 @@ export interface Question {
   type: 'yes-no' | 'this-that' | 'multiple-choice' | 'rating' | 'desires' | 'pain-avoidance';
   question: string;
   voiceScript?: string;
+  description?: string;
   options?: string[];
 }
 
