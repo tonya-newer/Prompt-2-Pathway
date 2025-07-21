@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -46,9 +47,11 @@ const Assessment = () => {
           setAnswers(JSON.parse(storedAnswers));
         } catch (error) {
           console.error("Error parsing stored answers:", error);
+          // Initialize with null values (no pre-selected answers)
           setAnswers(new Array(assessment.questions.length).fill(null));
         }
       } else {
+        // Initialize with null values (no pre-selected answers)
         setAnswers(new Array(assessment.questions.length).fill(null));
       }
     }
@@ -149,7 +152,7 @@ const Assessment = () => {
 
     leadStorageService.storeLead(leadData, assessmentResults, assessment.title);
 
-    navigate('/results');
+    navigate('/results', { state: { assessment } });
   };
 
   return (
@@ -172,14 +175,12 @@ const Assessment = () => {
           </div>
         ) : currentQuestionIndex < assessment.questions.length ? (
           <div className="space-y-8">
-            {/* Auto-playing welcome voice */}
-            {currentQuestionIndex === 0 && (
-              <VoicePlayer
-                text={currentQuestion?.voiceScript || "Welcome to this assessment. Let's begin your journey of discovery."}
-                autoPlay={true}
-                className="mb-8"
-              />
-            )}
+            {/* Voice Player - plays for EVERY question */}
+            <VoicePlayer
+              text={currentQuestion?.voiceScript || `Question ${currentQuestionIndex + 1}: Let's continue with your assessment.`}
+              autoPlay={true}
+              className="mb-8"
+            />
             
             {/* Enhanced Progress bar */}
             <div className="max-w-5xl mx-auto">

@@ -96,22 +96,19 @@ const Results = () => {
     }
   };
 
+  // REMOVED: Auto-redirect logic that was causing the page to disappear
   if (!results || !assessment) {
-    setTimeout(() => {
-      navigate('/');
-    }, 3000);
-
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">No results found. Redirecting to home...</p>
+          <p className="text-gray-600">Loading your results...</p>
         </div>
       </div>
     );
   }
 
-  const voiceScript = `Congratulations on completing your ${assessment.title} assessment! You've achieved an overall score of ${results.overallScore} percent. ${results.interpretation}`;
+  const voiceScript = `Congratulations on completing your ${assessment.title} assessment! You've achieved an outstanding overall score of ${results.overallScore} percent. ${results.interpretation}`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/50">

@@ -18,58 +18,103 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
   const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Use only natural American female voice - consistent across all assessments
+  // Enhanced female voice selection - prioritize natural American female voices only
   const speakWithNaturalVoice = () => {
     if (speechSynthesis.speaking) {
       speechSynthesis.cancel();
     }
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9;
-    utterance.pitch = 1.0;
+    utterance.rate = 0.85; // Slightly slower for clarity
+    utterance.pitch = 1.1; // Slightly higher pitch for female voice
     utterance.volume = isMuted ? 0 : 1;
 
     const voices = speechSynthesis.getVoices();
+    console.log('Available voices:', voices.map(v => `${v.name} - ${v.lang} - ${v.gender}`));
     
-    // Priority order for natural American female voices
-    const preferredVoices = [
+    // Strict priority for confirmed female voices only
+    const preferredFemaleVoices = [
+      'Microsoft Zira - English (United States)',
+      'Microsoft Eva - English (United States)', 
+      'Google US English Female',
       'Samantha',
-      'Karen', 
+      'Karen',
       'Victoria',
       'Susan',
       'Allison',
       'Ava',
-      'Zoe'
+      'Zoe',
+      'Alice',
+      'Anna',
+      'Emma',
+      'Joanna',
+      'Kendra',
+      'Kimberly',
+      'Salli'
     ];
     
     let selectedVoice = null;
     
-    // Find the best natural voice available
-    for (const voiceName of preferredVoices) {
+    // First pass: Look for exact matches with confirmed female voices
+    for (const voiceName of preferredFemaleVoices) {
       selectedVoice = voices.find(voice => 
-        voice.name.includes(voiceName) && voice.lang.startsWith('en-US')
+        voice.name.includes(voiceName) && 
+        voice.lang.startsWith('en-US')
       );
-      if (selectedVoice) break;
+      if (selectedVoice) {
+        console.log('Selected preferred female voice:', selectedVoice.name);
+        break;
+      }
     }
     
-    // Fallback to any natural-sounding English voice
+    // Second pass: Look for any voice explicitly marked as female
     if (!selectedVoice) {
       selectedVoice = voices.find(voice => 
         voice.lang.startsWith('en-US') && 
         (voice.name.toLowerCase().includes('female') || 
          voice.name.toLowerCase().includes('woman') ||
-         !voice.name.toLowerCase().includes('male'))
+         voice.name.toLowerCase().includes('zira') ||
+         voice.name.toLowerCase().includes('eva'))
       );
+      if (selectedVoice) {
+        console.log('Selected female-marked voice:', selectedVoice.name);
+      }
+    }
+    
+    // Third pass: Exclude explicitly male voices and select the first remaining
+    if (!selectedVoice) {
+      selectedVoice = voices.find(voice => 
+        voice.lang.startsWith('en-US') && 
+        !voice.name.toLowerCase().includes('male') &&
+        !voice.name.toLowerCase().includes('david') &&
+        !voice.name.toLowerCase().includes('mark') &&
+        !voice.name.toLowerCase().includes('daniel') &&
+        !voice.name.toLowerCase().includes('matthew')
+      );
+      if (selectedVoice) {
+        console.log('Selected non-male voice:', selectedVoice.name);
+      }
     }
     
     if (selectedVoice) {
       utterance.voice = selectedVoice;
-      console.log('Using natural voice:', selectedVoice.name);
+      console.log('Final voice selection:', selectedVoice.name, selectedVoice.lang);
+    } else {
+      console.log('Using default voice (no female voice found)');
     }
 
-    utterance.onstart = () => setIsPlaying(true);
-    utterance.onend = () => setIsPlaying(false);
-    utterance.onerror = () => setIsPlaying(false);
+    utterance.onstart = () => {
+      console.log('Voice started playing');
+      setIsPlaying(true);
+    };
+    utterance.onend = () => {
+      console.log('Voice finished playing');
+      setIsPlaying(false);
+    };
+    utterance.onerror = (error) => {
+      console.error('Voice playback error:', error);
+      setIsPlaying(false);
+    };
 
     speechSynthesis.speak(utterance);
   };
@@ -109,14 +154,32 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     }
   };
 
-  // Auto-play functionality
+  // Enhanced auto-play functionality with voice loading wait
   useEffect(() => {
     if (autoPlay && text.trim()) {
-      const timer = setTimeout(() => {
-        speakWithNaturalVoice();
-      }, 1000);
+      // Wait for voices to load, then auto-play
+      const checkVoicesAndPlay = () => {
+        const voices = speechSynthesis.getVoices();
+        if (voices.length > 0) {
+          console.log('Voices loaded, starting auto-play');
+          setTimeout(() => {
+            speakWithNaturalVoice();
+          }, 800); // Short delay for better UX
+        } else {
+          // Voices not loaded yet, wait a bit more
+          setTimeout(checkVoicesAndPlay, 100);
+        }
+      };
+
+      // Start checking for voices
+      checkVoicesAndPlay();
       
-      return () => clearTimeout(timer);
+      // Also listen for the voiceschanged event
+      speechSynthesis.addEventListener('voiceschanged', checkVoicesAndPlay, { once: true });
+      
+      return () => {
+        speechSynthesis.removeEventListener('voiceschanged', checkVoicesAndPlay);
+      };
     }
   }, [text, autoPlay]);
 
