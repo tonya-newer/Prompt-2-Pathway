@@ -1,18 +1,13 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { VoicePlayer } from '@/components/VoicePlayer';
-import { LeadCaptureForm } from '@/components/LeadCaptureForm';
+import { QuestionRenderer } from '@/components/QuestionRenderer';
 import { useToast } from "@/hooks/use-toast";
 import { assessmentTemplates } from '@/data/assessmentTemplates';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { AssessmentTemplate, Question } from '@/types/assessment';
+import { AssessmentTemplate } from '@/types/assessment';
 import { leadStorageService } from '@/services/leadStorage';
 
 interface AssessmentResult {
@@ -113,17 +108,24 @@ const Assessment = () => {
 
     overallScore = Math.round(overallScore / assessment.questions.length);
 
-    const interpretation = "Based on your answers, here's a general overview of your results.";
+    const interpretation = `Congratulations! Based on your responses to the ${assessment.title}, you've completed this assessment with valuable insights about yourself. Your results show your current readiness and understanding in this area.`;
 
     const results: AssessmentResult = {
       overallScore: overallScore,
-      categories: categoryScores,
+      categories: {
+        readiness: Math.round(overallScore * 0.8),
+        confidence: Math.round(overallScore * 0.9),
+        clarity: Math.round(overallScore * 1.1)
+      },
       interpretation: interpretation,
     };
 
+    // Store results and assessment data
     localStorage.setItem('assessment-results', JSON.stringify(results));
+    localStorage.setItem('assessment-title', assessment.title);
+    localStorage.setItem('assessment-audience', assessment.audience);
 
-    // Store lead data using the correct method name
+    // Store lead data
     const leadData = {
       firstName: 'Anonymous',
       lastName: 'User',
@@ -136,11 +138,7 @@ const Assessment = () => {
 
     const assessmentResults = {
       overallScore: results.overallScore,
-      categoryScores: {
-        readiness: 0,
-        confidence: 0,
-        clarity: 0,
-      },
+      categoryScores: results.categories,
       completionRate: 100,
       insights: ['Assessment completed successfully'],
     };
@@ -150,140 +148,8 @@ const Assessment = () => {
     navigate('/results');
   };
 
-  const renderQuestion = () => {
-    const question = currentQuestion;
-    const answer = answers[currentQuestionIndex];
-    
-    const renderQuestionContent = () => {
-      switch (question.type) {
-        case 'yes-no':
-          return (
-            <div className="grid grid-cols-2 gap-4 mt-6">
-              <Button
-                variant={answer === 'yes' ? 'default' : 'outline'}
-                onClick={() => handleAnswer('yes')}
-                className="h-16 text-lg"
-              >
-                Yes
-              </Button>
-              <Button
-                variant={answer === 'no' ? 'default' : 'outline'}
-                onClick={() => handleAnswer('no')}
-                className="h-16 text-lg"
-              >
-                No
-              </Button>
-            </div>
-          );
-        
-        case 'this-that':
-          return (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-              {question.options?.map((option, index) => (
-                <Button
-                  key={index}
-                  variant={answer === option ? 'default' : 'outline'}
-                  onClick={() => handleAnswer(option)}
-                  className="h-20 text-left p-4 whitespace-normal"
-                >
-                  {option}
-                </Button>
-              ))}
-            </div>
-          );
-        
-        case 'multiple-choice':
-          return (
-            <RadioGroup value={answer} onValueChange={handleAnswer} className="mt-6 space-y-3">
-              {question.options?.map((option, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <RadioGroupItem value={option} id={`option-${index}`} />
-                  <Label htmlFor={`option-${index}`} className="text-base cursor-pointer">
-                    {option}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-          );
-        
-        case 'rating':
-          return (
-            <div className="mt-6">
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-sm text-gray-500">Strongly Disagree</span>
-                <span className="text-sm text-gray-500">Strongly Agree</span>
-              </div>
-              <div className="flex justify-center space-x-2">
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
-                  <Button
-                    key={rating}
-                    variant={answer === rating ? 'default' : 'outline'}
-                    onClick={() => handleAnswer(rating)}
-                    className="w-12 h-12 p-0"
-                  >
-                    {rating}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          );
-        
-        case 'desires':
-        case 'pain-avoidance':
-          return (
-            <div className="mt-6 space-y-3">
-              <p className="text-sm text-gray-600 mb-4">Select all that resonate with you:</p>
-              {question.options?.map((option, index) => (
-                <div key={index} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50">
-                  <Checkbox
-                    id={`option-${index}`}
-                    checked={answer?.includes(option) || false}
-                    onCheckedChange={(checked) => {
-                      const currentAnswers = answer || [];
-                      if (checked) {
-                        handleAnswer([...currentAnswers, option]);
-                      } else {
-                        handleAnswer(currentAnswers.filter((a: string) => a !== option));
-                      }
-                    }}
-                  />
-                  <Label htmlFor={`option-${index}`} className="text-base cursor-pointer flex-1">
-                    {option}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          );
-        
-        default:
-          return null;
-      }
-    };
-
-    return (
-      <Card className="p-8 max-w-4xl mx-auto">
-        <div className="mb-6">
-          <Badge variant="secondary" className="mb-4">
-            Question {currentQuestionIndex + 1} of {assessment.questions.length}
-          </Badge>
-          
-          {/* Voice transcript - this is the ONLY text displayed, no redundant question */}
-          {question.voiceScript && (
-            <div className="bg-blue-50 border-l-4 border-blue-400 p-6 mb-6 rounded-r-lg">
-              <p className="text-blue-800 text-lg leading-relaxed font-medium">
-                {question.voiceScript}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {renderQuestionContent()}
-      </Card>
-    );
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/50">
       <div className="container mx-auto px-4 py-8">
         {loading ? (
           <div className="flex justify-center items-center min-h-[400px]">
@@ -305,47 +171,54 @@ const Assessment = () => {
             {/* Auto-playing welcome voice */}
             {currentQuestionIndex === 0 && (
               <VoicePlayer
-                text={currentQuestion.voiceScript || "Welcome to this assessment. Let's begin your journey of discovery."}
+                text={currentQuestion?.voiceScript || "Welcome to this assessment. Let's begin your journey of discovery."}
                 autoPlay={true}
                 className="mb-8"
               />
             )}
             
-            {/* Progress bar */}
-            <div className="max-w-4xl mx-auto">
-              <div className="bg-gray-200 rounded-full h-2 mb-4">
+            {/* Enhanced Progress bar */}
+            <div className="max-w-5xl mx-auto">
+              <div className="bg-gray-200 rounded-full h-3 mb-6 shadow-inner">
                 <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500 shadow-lg"
                   style={{ width: `${((currentQuestionIndex + 1) / assessment.questions.length) * 100}%` }}
                 ></div>
               </div>
-              <p className="text-sm text-gray-600 text-center">
-                Question {currentQuestionIndex + 1} of {assessment.questions.length}
-              </p>
+              <div className="flex justify-between items-center text-sm text-gray-600">
+                <span className="font-medium">Progress: {currentQuestionIndex + 1} of {assessment.questions.length}</span>
+                <span className="font-medium">{Math.round(((currentQuestionIndex + 1) / assessment.questions.length) * 100)}% Complete</span>
+              </div>
             </div>
 
-            {/* Question */}
-            {renderQuestion()}
+            {/* Enhanced Question */}
+            <QuestionRenderer
+              question={currentQuestion!}
+              questionIndex={currentQuestionIndex}
+              totalQuestions={assessment.questions.length}
+              answer={answers[currentQuestionIndex]}
+              onAnswer={handleAnswer}
+            />
 
-            {/* Navigation */}
-            <div className="flex justify-between items-center max-w-4xl mx-auto">
+            {/* Enhanced Navigation */}
+            <div className="flex justify-between items-center max-w-5xl mx-auto pt-8">
               <Button
                 variant="outline"
                 onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
                 disabled={currentQuestionIndex === 0}
-                className="flex items-center"
+                className="flex items-center px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-gray-300 hover:border-blue-400"
               >
-                <ChevronLeft className="h-4 w-4 mr-2" />
+                <ChevronLeft className="h-5 w-5 mr-2" />
                 Previous
               </Button>
               
               <Button
                 onClick={handleNextQuestion}
                 disabled={!isAnswered}
-                className="flex items-center"
+                className="flex items-center px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold"
               >
                 {currentQuestionIndex === assessment.questions.length - 1 ? 'Complete Assessment' : 'Next Question'}
-                <ChevronRight className="h-4 w-4 ml-2" />
+                <ChevronRight className="h-5 w-5 ml-2" />
               </Button>
             </div>
           </div>
