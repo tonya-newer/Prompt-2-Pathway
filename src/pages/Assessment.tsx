@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -266,23 +267,13 @@ const Assessment = () => {
             Question {currentQuestionIndex + 1} of {assessment.questions.length}
           </Badge>
           
-          {/* Voice transcript placed directly in question area */}
+          {/* Voice transcript - this is the ONLY text displayed, no redundant question */}
           {question.voiceScript && (
-            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6 rounded-r-lg">
-              <p className="text-blue-800 text-sm italic leading-relaxed">
+            <div className="bg-blue-50 border-l-4 border-blue-400 p-6 mb-6 rounded-r-lg">
+              <p className="text-blue-800 text-lg leading-relaxed font-medium">
                 {question.voiceScript}
               </p>
             </div>
-          )}
-          
-          <h2 className="text-2xl font-bold leading-relaxed mb-3">
-            {question.question}
-          </h2>
-          
-          {question.description && (
-            <p className="text-gray-600 leading-relaxed mb-4">
-              {question.description}
-            </p>
           )}
         </div>
 

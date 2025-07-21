@@ -18,7 +18,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
   const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Use only natural American female voice
+  // Use only natural American female voice - consistent across all assessments
   const speakWithNaturalVoice = () => {
     if (speechSynthesis.speaking) {
       speechSynthesis.cancel();
@@ -26,27 +26,45 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = 0.9;
-    utterance.pitch = 1.1;
+    utterance.pitch = 1.0;
     utterance.volume = isMuted ? 0 : 1;
 
     const voices = speechSynthesis.getVoices();
     
-    // Find the most natural-sounding American female voice
-    const naturalVoice = voices.find(voice => 
-      voice.name.includes('Samantha') || 
-      voice.name.includes('Karen') ||
-      voice.name.includes('Victoria') ||
-      voice.name.includes('Susan') ||
-      voice.name.includes('Allison') ||
-      voice.name.includes('Ava') ||
-      voice.name.includes('Zoe') ||
-      voice.name.includes('Fiona') ||
-      (voice.lang.startsWith('en-US') && voice.name.toLowerCase().includes('female'))
-    );
+    // Priority order for natural American female voices
+    const preferredVoices = [
+      'Samantha',
+      'Karen', 
+      'Victoria',
+      'Susan',
+      'Allison',
+      'Ava',
+      'Zoe'
+    ];
     
-    if (naturalVoice) {
-      utterance.voice = naturalVoice;
-      console.log('Using natural voice:', naturalVoice.name);
+    let selectedVoice = null;
+    
+    // Find the best natural voice available
+    for (const voiceName of preferredVoices) {
+      selectedVoice = voices.find(voice => 
+        voice.name.includes(voiceName) && voice.lang.startsWith('en-US')
+      );
+      if (selectedVoice) break;
+    }
+    
+    // Fallback to any natural-sounding English voice
+    if (!selectedVoice) {
+      selectedVoice = voices.find(voice => 
+        voice.lang.startsWith('en-US') && 
+        (voice.name.toLowerCase().includes('female') || 
+         voice.name.toLowerCase().includes('woman') ||
+         !voice.name.toLowerCase().includes('male'))
+      );
+    }
+    
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+      console.log('Using natural voice:', selectedVoice.name);
     }
 
     utterance.onstart = () => setIsPlaying(true);
