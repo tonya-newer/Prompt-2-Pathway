@@ -122,17 +122,29 @@ const Assessment = () => {
 
     localStorage.setItem('assessment-results', JSON.stringify(results));
 
-    // Store lead data
+    // Store lead data using the correct method name
     const leadData = {
-      id: Date.now().toString(),
-      assessmentTitle: assessment.title,
-      overallScore: results.overallScore,
-      completionRate: 100,
-      completedAt: new Date().toLocaleDateString(),
+      firstName: 'Anonymous',
+      lastName: 'User',
+      email: 'anonymous@example.com',
+      ageRange: '25-34',
       source: 'voicecard-assessment',
       audience: assessment.audience,
+      submissionDate: new Date().toISOString(),
     };
-    leadStorageService.addLead(leadData);
+
+    const assessmentResults = {
+      overallScore: results.overallScore,
+      categoryScores: {
+        readiness: 0,
+        confidence: 0,
+        clarity: 0,
+      },
+      completionRate: 100,
+      insights: ['Assessment completed successfully'],
+    };
+
+    leadStorageService.storeLead(leadData, assessmentResults, assessment.title);
 
     navigate('/results');
   };

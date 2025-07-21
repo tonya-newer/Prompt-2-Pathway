@@ -178,8 +178,7 @@ const Results = () => {
               </p>
             </div>
             <LeadCaptureForm
-              assessmentTitle={assessment.title}
-              results={results}
+              audience={assessment.audience}
               onSubmit={handleLeadSubmit}
             />
           </Card>
