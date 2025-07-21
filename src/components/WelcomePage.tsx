@@ -92,7 +92,6 @@ export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePage
             <LeadCaptureForm
               audience={audience}
               onSubmit={onSubmit}
-              buttonText="Begin My VoiceCard Assessment"
             />
           </Card>
         </div>
