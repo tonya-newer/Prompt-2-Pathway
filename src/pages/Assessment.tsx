@@ -2,697 +2,357 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useToast } from "@/hooks/use-toast"
-import { AssessmentTemplate, Question, LeadData } from '@/types/assessment';
-import { assessmentTemplates } from '@/data/assessmentTemplates';
+import { Badge } from '@/components/ui/badge';
 import { VoicePlayer } from '@/components/VoicePlayer';
-import { QuestionCard } from '@/components/QuestionCard';
-import { ArrowLeft, ArrowRight, Sparkles, Heart, AlertCircle, Headphones } from 'lucide-react';
+import { LeadCaptureForm } from '@/components/LeadCaptureForm';
+import { useToast } from "@/hooks/use-toast";
+import { assessmentTemplates } from '@/data/assessmentTemplates';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { AssessmentTemplate, Question } from '@/types/assessment';
+import { leadStorageService } from '@/services/leadStorage';
 
-interface AssessmentData {
-  title: string;
-  description: string;
-  questions: Question[];
+interface AssessmentResult {
+  overallScore: number;
+  categories: { [key: string]: number };
+  interpretation: string;
 }
 
 const Assessment = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(null);
+  const [assessment, setAssessment] = useState<AssessmentTemplate | null>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [answers, setAnswers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1);
-  const [leadData, setLeadData] = useState<LeadData>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    ageRange: '',
-    source: '',
-    audience: 'individual'
-  });
-  const [answers, setAnswers] = useState<Record<number, any>>({});
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   useEffect(() => {
-    const fetchAssessment = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        console.log('Loading FULLY PUBLIC assessment with ID:', id);
-        
-        // Ensure ID is provided
-        if (!id) {
-          setError('Assessment ID is required');
-          return;
-        }
-
-        // Find the assessment template - COMPLETELY PUBLIC ACCESS
-        const numericId = parseInt(id);
-        const template = assessmentTemplates.find(t => t.id === numericId);
-        
-        if (!template) {
-          console.warn('Assessment template not found for ID:', id);
-          // Don't show error - try fallback
-          const fallbackTemplate = assessmentTemplates[0];
-          if (fallbackTemplate) {
-            const fallbackData: AssessmentData = {
-              title: fallbackTemplate.title,
-              description: fallbackTemplate.description,
-              questions: fallbackTemplate.questions || []
-            };
-            setAssessmentData(fallbackData);
-            console.log('Using fallback assessment for public access');
-            return;
-          }
-          setError('Assessment not found. Please check the assessment link and try again.');
-          return;
-        }
-
-        // Transform template data - FULLY PUBLIC
-        const transformedData: AssessmentData = {
-          title: template.title,
-          description: template.description,
-          questions: template.questions || []
-        };
-        
-        console.log('PUBLIC assessment loaded successfully:', transformedData.title);
-        setAssessmentData(transformedData);
-        
-        // Track public assessment access
-        console.log(`PUBLIC assessment accessed: ${template.title} (ID: ${id})`);
-        
-      } catch (error) {
-        console.error("Error loading public assessment - attempting fallback:", error);
-        // Always try fallback for public access
-        const numericId = parseInt(id || '0');
-        const fallbackTemplate = assessmentTemplates.find(t => t.id === numericId) || assessmentTemplates[0];
-        
-        if (fallbackTemplate) {
-          const fallbackData: AssessmentData = {
-            title: fallbackTemplate.title,
-            description: fallbackTemplate.description,
-            questions: fallbackTemplate.questions || []
-          };
-          setAssessmentData(fallbackData);
-          console.log('Fallback assessment loaded - PUBLIC ACCESS ENSURED');
-          setError(null);
-        } else {
-          setError('Unable to load assessment at this time. Please try refreshing the page.');
-        }
-      } finally {
-        setLoading(false);
+    if (id) {
+      const assessmentId = parseInt(id, 10);
+      const template = assessmentTemplates.find(template => template.id === assessmentId);
+      if (template) {
+        setAssessment(template);
       }
-    };
-
-    fetchAssessment();
+      setLoading(false);
+    } else {
+      setLoading(false);
+    }
   }, [id]);
 
-  // Remove browser back button restrictions - allow normal navigation
   useEffect(() => {
-    // No restrictions on navigation - fully public access
-    console.log('Assessment is publicly accessible - no navigation restrictions');
-  }, [currentQuestionIndex]);
-
-  const handleLeadDataChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, field: keyof LeadData) => {
-    setLeadData({
-      ...leadData,
-      [field]: e.target.value,
-    });
-  };
-
-  const handleAnswer = (questionId: number, answer: any) => {
-    setAnswers({
-      ...answers,
-      [questionId]: answer,
-    });
-  };
-
-  const validateLeadData = () => {
-    return leadData.firstName && leadData.lastName && leadData.email && leadData.ageRange;
-  };
-
-  const startAssessment = () => {
-    if (!validateLeadData()) {
-      toast({
-        title: "Required Information Missing",
-        description: "Please fill in all required fields before starting the assessment.",
-        variant: "destructive",
-      });
-      return;
+    if (assessment) {
+      const storedAnswers = localStorage.getItem('assessment-answers');
+      if (storedAnswers) {
+        try {
+          setAnswers(JSON.parse(storedAnswers));
+        } catch (error) {
+          console.error("Error parsing stored answers:", error);
+          setAnswers(new Array(assessment.questions.length).fill(null));
+        }
+      } else {
+        setAnswers(new Array(assessment.questions.length).fill(null));
+      }
     }
-    setCurrentQuestionIndex(0);
+  }, [assessment]);
+
+  const currentQuestion = assessment?.questions[currentQuestionIndex];
+  const isAnswered = answers[currentQuestionIndex] !== undefined && answers[currentQuestionIndex] !== null;
+
+  const handleAnswer = (answer: any) => {
+    const newAnswers = [...answers];
+    newAnswers[currentQuestionIndex] = answer;
+    setAnswers(newAnswers);
+    localStorage.setItem('assessment-answers', JSON.stringify(newAnswers));
   };
 
-  const nextQuestion = () => {
-    if (!assessmentData) return;
-    
-    const currentQuestion = assessmentData.questions[currentQuestionIndex];
-    if (answers[currentQuestion.id] === undefined) {
-      toast({
-        title: "Answer Required",
-        description: "Please answer the current question before proceeding.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (currentQuestionIndex < assessmentData.questions.length - 1) {
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < (assessment?.questions.length || 0) - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      completeAssessment();
-    }
-  };
-
-  const previousQuestion = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-    } else {
-      setCurrentQuestionIndex(-1);
+      calculateResults();
     }
   };
 
   const calculateResults = () => {
-    if (!assessmentData) return null;
+    if (!assessment) return;
 
-    let totalPoints = 0;
-    let maxPossiblePoints = 0;
-    let readinessScore = 0;
-    let confidenceScore = 0;
-    let clarityScore = 0;
+    let overallScore = 0;
+    const categoryScores: { [key: string]: number } = {};
 
-    // Calculate scores based on question types and answers
-    assessmentData.questions.forEach((question) => {
-      const answer = answers[question.id];
-      if (answer === undefined) return;
+    assessment.questions.forEach((question, index) => {
+      const answer = answers[index];
 
+      let questionScore = 0;
       switch (question.type) {
         case 'yes-no':
-          maxPossiblePoints += 10;
-          if (answer === 'yes') {
-            totalPoints += 10;
-            readinessScore += 10;
-          } else {
-            totalPoints += 3;
-            clarityScore += 3;
-          }
+          questionScore = answer === 'yes' ? 100 : 0;
           break;
-        
-        case 'rating':
-          maxPossiblePoints += 10;
-          const rating = parseInt(answer) || 0;
-          totalPoints += rating;
-          confidenceScore += rating;
-          break;
-        
         case 'this-that':
-          maxPossiblePoints += 8;
-          totalPoints += 8; // Both options are positive
-          readinessScore += 4;
-          confidenceScore += 4;
+          questionScore = question.options?.indexOf(answer) === 0 ? 100 : 0;
           break;
-        
         case 'multiple-choice':
+          questionScore = question.options?.indexOf(answer) === 0 ? 100 : 0;
+          break;
+        case 'rating':
+          questionScore = (Number(answer) / 10) * 100;
+          break;
         case 'desires':
         case 'pain-avoidance':
-          maxPossiblePoints += 6;
-          if (Array.isArray(answer)) {
-            // Multiple selections - more selections = higher clarity
-            totalPoints += Math.min(answer.length * 2, 6);
-            clarityScore += Math.min(answer.length * 3, 9);
-          } else {
-            totalPoints += 6;
-            clarityScore += 6;
-          }
+          const selectedOptions = answer || [];
+          questionScore = (selectedOptions.length / (question.options?.length || 1)) * 100;
           break;
-        
         default:
-          maxPossiblePoints += 5;
-          totalPoints += 5;
+          questionScore = 0;
       }
+      overallScore += questionScore;
     });
 
-    // Calculate final scores as percentages
-    const overallScore = maxPossiblePoints > 0 ? Math.round((totalPoints / maxPossiblePoints) * 100) : 0;
-    readinessScore = Math.min(Math.round((readinessScore / (assessmentData.questions.length * 3)) * 100), 100);
-    confidenceScore = Math.min(Math.round((confidenceScore / (assessmentData.questions.length * 3)) * 100), 100);
-    clarityScore = Math.min(Math.round((clarityScore / (assessmentData.questions.length * 3)) * 100), 100);
+    overallScore = Math.round(overallScore / assessment.questions.length);
 
-    const insights = [
-      "Focus on clarifying your goals and objectives.",
-      "Build confidence by celebrating small wins.",
-      "Increase readiness by setting realistic timelines."
-    ];
+    const interpretation = "Based on your answers, here's a general overview of your results.";
 
-    return {
-      overallScore,
-      categoryScores: {
-        readiness: readinessScore,
-        confidence: confidenceScore,
-        clarity: clarityScore,
-      },
-      insights,
+    const results: AssessmentResult = {
+      overallScore: overallScore,
+      categories: categoryScores,
+      interpretation: interpretation,
     };
-  };
 
-  const completeAssessment = () => {
-    const results = calculateResults();
-    if (results) {
-      navigate('/results', { state: { leadData, answers, results, template: assessmentData?.title } });
-    } else {
-      toast({
-        title: "Error",
-        description: "Could not calculate results. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
+    localStorage.setItem('assessment-results', JSON.stringify(results));
 
-  const getProgressPercentage = () => {
-    if (!assessmentData || currentQuestionIndex === -1) return 0;
-    return ((currentQuestionIndex + 1) / assessmentData.questions.length) * 100;
-  };
-
-  const getCurrentVoiceScript = () => {
-    if (!assessmentData || currentQuestionIndex === -1) return "";
-    const currentQuestion = assessmentData.questions[currentQuestionIndex];
-    return currentQuestion.voiceScript || currentQuestion.question;
-  };
-
-  const getWelcomeVoiceScript = () => {
-    if (!assessmentData) return "";
-    return `Welcome to your ${assessmentData.title}! I'm excited to guide you through this personalized experience. This assessment has been designed specifically to help you gain valuable insights about your unique situation. Before we begin with the questions, I'll need to gather some basic information about you. This helps me personalize your experience and ensure you get the most relevant insights. Please take your time filling out the form below, and when you're ready, we'll begin your guided assessment journey together.`;
-  };
-
-  // Loading state - simplified for public access
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
-        <div className="container max-w-4xl mx-auto px-4 py-6 sm:py-8">
-          <Card className="bg-white/95 backdrop-blur-sm shadow-2xl rounded-2xl p-8">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-              <p className="text-lg text-gray-700">Loading your VoiceCard experience...</p>
-              <p className="text-sm text-gray-500 mt-2">Preparing your personalized assessment</p>
-            </div>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  // Simplified error state - ALWAYS ALLOW PUBLIC ACCESS
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
-        <div className="container max-w-4xl mx-auto px-4 py-6 sm:py-8">
-          <Card className="bg-white/95 backdrop-blur-sm shadow-2xl rounded-2xl p-8">
-            <div className="text-center">
-              <Sparkles className="h-16 w-16 text-purple-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Loading Your VoiceCard Assessment...</h2>
-              <p className="text-lg text-gray-700 mb-6">Preparing your personalized experience.</p>
-              <div className="space-y-4">
-                <Button 
-                  onClick={() => window.location.reload()} 
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
-                >
-                  Continue to Assessment
-                </Button>
-                <p className="text-sm text-gray-500">
-                  This assessment is publicly accessible.
-                </p>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  const getQuestionTypeLabel = (type: string) => {
-    const labels = {
-      'yes-no': 'Quick Decision',
-      'this-that': 'Choose One',
-      'multiple-choice': 'Select Option',
-      'rating': 'Rate Agreement',
-      'desires': 'Multiple Select',
-      'pain-avoidance': 'Priority Check'
+    // Store lead data
+    const leadData = {
+      id: Date.now().toString(),
+      assessmentTitle: assessment.title,
+      overallScore: results.overallScore,
+      completionRate: 100,
+      completedAt: new Date().toLocaleDateString(),
+      source: 'voicecard-assessment',
+      audience: assessment.audience,
     };
-    return labels[type as keyof typeof labels] || 'Question';
+    leadStorageService.addLead(leadData);
+
+    navigate('/results');
   };
 
-  const renderQuestion = (question: Question) => {
-    switch (question.type) {
-      case 'yes-no':
-        return (
-          <div className="grid grid-cols-2 gap-4 mt-6">
-            <Button
-              variant={answers[question.id] === 'yes' ? 'default' : 'outline'}
-              onClick={() => handleAnswer(question.id, 'yes')}
-              className="h-16 text-lg"
-            >
-              Yes
-            </Button>
-            <Button
-              variant={answers[question.id] === 'no' ? 'default' : 'outline'}
-              onClick={() => handleAnswer(question.id, 'no')}
-              className="h-16 text-lg"
-            >
-              No
-            </Button>
-          </div>
-        );
-      case 'this-that':
-        return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-            {question.options?.map((option, index) => (
+  const renderQuestion = () => {
+    const question = currentQuestion;
+    const answer = answers[currentQuestionIndex];
+    
+    const renderQuestionContent = () => {
+      switch (question.type) {
+        case 'yes-no':
+          return (
+            <div className="grid grid-cols-2 gap-4 mt-6">
               <Button
-                key={index}
-                variant={answers[question.id] === option ? 'default' : 'outline'}
-                onClick={() => handleAnswer(question.id, option)}
-                className="h-20 text-left p-4 whitespace-normal"
+                variant={answer === 'yes' ? 'default' : 'outline'}
+                onClick={() => handleAnswer('yes')}
+                className="h-16 text-lg"
               >
-                {option}
+                Yes
               </Button>
-            ))}
-          </div>
-        );
-      case 'multiple-choice':
-        return (
-          <RadioGroup value={answers[question.id]} onValueChange={(value) => handleAnswer(question.id, value)} className="mt-6 space-y-3">
-            {question.options?.map((option, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <RadioGroupItem value={option} id={`option-${index}`} />
-                <Label htmlFor={`option-${index}`} className="text-base cursor-pointer">
-                  {option}
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
-        );
-      case 'rating':
-        return (
-          <div className="mt-6">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-sm text-gray-500">Strongly Disagree</span>
-              <span className="text-sm text-gray-500">Strongly Agree</span>
+              <Button
+                variant={answer === 'no' ? 'default' : 'outline'}
+                onClick={() => handleAnswer('no')}
+                className="h-16 text-lg"
+              >
+                No
+              </Button>
             </div>
-            <div className="flex justify-center space-x-2">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
+          );
+        
+        case 'this-that':
+          return (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+              {question.options?.map((option, index) => (
                 <Button
-                  key={rating}
-                  variant={answers[question.id] === rating ? 'default' : 'outline'}
-                  onClick={() => handleAnswer(question.id, rating)}
-                  className="w-12 h-12 p-0"
+                  key={index}
+                  variant={answer === option ? 'default' : 'outline'}
+                  onClick={() => handleAnswer(option)}
+                  className="h-20 text-left p-4 whitespace-normal"
                 >
-                  {rating}
+                  {option}
                 </Button>
               ))}
             </div>
-          </div>
-        );
-      case 'desires':
-      case 'pain-avoidance':
-        return (
-          <div className="mt-6 space-y-3">
-            <p className="text-sm text-gray-600 mb-4">Select all that resonate with you:</p>
-            {question.options?.map((option, index) => (
-              <div key={index} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50">
-                <Checkbox
-                  id={`desire-${index}`}
-                  checked={answers[question.id]?.includes(option) || false}
-                  onCheckedChange={(checked) => {
-                    const currentAnswers = answers[question.id] || [];
-                    if (checked) {
-                      handleAnswer(question.id, [...currentAnswers, option]);
-                    } else {
-                      handleAnswer(question.id, currentAnswers.filter((a: string) => a !== option));
-                    }
-                  }}
-                />
-                <Label htmlFor={`desire-${index}`} className="text-base cursor-pointer flex-1">
-                  {option}
-                </Label>
+          );
+        
+        case 'multiple-choice':
+          return (
+            <RadioGroup value={answer} onValueChange={handleAnswer} className="mt-6 space-y-3">
+              {question.options?.map((option, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <RadioGroupItem value={option} id={`option-${index}`} />
+                  <Label htmlFor={`option-${index}`} className="text-base cursor-pointer">
+                    {option}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+          );
+        
+        case 'rating':
+          return (
+            <div className="mt-6">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-sm text-gray-500">Strongly Disagree</span>
+                <span className="text-sm text-gray-500">Strongly Agree</span>
               </div>
-            ))}
-          </div>
-        );
-      default:
-        return null;
-    }
-  }
+              <div className="flex justify-center space-x-2">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
+                  <Button
+                    key={rating}
+                    variant={answer === rating ? 'default' : 'outline'}
+                    onClick={() => handleAnswer(rating)}
+                    className="w-12 h-12 p-0"
+                  >
+                    {rating}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          );
+        
+        case 'desires':
+        case 'pain-avoidance':
+          return (
+            <div className="mt-6 space-y-3">
+              <p className="text-sm text-gray-600 mb-4">Select all that resonate with you:</p>
+              {question.options?.map((option, index) => (
+                <div key={index} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50">
+                  <Checkbox
+                    id={`option-${index}`}
+                    checked={answer?.includes(option) || false}
+                    onCheckedChange={(checked) => {
+                      const currentAnswers = answer || [];
+                      if (checked) {
+                        handleAnswer([...currentAnswers, option]);
+                      } else {
+                        handleAnswer(currentAnswers.filter((a: string) => a !== option));
+                      }
+                    }}
+                  />
+                  <Label htmlFor={`option-${index}`} className="text-base cursor-pointer flex-1">
+                    {option}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          );
+        
+        default:
+          return null;
+      }
+    };
+
+    return (
+      <Card className="p-8 max-w-4xl mx-auto">
+        <div className="mb-6">
+          <Badge variant="secondary" className="mb-4">
+            Question {currentQuestionIndex + 1} of {assessment.questions.length}
+          </Badge>
+          
+          {/* Voice transcript placed directly in question area */}
+          {question.voiceScript && (
+            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6 rounded-r-lg">
+              <p className="text-blue-800 text-sm italic leading-relaxed">
+                {question.voiceScript}
+              </p>
+            </div>
+          )}
+          
+          <h2 className="text-2xl font-bold leading-relaxed mb-3">
+            {question.question}
+          </h2>
+          
+          {question.description && (
+            <p className="text-gray-600 leading-relaxed mb-4">
+              {question.description}
+            </p>
+          )}
+        </div>
+
+        {renderQuestionContent()}
+      </Card>
+    );
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
-      <div className="container max-w-4xl mx-auto px-4 py-6 sm:py-8">
-        {assessmentData ? (
-          <>
-            {/* Header with Progress */}
-            <div className="text-center mb-6 sm:mb-8">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                {assessmentData.title}
-              </h1>
-              <p className="text-base sm:text-lg text-gray-600 mb-6 max-w-2xl mx-auto leading-relaxed">
-                {assessmentData.description}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="container mx-auto px-4 py-8">
+        {loading ? (
+          <div className="flex justify-center items-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading your assessment...</p>
+            </div>
+          </div>
+        ) : !assessment ? (
+          <div className="text-center py-12">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Assessment Not Found</h1>
+            <p className="text-gray-600 mb-8">The assessment you're looking for doesn't exist.</p>
+            <Button onClick={() => navigate('/')}>
+              Return to Home
+            </Button>
+          </div>
+        ) : currentQuestionIndex < assessment.questions.length ? (
+          <div className="space-y-8">
+            {/* Auto-playing welcome voice */}
+            {currentQuestionIndex === 0 && (
+              <VoicePlayer
+                text={currentQuestion.voiceScript || "Welcome to this assessment. Let's begin your journey of discovery."}
+                autoPlay={true}
+                className="mb-8"
+              />
+            )}
+            
+            {/* Progress bar */}
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-gray-200 rounded-full h-2 mb-4">
+                <div
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${((currentQuestionIndex + 1) / assessment.questions.length) * 100}%` }}
+                ></div>
+              </div>
+              <p className="text-sm text-gray-600 text-center">
+                Question {currentQuestionIndex + 1} of {assessment.questions.length}
               </p>
-              
-              {currentQuestionIndex >= 0 && (
-                <div className="max-w-md mx-auto">
-                  <div className="flex justify-between text-sm text-gray-500 mb-2">
-                    <span>Question {currentQuestionIndex + 1} of {assessmentData.questions.length}</span>
-                    <span>{Math.round(getProgressPercentage())}% Complete</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div 
-                      className="bg-gradient-to-r from-purple-600 to-blue-600 h-3 rounded-full transition-all duration-500 shadow-lg"
-                      style={{ width: `${getProgressPercentage()}%` }}
-                    ></div>
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* Welcome Form - AUTO-PLAY WELCOME */}
-            {currentQuestionIndex === -1 && (
-              <div className="space-y-6 sm:space-y-8">
-                {/* Welcome Voice Guide - AUTO-PLAY */}
-                <div className="mb-6 sm:mb-8">
-                  <VoicePlayer 
-                    text={getWelcomeVoiceScript()}
-                    autoPlay={true}
-                    className="shadow-2xl border-4 border-purple-200"
-                  />
-                </div>
+            {/* Question */}
+            {renderQuestion()}
 
-                {/* Enhanced Welcome Card */}
-                <Card className="bg-white/95 backdrop-blur-sm shadow-2xl rounded-2xl p-6 sm:p-8 lg:p-10 border-0 relative overflow-hidden">
-                  {/* Decorative Background Elements */}
-                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-purple-500 via-blue-500 to-indigo-500"></div>
-                  <div className="absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-br from-purple-200 to-blue-200 rounded-full opacity-50"></div>
-                  <div className="absolute -bottom-8 -left-8 w-16 h-16 bg-gradient-to-br from-indigo-200 to-purple-200 rounded-full opacity-30"></div>
-                  
-                  <div className="relative z-10">
-                    <div className="text-center mb-8">
-                      <div className="flex items-center justify-center mb-4">
-                        <div className="bg-gradient-to-r from-purple-100 to-blue-100 p-4 rounded-full">
-                          <Heart className="h-8 w-8 text-purple-600" />
-                        </div>
-                        <Sparkles className="h-6 w-6 text-blue-500 ml-2" />
-                      </div>
-                      <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 leading-tight">
-                        Welcome to Your 
-                        <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                          {" "}VoiceCard Experience
-                        </span>
-                      </h2>
-                      <p className="text-base sm:text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto">
-                        Let's start by getting to know you better. This information helps us create a completely personalized assessment experience just for you.
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-8">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName" className="text-base font-semibold text-gray-700 flex items-center">
-                          First Name <span className="text-red-500 ml-1">*</span>
-                        </Label>
-                        <Input
-                          type="text"
-                          id="firstName"
-                          placeholder="Enter your first name"
-                          className="h-12 text-base border-2 border-gray-200 focus:border-purple-400 rounded-xl transition-all duration-200"
-                          value={leadData.firstName}
-                          onChange={(e) => handleLeadDataChange(e, 'firstName')}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName" className="text-base font-semibold text-gray-700 flex items-center">
-                          Last Name <span className="text-red-500 ml-1">*</span>
-                        </Label>
-                        <Input
-                          type="text"
-                          id="lastName"
-                          placeholder="Enter your last name"
-                          className="h-12 text-base border-2 border-gray-200 focus:border-purple-400 rounded-xl transition-all duration-200"
-                          value={leadData.lastName}
-                          onChange={(e) => handleLeadDataChange(e, 'lastName')}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="email" className="text-base font-semibold text-gray-700 flex items-center">
-                          Email Address <span className="text-red-500 ml-1">*</span>
-                        </Label>
-                        <Input
-                          type="email"
-                          id="email"
-                          placeholder="Enter your email address"
-                          className="h-12 text-base border-2 border-gray-200 focus:border-purple-400 rounded-xl transition-all duration-200"
-                          value={leadData.email}
-                          onChange={(e) => handleLeadDataChange(e, 'email')}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="phone" className="text-base font-semibold text-gray-700">
-                          Phone Number (Optional)
-                        </Label>
-                        <Input
-                          type="tel"
-                          id="phone"
-                          placeholder="Enter your phone number"
-                          className="h-12 text-base border-2 border-gray-200 focus:border-purple-400 rounded-xl transition-all duration-200"
-                          value={leadData.phone || ''}
-                          onChange={(e) => handleLeadDataChange(e, 'phone')}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="ageRange" className="text-base font-semibold text-gray-700 flex items-center">
-                          Age Range <span className="text-red-500 ml-1">*</span>
-                        </Label>
-                        <Select value={leadData.ageRange} onValueChange={(value) => handleLeadDataChange({ target: { value } } as any, 'ageRange')}>
-                          <SelectTrigger className="h-12 text-base border-2 border-gray-200 focus:border-purple-400 rounded-xl">
-                            <SelectValue placeholder="Select your age range" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="18-24">18-24</SelectItem>
-                            <SelectItem value="25-34">25-34</SelectItem>
-                            <SelectItem value="35-44">35-44</SelectItem>
-                            <SelectItem value="45-54">45-54</SelectItem>
-                            <SelectItem value="55+">55+</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="source" className="text-base font-semibold text-gray-700">
-                          How did you hear about us?
-                        </Label>
-                        <Select value={leadData.source} onValueChange={(value) => handleLeadDataChange({ target: { value } } as any, 'source')}>
-                          <SelectTrigger className="h-12 text-base border-2 border-gray-200 focus:border-purple-400 rounded-xl">
-                            <SelectValue placeholder="Select how you found us" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="social-media">Social Media</SelectItem>
-                            <SelectItem value="website">Website</SelectItem>
-                            <SelectItem value="google">Google</SelectItem>
-                            <SelectItem value="referral">Referral</SelectItem>
-                            <SelectItem value="email">Email</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="mt-10 text-center">
-                      <Button 
-                        onClick={startAssessment}
-                        size="lg"
-                        className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-4 text-lg font-bold shadow-2xl transform hover:scale-105 transition-all duration-300 rounded-xl border-0 w-full sm:w-auto"
-                      >
-                        <Sparkles className="h-5 w-5 mr-3" />
-                        Begin My VoiceCard Journey
-                      </Button>
-                      <p className="text-sm text-gray-500 mt-4">
-                        🎧 Grab your headphones for the ultimate VoiceCard experience
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            )}
-
-            {/* Question Display */}
-            {currentQuestionIndex >= 0 && assessmentData.questions[currentQuestionIndex] && (
-              <div className="space-y-6">
-                {/* Voice Guide - AUTO-PLAY */}
-                <VoicePlayer
-                  text={getCurrentVoiceScript()}
-                  autoPlay={true}
-                  className="animate-fade-in shadow-xl"
-                />
-
-                {/* Question Card with Integrated Transcript */}
-                <div className="animate-scale-in">
-                  <Card className="p-8 max-w-4xl mx-auto">
-                    <div className="mb-6">
-                      <Badge variant="secondary" className="mb-4">
-                        {getQuestionTypeLabel(assessmentData.questions[currentQuestionIndex].type)}
-                      </Badge>
-                      
-                      {/* Voice transcript integrated into question area */}
-                      <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
-                        <p className="text-sm text-blue-800 italic leading-relaxed">
-                          {getCurrentVoiceScript()}
-                        </p>
-                      </div>
-                      
-                      <h2 className="text-2xl font-bold leading-relaxed mb-3">
-                        {assessmentData.questions[currentQuestionIndex].question}
-                      </h2>
-                      {assessmentData.questions[currentQuestionIndex].description && (
-                        <p className="text-gray-600 leading-relaxed">
-                          {assessmentData.questions[currentQuestionIndex].description}
-                        </p>
-                      )}
-                    </div>
-
-                    {renderQuestion(assessmentData.questions[currentQuestionIndex])}
-                  </Card>
-                </div>
-
-                {/* Navigation */}
-                <div className="flex justify-between items-center mt-8">
-                  <Button
-                    variant="outline"
-                    onClick={previousQuestion}
-                    className="flex items-center space-x-2 px-6 py-3 border-2 border-gray-300 hover:border-purple-400 rounded-xl"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    <span>Previous</span>
-                  </Button>
-
-                  <Button
-                    onClick={nextQuestion}
-                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white flex items-center space-x-2 px-6 py-3 rounded-xl shadow-lg"
-                  >
-                    <span>
-                      {currentQuestionIndex === assessmentData.questions.length - 1 ? 'Complete Assessment' : 'Next Question'}
-                    </span>
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
-          </>
-        ) : null}
+            {/* Navigation */}
+            <div className="flex justify-between items-center max-w-4xl mx-auto">
+              <Button
+                variant="outline"
+                onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
+                disabled={currentQuestionIndex === 0}
+                className="flex items-center"
+              >
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Previous
+              </Button>
+              
+              <Button
+                onClick={handleNextQuestion}
+                disabled={!isAnswered}
+                className="flex items-center"
+              >
+                {currentQuestionIndex === assessment.questions.length - 1 ? 'Complete Assessment' : 'Next Question'}
+                <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">Assessment Complete!</h1>
+            <p className="text-gray-600 mb-8">Calculating your results...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          </div>
+        )}
       </div>
     </div>
   );

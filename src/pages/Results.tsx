@@ -1,198 +1,207 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Download, Mic, TrendingUp, Target, Lightbulb, Headphones } from 'lucide-react';
+import { Share2, RefreshCw } from 'lucide-react';
 import { VoicePlayer } from '@/components/VoicePlayer';
+import { LeadCaptureForm } from '@/components/LeadCaptureForm';
+import { useToast } from "@/hooks/use-toast";
 import { CelebrationEffects } from '@/components/CelebrationEffects';
-import { LeadData, AssessmentResults } from '@/types/assessment';
-import { leadStorageService } from '@/services/leadStorage';
-import { useEffect, useState } from 'react';
+
+interface AssessmentResult {
+  overallScore: number;
+  categories: { [key: string]: number };
+  interpretation: string;
+}
+
+interface AssessmentTemplate {
+  id: number;
+  title: string;
+}
 
 const Results = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const [showCelebration, setShowCelebration] = useState(true);
-  const [celebrationComplete, setCelebrationComplete] = useState(false);
-  const { leadData, answers, results, template }: {
-    leadData: LeadData;
-    answers: Record<number, any>;
-    results: AssessmentResults;
-    template: string;
-  } = location.state || {};
+  const location = useLocation();
+  const { toast } = useToast();
+  const [results, setResults] = useState<AssessmentResult | null>(null);
+  const [assessment, setAssessment] = useState<AssessmentTemplate | null>(null);
 
-  if (!results) {
+  useEffect(() => {
+    const storedResults = localStorage.getItem('assessment-results');
+    const assessmentData = location.state?.assessment;
+
+    if (storedResults) {
+      setResults(JSON.parse(storedResults));
+    }
+    if (assessmentData) {
+      setAssessment(assessmentData);
+    } else {
+      // Fallback to local storage if available
+      const assessmentTitle = localStorage.getItem('assessment-title');
+      if (assessmentTitle) {
+        setAssessment({
+          id: 0, // Provide a default value or fetch from local storage if available
+          title: assessmentTitle,
+        });
+      }
+    }
+  }, [location.state?.assessment]);
+
+  const handleLeadSubmit = () => {
+    toast({
+      title: "Thank you!",
+      description: "We'll be in touch soon with personalized insights.",
+    });
+  };
+
+  const handleStartOver = () => {
+    localStorage.removeItem('assessment-answers');
+    localStorage.removeItem('assessment-results');
     navigate('/');
-    return null;
+  };
+
+  const handleShareResults = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `My ${assessment?.title} Results`,
+          text: `I scored ${results?.overallScore}% on the ${assessment?.title} assessment! Check it out: ${window.location.href}`,
+          url: window.location.href,
+        });
+        toast({
+          title: "Results Shared!",
+          description: "Thanks for sharing your results!",
+        });
+      } catch (error) {
+        console.error("Sharing failed:", error);
+        toast({
+          title: "Sharing Failed",
+          description: "There was an error sharing your results. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } else {
+      toast({
+        title: "Sharing Not Supported",
+        description: "Web Share API is not supported in your browser.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (!results || !assessment) {
+    const timer = setTimeout(() => {
+      navigate('/');
+    }, 3000);
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">No results found. Redirecting to home...</p>
+        </div>
+      </div>
+    );
   }
 
-  // Store the lead data when results are displayed
-  useEffect(() => {
-    if (leadData && results && template) {
-      leadStorageService.storeLead(leadData, results, template);
-      console.log('Assessment completed and stored:', { leadData, results, template });
-    }
-  }, [leadData, results, template]);
-
-  const getScoreLabel = (score: number) => {
-    if (score >= 80) return { label: 'Excellent', color: 'bg-green-500' };
-    if (score >= 60) return { label: 'Good', color: 'bg-blue-500' };
-    if (score >= 40) return { label: 'Fair', color: 'bg-yellow-500' };
-    return { label: 'Needs Attention', color: 'bg-red-500' };
-  };
-
-  const overallLabel = getScoreLabel(results.overallScore);
-
-  // Enhanced voice script message - will play after celebration
-  const voiceScript = `Hello ${leadData?.firstName}, and congratulations on completing your VoiceCard assessment! This is truly an accomplishment worth celebrating. Taking the time for this kind of self-reflection shows real commitment to your growth. Your overall clarity score of ${results.overallScore} out of 100 is a meaningful indicator of where you stand today. But what's even more valuable are the personalized insights we've discovered specifically for your journey. These aren't generic recommendations - they're tailored insights based on your unique responses. I encourage you to take your time reviewing these insights, as they could be the key to unlocking your next breakthrough.`;
-
-  const handleCelebrationComplete = () => {
-    setCelebrationComplete(true);
-    setShowCelebration(false);
-  };
+  const voiceScript = `Congratulations on completing your ${assessment.title} assessment! Your overall score is ${results.overallScore} percent. ${results.interpretation}`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Celebration Effects */}
-      {showCelebration && (
-        <CelebrationEffects onComplete={handleCelebrationComplete} />
-      )}
-
-      <div className="container mx-auto px-4 py-4 sm:py-8">
+      <CelebrationEffects />
+      
+      <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          {/* Welcome & Enhanced Voice Player */}
-          <div className="text-center mb-6 sm:mb-8">
-            <h1 className="text-xl sm:text-2xl md:text-4xl font-bold mb-4">
-              Your VoiceCard 
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                {" "}Clarity Snapshot
-              </span>
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              🎉 Congratulations! 🎉
             </h1>
-            
-            {/* Mobile-Optimized Congratulations Message */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 sm:border-4 border-green-400 rounded-xl sm:rounded-2xl p-4 sm:p-8 lg:p-12 mb-6 sm:mb-8 shadow-2xl transform hover:scale-105 transition-transform duration-300">
-              <div className="text-center">
-                <div className="text-3xl sm:text-5xl lg:text-7xl mb-3 sm:mb-6">🎉</div>
-                <h2 className="text-xl sm:text-3xl lg:text-5xl font-black text-green-800 mb-2 sm:mb-4 tracking-tight drop-shadow-lg">
-                  CONGRATULATIONS!
-                </h2>
-                <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-700 mb-2 sm:mb-3">
-                  {leadData?.firstName?.toUpperCase()}, YOU DID IT!
-                </p>
-                <p className="text-sm sm:text-lg lg:text-xl font-bold text-green-600 mb-3 sm:mb-4">
-                  Assessment Complete - Your Results Are Ready!
-                </p>
-                <div className="bg-white/90 rounded-lg sm:rounded-xl p-3 sm:p-6 mt-3 sm:mt-6 shadow-lg">
-                  <p className="text-xs sm:text-base lg:text-lg font-semibold text-gray-800 leading-relaxed">
-                    You've successfully completed your {template} assessment. 
-                    Your detailed insights and actionable next steps are outlined below.
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Simplified Voice Guide Section - Remove redundant labels */}
-            <div className="mb-6 sm:mb-8">
-              <Card className="p-6 bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200 shadow-xl rounded-xl">
-                <div className="mb-4 p-4 bg-purple-100 border-l-4 border-purple-500 rounded-r-lg">
-                  <p className="text-sm text-purple-800 leading-relaxed italic">
-                    {voiceScript}
-                  </p>
-                </div>
-                
-                <VoicePlayer 
-                  text={voiceScript}
-                  autoPlay={celebrationComplete}
-                  className="bg-white/90 shadow-lg"
-                  isResultsPage={true}
-                />
-              </Card>
-            </div>
-          </div>
-
-          {/* Overall Score */}
-          <Card className="p-6 sm:p-8 mb-6 sm:mb-8 text-center bg-gradient-to-r from-blue-50 to-purple-50 border-0 shadow-xl">
-            <div className="mb-4">
-              <div className="text-4xl sm:text-6xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                {results.overallScore}
-              </div>
-              <div className="text-lg sm:text-2xl text-gray-600">out of 100</div>
-            </div>
-            <Badge className={`${overallLabel.color} text-white text-sm sm:text-lg px-3 sm:px-4 py-1 sm:py-2 mb-4`}>
-              {overallLabel.label}
-            </Badge>
-            <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto">
-              This score reflects your current position across key areas we assessed. 
-              Remember, this is a starting point for your journey forward.
+            <p className="text-xl text-gray-600">
+              You've completed your {assessment.title} assessment
             </p>
-          </Card>
-
-          {/* Category Breakdown */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-            {Object.entries(results.categoryScores).map(([category, score]) => {
-              const categoryLabel = getScoreLabel(score as number);
-              return (
-                <Card key={category} className="p-4 sm:p-6">
-                  <div className="flex items-center mb-3 sm:mb-4">
-                    {category === 'readiness' && <Target className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-blue-600" />}
-                    {category === 'confidence' && <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-green-600" />}
-                    {category === 'clarity' && <Lightbulb className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-purple-600" />}
-                    <h3 className="font-semibold text-base sm:text-lg capitalize">{category}</h3>
-                  </div>
-                  <div className="mb-3">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-xl sm:text-2xl font-bold">{score}</span>
-                      <Badge variant="outline" className={`${categoryLabel.color.replace('bg-', 'border-')} border-2 text-xs sm:text-sm`}>
-                        {categoryLabel.label}
-                      </Badge>
-                    </div>
-                    <Progress value={score as number} className="h-2 sm:h-3" />
-                  </div>
-                </Card>
-              );
-            })}
           </div>
 
-          {/* Key Insights */}
-          <Card className="p-6 sm:p-8 mb-6 sm:mb-8 shadow-xl">
-            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center">
-              <Lightbulb className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-yellow-500" />
-              Your Personalized Insights
-            </h2>
-            <div className="space-y-3 sm:space-y-4">
-              {results.insights.map((insight: string, index: number) => (
-                <div key={index} className="flex items-start space-x-3 sm:space-x-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
-                  <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center font-bold text-xs sm:text-sm flex-shrink-0 mt-1">
-                    {index + 1}
+          {/* Voice Player */}
+          <VoicePlayer
+            text={voiceScript}
+            autoPlay={true}
+            isResultsPage={true}
+            className="mb-8"
+          />
+
+          {/* Results Summary */}
+          <Card className="p-8 mb-8">
+            <div className="text-center mb-6">
+              <div className="text-6xl font-bold text-blue-600 mb-4">
+                {results.overallScore}%
+              </div>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                Your Overall Score
+              </h2>
+              <div className="max-w-2xl mx-auto">
+                <p className="text-lg text-gray-700 leading-relaxed">
+                  {results.interpretation}
+                </p>
+              </div>
+            </div>
+
+            {/* Score breakdown */}
+            <div className="grid md:grid-cols-2 gap-6 mt-8">
+              {Object.entries(results.categories).map(([category, score]) => (
+                <div key={category} className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-medium text-gray-900 capitalize">
+                      {category.replace(/([A-Z])/g, ' $1').trim()}
+                    </span>
+                    <span className="text-xl font-bold text-blue-600">{score}%</span>
                   </div>
-                  <p className="text-sm sm:text-base text-gray-700 leading-relaxed">{insight}</p>
+                  <div className="bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${score}%` }}
+                    ></div>
+                  </div>
                 </div>
               ))}
             </div>
           </Card>
 
-          {/* Updated Call to Action with TidyCal Integration */}
-          <Card className="p-6 sm:p-8 text-center bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-xl">
-            <h3 className="text-xl sm:text-2xl font-bold mb-4">Ready to Explore More?</h3>
-            <p className="mb-6 text-sm sm:text-base text-blue-100">
-              Your journey doesn't end here. We're here to support your continued growth, 
-              but only if you're open to exploring what's possible.
-            </p>
-            <div className="flex justify-center">
-              <Button 
-                variant="secondary" 
-                size="lg"
-                className="w-full sm:w-auto"
-                onClick={() => window.open('https://tidycal.com/newerconsulting', '_blank')}
-              >
-                Schedule a Clarity Call
-              </Button>
+          {/* Lead Capture */}
+          <Card className="p-8 mb-8">
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Want to explore your results further?
+              </h3>
+              <p className="text-gray-600">
+                Get personalized insights and recommendations delivered to your inbox
+              </p>
             </div>
-            <p className="text-xs text-blue-200 mt-4">
-              No pressure - we'll only follow up if you indicate you'd like us to.
-            </p>
+            <LeadCaptureForm
+              assessmentTitle={assessment.title}
+              results={results}
+              onSubmit={handleLeadSubmit}
+            />
           </Card>
+
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              onClick={handleShareResults}
+              className="flex items-center justify-center"
+            >
+              <Share2 className="h-4 w-4 mr-2" />
+              Share Results
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleStartOver}
+              className="flex items-center justify-center"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Take Another Assessment
+            </Button>
+          </div>
         </div>
       </div>
     </div>

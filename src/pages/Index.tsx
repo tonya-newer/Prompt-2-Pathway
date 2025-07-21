@@ -1,187 +1,290 @@
+
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Play, Mic, Brain, Users, TrendingUp, Star } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Edit, Copy, Trash2, Link, Users, BarChart3, Settings } from 'lucide-react';
 import { assessmentTemplates } from '@/data/assessmentTemplates';
+import { AssessmentTemplate } from '@/types/assessment';
+import { useToast } from '@/hooks/use-toast';
+import { AssessmentEditor } from '@/components/admin/AssessmentEditor';
+import { LeadsList } from '@/components/admin/LeadsList';
+import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
+import { leadStorageService } from '@/services/leadStorage';
 
 const Index = () => {
-  const navigate = useNavigate();
+  const [templates, setTemplates] = useState(assessmentTemplates);
+  const [selectedTemplate, setSelectedTemplate] = useState<AssessmentTemplate | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const { toast } = useToast();
 
-  const handleStartJourney = () => {
-    if (assessmentTemplates.length > 0) {
-      navigate(`/assessment/${assessmentTemplates[0].id}`);
+  // Get leads data for analytics
+  const leads = leadStorageService.getLeads();
+
+  const handleCreateNew = () => {
+    const newTemplate: AssessmentTemplate = {
+      id: Date.now(),
+      title: 'New Assessment',
+      description: 'New assessment description',
+      audience: 'individual',
+      tags: ['new'],
+      questions: [],
+      image: ''
+    };
+    setSelectedTemplate(newTemplate);
+    setEditMode(true);
+    toast({
+      title: "New Template",
+      description: "Creating new assessment template",
+    });
+  };
+
+  const handleEditTemplate = (template: AssessmentTemplate) => {
+    setSelectedTemplate({...template});
+    setEditMode(true);
+    toast({
+      title: "Opening Editor",
+      description: `Now editing "${template.title}"`,
+    });
+  };
+
+  const handleSaveTemplate = (updatedTemplate: AssessmentTemplate) => {
+    const existingIndex = templates.findIndex(t => t.id === updatedTemplate.id);
+    if (existingIndex >= 0) {
+      const updatedTemplates = [...templates];
+      updatedTemplates[existingIndex] = updatedTemplate;
+      setTemplates(updatedTemplates);
+      toast({
+        title: "Template Updated",
+        description: `"${updatedTemplate.title}" has been saved successfully.`,
+      });
+    } else {
+      setTemplates([...templates, updatedTemplate]);
+      toast({
+        title: "Template Created",
+        description: `"${updatedTemplate.title}" has been created successfully.`,
+      });
+    }
+    setEditMode(false);
+    setSelectedTemplate(null);
+  };
+
+  const handleDuplicateTemplate = (template: AssessmentTemplate) => {
+    const duplicated: AssessmentTemplate = {
+      ...template,
+      id: Date.now(),
+      title: `${template.title} (Copy)`,
+      tags: [...template.tags, 'duplicate']
+    };
+    setTemplates([...templates, duplicated]);
+    toast({
+      title: "Template Duplicated",
+      description: `"${duplicated.title}" has been created.`,
+    });
+  };
+
+  const handleDeleteTemplate = (templateId: number) => {
+    const templateToDelete = templates.find(t => t.id === templateId);
+    setTemplates(templates.filter(t => t.id !== templateId));
+    toast({
+      title: "Template Deleted",
+      description: `"${templateToDelete?.title}" has been deleted.`,
+      variant: "destructive",
+    });
+  };
+
+  const copyAssessmentLink = async (template: AssessmentTemplate) => {
+    const url = `${window.location.origin}/assessment/${template.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({
+        title: "Assessment Link Copied!",
+        description: `Link copied: ${url}`,
+      });
+    } catch (error) {
+      const textArea = document.createElement('textarea');
+      textArea.value = url;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      toast({
+        title: "Assessment Link Copied!",
+        description: `Link copied: ${url}`,
+      });
     }
   };
 
-  const handlePreviewVoice = () => {
-    const featuresSection = document.getElementById('features-section');
-    if (featuresSection) {
-      featuresSection.scrollIntoView({ behavior: 'smooth' });
-    }
-    alert('Voice preview functionality - this would demonstrate our voice-guided experience');
-  };
+  if (editMode && selectedTemplate) {
+    return (
+      <AssessmentEditor
+        template={selectedTemplate}
+        onSave={handleSaveTemplate}
+        onCancel={() => {
+          setEditMode(false);
+          setSelectedTemplate(null);
+          toast({
+            title: "Editor Closed",
+            description: "Changes have been discarded.",
+          });
+        }}
+      />
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Hero Section */}
-      <header className="container mx-auto px-4 py-16 text-center">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            Welcome to VoiceCard
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-700 mb-8 leading-relaxed">
-            Experience voice-guided clarity assessments that reveal insights about your path forward
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="text-lg px-8 py-4" onClick={handleStartJourney}>
-              <Play className="mr-2 h-5 w-5" />
-              Start Your Journey
-            </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 py-4" onClick={handlePreviewVoice}>
-              <Mic className="mr-2 h-5 w-5" />
-              Preview Voice Experience
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Features Section */}
-      <section id="features-section" className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Why VoiceCard?
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Our voice-guided assessments provide deeper insights through human connection and personalized experiences
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8 text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome to VoiceCard</h1>
+          <p className="text-xl text-gray-600 mb-8">
+            Discover your path through personalized voice-guided assessments
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Brain className="h-6 w-6 text-blue-600" />
+        <Tabs defaultValue="assessments" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="assessments" className="flex items-center space-x-2">
+              <Settings className="h-4 w-4" />
+              <span>Assessments</span>
+            </TabsTrigger>
+            <TabsTrigger value="leads" className="flex items-center space-x-2">
+              <Users className="h-4 w-4" />
+              <span>Leads</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center space-x-2">
+              <BarChart3 className="h-4 w-4" />
+              <span>Analytics</span>
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center space-x-2">
+              <Settings className="h-4 w-4" />
+              <span>Settings</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="assessments" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Available Assessments</h3>
+              <Button onClick={handleCreateNew} className="flex items-center">
+                <Plus className="h-4 w-4 mr-2" />
+                Create New
+              </Button>
             </div>
-            <h3 className="text-xl font-semibold mb-3">Deep Insights</h3>
-            <p className="text-gray-600">
-              Uncover meaningful patterns and clarity about your personal or business direction
-            </p>
-          </Card>
-
-          <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Mic className="h-6 w-6 text-green-600" />
-            </div>
-            <h3 className="text-xl font-semibold mb-3">Voice-Guided</h3>
-            <p className="text-gray-600">
-              Experience a human touch with professionally crafted voice narration throughout
-            </p>
-          </Card>
-
-          <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Users className="h-6 w-6 text-purple-600" />
-            </div>
-            <h3 className="text-xl font-semibold mb-3">Personalized</h3>
-            <p className="text-gray-600">
-              Tailored experiences for individuals and business owners with relevant insights
-            </p>
-          </Card>
-        </div>
-      </section>
-
-      {/* Assessment Templates with Vertical Images */}
-      <section className="container mx-auto px-4 py-16 bg-white">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Choose Your Assessment
-          </h2>
-          <p className="text-lg text-gray-600">
-            Select from our curated collection of professional assessments
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {assessmentTemplates.map((template) => (
-            <Card key={template.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-              {template.image && (
-                <div className="h-48 w-full overflow-hidden">
-                  <img 
-                    src={template.image} 
-                    alt={template.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <Badge variant={template.audience === 'business' ? 'default' : 'secondary'}>
-                    {template.audience}
-                  </Badge>
-                  <div className="flex items-center text-sm text-yellow-600">
-                    <Star className="h-4 w-4 mr-1 fill-current" />
-                    <span>4.9</span>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {templates.map((template) => (
+                <Card key={template.id} className="overflow-hidden">
+                  {template.image && (
+                    <div className="h-48 overflow-hidden">
+                      <img 
+                        src={template.image} 
+                        alt={template.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-lg mb-2">{template.title}</h4>
+                        <p className="text-sm text-gray-600 mb-3">{template.description}</p>
+                        
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          <Badge variant={template.audience === 'business' ? 'default' : 'secondary'}>
+                            {template.audience}
+                          </Badge>
+                          {template.tags.map((tag, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                        
+                        <p className="text-xs text-gray-500 mb-4">
+                          {template.questions.length} questions • Est. {Math.ceil(template.questions.length * 0.75)} min
+                        </p>
+                        
+                        {/* Assessment Link */}
+                        <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4">
+                          <p className="text-sm font-medium text-blue-900 mb-1">Public Link:</p>
+                          <code className="text-xs bg-white px-2 py-1 rounded border block w-full text-gray-700 break-all">
+                            {window.location.origin}/assessment/{template.id}
+                          </code>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2">
+                      <Button 
+                        size="sm"
+                        onClick={() => copyAssessmentLink(template)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1"
+                      >
+                        <Link className="h-3 w-3" />
+                        Copy URL
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleEditTemplate(template)}
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        Edit
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDuplicateTemplate(template)}
+                      >
+                        <Copy className="h-3 w-3 mr-1" />
+                        Duplicate
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDeleteTemplate(template.id)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="leads">
+            <LeadsList />
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <AnalyticsDashboard leads={leads} />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">VoiceCard Settings</h3>
+              <div className="space-y-4">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">Voice Configuration</h4>
+                  <p className="text-sm text-blue-800">
+                    All assessments use a consistent, natural American female voice for the best user experience.
+                  </p>
                 </div>
-                <h3 className="font-semibold text-lg mb-2">{template.title}</h3>
-                <p className="text-gray-600 text-sm mb-3">{template.description}</p>
-                <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-                  <span>{template.questions.length} questions</span>
-                  <span>~{Math.ceil(template.questions.length * 0.75)} min</span>
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-green-900 mb-2">Public Access</h4>
+                  <p className="text-sm text-green-800">
+                    All assessment links are publicly accessible without login requirements.
+                  </p>
                 </div>
-                <Link to={`/assessment/${template.id}`}>
-                  <Button className="w-full">
-                    <Play className="mr-2 h-4 w-4" />
-                    Start Assessment
-                  </Button>
-                </Link>
               </div>
             </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white text-center">
-          <h2 className="text-3xl font-bold mb-8">Trusted by Thousands</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div>
-              <div className="text-4xl font-bold mb-2">12,547</div>
-              <div className="text-blue-100">Assessments Completed</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold mb-2">98%</div>
-              <div className="text-blue-100">Satisfaction Rate</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold mb-2">4.9</div>
-              <div className="text-blue-100">Average Rating</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="container mx-auto px-4 text-center">
-          <h3 className="text-2xl font-bold mb-4">VoiceCard</h3>
-          <p className="text-gray-400 mb-6">
-            Empowering clarity through voice-guided assessments
-          </p>
-          <div className="flex justify-center space-x-6">
-            <Link to="/admin" className="text-gray-400 hover:text-white transition-colors">
-              Admin Dashboard
-            </Link>
-          </div>
-          <div className="mt-8 pt-4 border-t border-gray-700">
-            <p className="text-gray-400 text-sm">
-              © 2025 VoiceCard. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };

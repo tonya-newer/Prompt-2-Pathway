@@ -18,80 +18,20 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
   const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Get API key from localStorage (set in admin dashboard)
-  const getApiKey = () => localStorage.getItem('elevenlabs-api-key') || '';
-  
-  // ONLY use natural female voice - Apple Quirky & Relatable
-  const VOICE_ID = '9BWtsMINqrJLrRacOk9x'; // Aria - Natural Female Voice
-  const MODEL_ID = 'eleven_multilingual_v2';
-
-  const generateSpeech = async () => {
-    const apiKey = getApiKey();
-    
-    if (!apiKey || apiKey.trim() === '') {
-      console.log('No ElevenLabs API key found, using natural browser voice');
-      return speakWithBrowserAPI();
-    }
-
-    try {
-      setIsLoading(true);
-      console.log('Generating natural female voice with ElevenLabs');
-      
-      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
-        method: 'POST',
-        headers: {
-          'Accept': 'audio/mpeg',
-          'Content-Type': 'application/json',
-          'xi-api-key': apiKey,
-        },
-        body: JSON.stringify({
-          text: text,
-          model_id: MODEL_ID,
-          voice_settings: {
-            stability: 0.75,
-            similarity_boost: 0.85,
-            style: 0.8,
-            use_speaker_boost: true
-          },
-        }),
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          console.error('Invalid ElevenLabs API key, falling back to natural browser voice');
-          return speakWithBrowserAPI();
-        }
-        throw new Error(`ElevenLabs API request failed: ${response.status}`);
-      }
-
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-      
-      if (audioRef.current) {
-        audioRef.current.src = audioUrl;
-        await audioRef.current.play();
-      }
-    } catch (error) {
-      console.error('ElevenLabs error, falling back to natural browser voice:', error);
-      speakWithBrowserAPI();
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const speakWithBrowserAPI = () => {
+  // Use only natural American female voice
+  const speakWithNaturalVoice = () => {
     if (speechSynthesis.speaking) {
       speechSynthesis.cancel();
     }
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.85;
-    utterance.pitch = 1.2;
+    utterance.rate = 0.9;
+    utterance.pitch = 1.1;
     utterance.volume = isMuted ? 0 : 1;
 
     const voices = speechSynthesis.getVoices();
     
-    // Find the most natural-sounding female voice
+    // Find the most natural-sounding American female voice
     const naturalVoice = voices.find(voice => 
       voice.name.includes('Samantha') || 
       voice.name.includes('Karen') ||
@@ -99,15 +39,14 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
       voice.name.includes('Susan') ||
       voice.name.includes('Allison') ||
       voice.name.includes('Ava') ||
-      voice.name.includes('Serena') ||
       voice.name.includes('Zoe') ||
       voice.name.includes('Fiona') ||
-      (voice.lang.startsWith('en') && voice.name.toLowerCase().includes('female'))
+      (voice.lang.startsWith('en-US') && voice.name.toLowerCase().includes('female'))
     );
     
     if (naturalVoice) {
       utterance.voice = naturalVoice;
-      console.log('Using natural browser voice:', naturalVoice.name);
+      console.log('Using natural voice:', naturalVoice.name);
     }
 
     utterance.onstart = () => setIsPlaying(true);
@@ -121,7 +60,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     if (isPlaying) {
       handleStop();
     } else {
-      generateSpeech();
+      speakWithNaturalVoice();
     }
   };
 
@@ -152,20 +91,11 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     }
   };
 
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (audio) {
-      audio.onplay = () => setIsPlaying(true);
-      audio.onpause = () => setIsPlaying(false);
-      audio.onended = () => setIsPlaying(false);
-    }
-  }, []);
-
   // Auto-play functionality
   useEffect(() => {
     if (autoPlay && text.trim()) {
       const timer = setTimeout(() => {
-        generateSpeech();
+        speakWithNaturalVoice();
       }, 1000);
       
       return () => clearTimeout(timer);
@@ -181,8 +111,8 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
             <Mic className="h-5 w-5 text-white" />
           </div>
           <div className="text-center sm:text-left">
-            <h3 className="text-lg font-black text-purple-900 mb-1">🎧 Voice Guide</h3>
-            <p className="text-sm text-purple-700 font-bold">Press play to hear a summary of your results!</p>
+            <h3 className="text-lg font-black text-purple-900 mb-1">🎧 Your Personalized Voice Message</h3>
+            <p className="text-sm text-purple-700 font-bold">Press play to hear your results!</p>
           </div>
         </div>
         
@@ -202,12 +132,12 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
             ) : isPlaying ? (
               <>
                 <Pause className="h-5 w-5 mr-3" />
-                <span>Pause Voice Guide</span>
+                <span>Pause</span>
               </>
             ) : (
               <>
                 <Play className="h-5 w-5 mr-3" />
-                <span>Play Voice Guide</span>
+                <span>Play</span>
               </>
             )}
           </Button>
@@ -230,7 +160,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
         <div className="mt-4 text-center">
           {isPlaying ? (
             <div className="flex items-center justify-center space-x-2">
-              <div className="text-sm text-purple-700 font-medium">🎵 Playing voice guide...</div>
+              <div className="text-sm text-purple-700 font-medium">🎵 Playing your message...</div>
               <div className="flex space-x-1">
                 {[...Array(5)].map((_, i) => (
                   <div
@@ -275,12 +205,12 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
               ) : isPlaying ? (
                 <>
                   <Pause className="h-5 w-5 mr-3" />
-                  <span>Pause Voice Guide</span>
+                  <span>Pause</span>
                 </>
               ) : (
                 <>
                   <Play className="h-5 w-5 mr-3" />
-                  <span>Play Voice Guide</span>
+                  <span>Play</span>
                 </>
               )}
             </Button>
@@ -304,7 +234,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
             <div className="bg-blue-50 p-3 rounded-lg">
               {isPlaying ? (
                 <div className="flex items-center space-x-2">
-                  <div className="text-sm text-blue-700 font-medium">🎵 Playing voice guide...</div>
+                  <div className="text-sm text-blue-700 font-medium">🎵 Playing...</div>
                   <div className="flex space-x-1">
                     {[...Array(5)].map((_, i) => (
                       <div
@@ -319,7 +249,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-blue-700">Ready to play your personalized voice guide</p>
+                <p className="text-sm text-blue-700">Ready to play</p>
               )}
             </div>
           </div>
