@@ -5,7 +5,6 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Share2, RefreshCw, Trophy, Star } from 'lucide-react';
 import { VoicePlayer } from '@/components/VoicePlayer';
-import { LeadCaptureForm } from '@/components/LeadCaptureForm';
 import { useToast } from "@/hooks/use-toast";
 import { CelebrationEffects } from '@/components/CelebrationEffects';
 
@@ -27,6 +26,7 @@ const Results = () => {
   const { toast } = useToast();
   const [results, setResults] = useState<AssessmentResult | null>(null);
   const [assessment, setAssessment] = useState<AssessmentTemplate | null>(null);
+  const [showVoicePlayer, setShowVoicePlayer] = useState(false);
 
   useEffect(() => {
     const storedResults = localStorage.getItem('assessment-results');
@@ -50,20 +50,21 @@ const Results = () => {
         });
       }
     }
-  }, [location.state?.assessment]);
 
-  const handleLeadSubmit = () => {
-    toast({
-      title: "Thank you!",
-      description: "We'll be in touch soon with personalized insights.",
-    });
-  };
+    // Show voice player after a 2-second delay to let celebration effects play
+    const timer = setTimeout(() => {
+      setShowVoicePlayer(true);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [location.state?.assessment]);
 
   const handleStartOver = () => {
     localStorage.removeItem('assessment-answers');
     localStorage.removeItem('assessment-results');
     localStorage.removeItem('assessment-title');
     localStorage.removeItem('assessment-audience');
+    localStorage.removeItem('user-info');
     navigate('/');
   };
 
@@ -96,7 +97,6 @@ const Results = () => {
     }
   };
 
-  // REMOVED: Auto-redirect logic that was causing the page to disappear
   if (!results || !assessment) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
@@ -108,7 +108,7 @@ const Results = () => {
     );
   }
 
-  const voiceScript = `Congratulations on completing your ${assessment.title} assessment! You've achieved an outstanding overall score of ${results.overallScore} percent. ${results.interpretation}`;
+  const voiceScript = `Congratulations on completing your ${assessment.title} assessment! You've achieved an outstanding overall score of ${results.overallScore} percent. ${results.interpretation} Thank you for taking the time to discover more about yourself. These insights can help guide your next steps forward.`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/50">
@@ -131,13 +131,15 @@ const Results = () => {
             </p>
           </div>
 
-          {/* Voice Player */}
-          <VoicePlayer
-            text={voiceScript}
-            autoPlay={true}
-            isResultsPage={true}
-            className="mb-10"
-          />
+          {/* Voice Player - only shows after delay */}
+          {showVoicePlayer && (
+            <VoicePlayer
+              text={voiceScript}
+              autoPlay={true}
+              isResultsPage={true}
+              className="mb-10"
+            />
+          )}
 
           {/* Enhanced Results Summary */}
           <Card className="p-10 mb-10 bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 border-2 border-blue-100 shadow-2xl rounded-2xl">
@@ -181,20 +183,16 @@ const Results = () => {
             </div>
           </Card>
 
-          {/* Enhanced Lead Capture */}
-          <Card className="p-10 mb-10 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 border-2 border-purple-100 shadow-2xl rounded-2xl">
-            <div className="text-center mb-8">
+          {/* Thank you message */}
+          <Card className="p-8 mb-10 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 border-2 border-purple-100 shadow-2xl rounded-2xl">
+            <div className="text-center">
               <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                🚀 Want to explore your results further?
+                🙏 Thank you for completing your assessment!
               </h3>
               <p className="text-lg text-gray-600">
-                Get personalized insights and recommendations delivered to your inbox
+                We hope these insights provide valuable guidance for your journey ahead.
               </p>
             </div>
-            <LeadCaptureForm
-              audience={assessment.audience}
-              onSubmit={handleLeadSubmit}
-            />
           </Card>
 
           {/* Enhanced Actions */}

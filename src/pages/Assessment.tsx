@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { VoicePlayer } from '@/components/VoicePlayer';
 import { QuestionRenderer } from '@/components/QuestionRenderer';
+import { LeadCaptureForm } from '@/components/LeadCaptureForm';
 import { useToast } from "@/hooks/use-toast";
 import { assessmentTemplates } from '@/data/assessmentTemplates';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -24,6 +25,8 @@ const Assessment = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showLeadCapture, setShowLeadCapture] = useState(true);
+  const [userInfo, setUserInfo] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -40,22 +43,20 @@ const Assessment = () => {
   }, [id]);
 
   useEffect(() => {
-    if (assessment) {
-      const storedAnswers = localStorage.getItem('assessment-answers');
-      if (storedAnswers) {
-        try {
-          setAnswers(JSON.parse(storedAnswers));
-        } catch (error) {
-          console.error("Error parsing stored answers:", error);
-          // Initialize with null values (no pre-selected answers)
-          setAnswers(new Array(assessment.questions.length).fill(null));
-        }
-      } else {
-        // Initialize with null values (no pre-selected answers)
-        setAnswers(new Array(assessment.questions.length).fill(null));
-      }
+    if (assessment && !showLeadCapture) {
+      // Initialize answers array with null values (no pre-selected answers)
+      setAnswers(new Array(assessment.questions.length).fill(null));
     }
-  }, [assessment]);
+  }, [assessment, showLeadCapture]);
+
+  const handleLeadSubmit = (data: any) => {
+    setUserInfo(data);
+    setShowLeadCapture(false);
+    toast({
+      title: "Welcome!",
+      description: "Let's begin your personalized assessment.",
+    });
+  };
 
   const currentQuestion = assessment?.questions[currentQuestionIndex];
   const isAnswered = answers[currentQuestionIndex] !== undefined && answers[currentQuestionIndex] !== null;
@@ -64,7 +65,6 @@ const Assessment = () => {
     const newAnswers = [...answers];
     newAnswers[currentQuestionIndex] = answer;
     setAnswers(newAnswers);
-    localStorage.setItem('assessment-answers', JSON.stringify(newAnswers));
   };
 
   const handleNextQuestion = () => {
@@ -127,13 +127,14 @@ const Assessment = () => {
     localStorage.setItem('assessment-results', JSON.stringify(results));
     localStorage.setItem('assessment-title', assessment.title);
     localStorage.setItem('assessment-audience', assessment.audience);
+    localStorage.setItem('user-info', JSON.stringify(userInfo));
 
     // Store lead data
     const leadData = {
-      firstName: 'Anonymous',
-      lastName: 'User',
-      email: 'anonymous@example.com',
-      ageRange: '25-34',
+      firstName: userInfo?.firstName || 'Anonymous',
+      lastName: userInfo?.lastName || 'User',
+      email: userInfo?.email || 'anonymous@example.com',
+      ageRange: userInfo?.ageRange || '25-34',
       source: 'voicecard-assessment',
       audience: assessment.audience,
       submissionDate: new Date().toISOString(),
@@ -172,6 +173,21 @@ const Assessment = () => {
             <Button onClick={() => navigate('/')}>
               Return to Home
             </Button>
+          </div>
+        ) : showLeadCapture ? (
+          <div className="space-y-8">
+            {/* Welcome Voice Message */}
+            <VoicePlayer
+              text={`Welcome to your ${assessment.title} assessment! This personalized assessment will help you gain valuable insights. Please fill out your information below, and then we'll begin your journey together.`}
+              autoPlay={true}
+              className="mb-8"
+            />
+            
+            {/* Lead Capture Form */}
+            <LeadCaptureForm
+              audience={assessment.audience}
+              onSubmit={handleLeadSubmit}
+            />
           </div>
         ) : currentQuestionIndex < assessment.questions.length ? (
           <div className="space-y-8">

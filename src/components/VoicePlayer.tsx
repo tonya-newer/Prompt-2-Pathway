@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, Volume2, VolumeX, Mic } from 'lucide-react';
@@ -17,73 +18,73 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
   const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Strict female voice selection - prioritize confirmed American female voices only
+  // Enhanced female voice selection targeting natural-sounding female voices
   const speakWithNaturalVoice = () => {
     if (speechSynthesis.speaking) {
       speechSynthesis.cancel();
     }
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.85; // Slightly slower for clarity
-    utterance.pitch = 1.1; // Slightly higher pitch for female voice
+    utterance.rate = 0.9; // Natural speaking pace
+    utterance.pitch = 1.2; // Higher pitch for female voice
     utterance.volume = isMuted ? 0 : 1;
 
     const voices = speechSynthesis.getVoices();
     console.log('Available voices:', voices.map(v => `${v.name} - ${v.lang}`));
     
-    // Strict priority for confirmed American female voices only
-    const confirmedAmericanFemaleVoices = [
-      'Microsoft Zira - English (United States)',
+    // Priority order for most natural female voices
+    const naturalFemaleVoices = [
+      'Samantha', // macOS natural female voice
       'Microsoft Eva - English (United States)', 
+      'Microsoft Zira - English (United States)',
       'Google US English Female',
-      'Samantha',
-      'Karen',
-      'Victoria',
-      'Susan',
-      'Allison',
-      'Ava',
-      'Zoe',
-      'Alice',
-      'Anna',
+      'Karen', // macOS
+      'Victoria', // macOS
+      'Allison', // iOS
+      'Ava', // iOS
+      'Susan', // macOS
+      'Joanna', // AWS Polly
+      'Kendra', // AWS Polly
+      'Kimberly', // AWS Polly
+      'Salli', // AWS Polly
       'Emma',
-      'Joanna',
-      'Kendra',
-      'Kimberly',
-      'Salli'
+      'Alice',
+      'Anna'
     ];
     
     let selectedVoice = null;
     
-    // First pass: Look for exact matches with confirmed American female voices
-    for (const voiceName of confirmedAmericanFemaleVoices) {
+    // First pass: Look for exact natural voice matches
+    for (const voiceName of naturalFemaleVoices) {
       selectedVoice = voices.find(voice => 
-        voice.name.includes(voiceName) && 
-        voice.lang.startsWith('en-US')
+        voice.name === voiceName || 
+        voice.name.includes(voiceName)
       );
-      if (selectedVoice) {
-        console.log('Selected confirmed American female voice:', selectedVoice.name);
+      if (selectedVoice && selectedVoice.lang.startsWith('en')) {
+        console.log('Selected natural female voice:', selectedVoice.name);
         break;
       }
     }
     
-    // Second pass: Look for any voice explicitly marked as female in US English
+    // Second pass: Look for US English voices with female indicators
     if (!selectedVoice) {
       selectedVoice = voices.find(voice => 
         voice.lang.startsWith('en-US') && 
-        (voice.name.toLowerCase().includes('female') || 
+        (voice.name.toLowerCase().includes('female') ||
          voice.name.toLowerCase().includes('woman') ||
          voice.name.toLowerCase().includes('zira') ||
-         voice.name.toLowerCase().includes('eva'))
+         voice.name.toLowerCase().includes('eva') ||
+         voice.name.toLowerCase().includes('samantha'))
       );
       if (selectedVoice) {
-        console.log('Selected female-marked voice:', selectedVoice.name);
+        console.log('Selected US English female voice:', selectedVoice.name);
       }
     }
     
-    // Third pass: Exclude all known male and non-American voices
+    // Third pass: Exclude male voices and select best available
     if (!selectedVoice) {
       selectedVoice = voices.find(voice => 
-        voice.lang.startsWith('en-US') && 
+        voice.lang.startsWith('en') && 
         !voice.name.toLowerCase().includes('male') &&
         !voice.name.toLowerCase().includes('david') &&
         !voice.name.toLowerCase().includes('mark') &&
@@ -92,12 +93,12 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
         !voice.name.toLowerCase().includes('alex') &&
         !voice.name.toLowerCase().includes('fred') &&
         !voice.name.toLowerCase().includes('bruce') &&
-        !voice.name.toLowerCase().includes('british') &&
-        !voice.name.toLowerCase().includes('uk') &&
-        !voice.lang.includes('GB')
+        !voice.name.toLowerCase().includes('thomas') &&
+        !voice.name.toLowerCase().includes('james') &&
+        !voice.lang.includes('GB') // Exclude British voices
       );
       if (selectedVoice) {
-        console.log('Selected filtered American voice:', selectedVoice.name);
+        console.log('Selected filtered voice:', selectedVoice.name);
       }
     }
     
@@ -105,7 +106,8 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
       utterance.voice = selectedVoice;
       console.log('Final voice selection:', selectedVoice.name, selectedVoice.lang);
     } else {
-      console.log('Using default voice (no confirmed female voice found)');
+      console.log('Using default voice - will attempt to set higher pitch for female tone');
+      utterance.pitch = 1.4; // Higher pitch if no specific female voice found
     }
 
     utterance.onstart = () => {
@@ -145,41 +147,28 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     const newMutedState = !isMuted;
     setIsMuted(newMutedState);
     
-    if (audioRef.current) {
-      audioRef.current.volume = newMutedState ? 0 : 1;
-      if (newMutedState) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-      }
-    }
-    
     if (newMutedState && speechSynthesis.speaking) {
       speechSynthesis.cancel();
       setIsPlaying(false);
     }
   };
 
-  // Enhanced auto-play functionality with voice loading wait
+  // Enhanced auto-play functionality
   useEffect(() => {
     if (autoPlay && text.trim()) {
-      // Wait for voices to load, then auto-play
       const checkVoicesAndPlay = () => {
         const voices = speechSynthesis.getVoices();
         if (voices.length > 0) {
           console.log('Voices loaded, starting auto-play');
           setTimeout(() => {
             speakWithNaturalVoice();
-          }, 800); // Short delay for better UX
+          }, 1000); // Longer delay for better UX
         } else {
-          // Voices not loaded yet, wait a bit more
           setTimeout(checkVoicesAndPlay, 100);
         }
       };
 
-      // Start checking for voices
       checkVoicesAndPlay();
-      
-      // Also listen for the voiceschanged event
       speechSynthesis.addEventListener('voiceschanged', checkVoicesAndPlay, { once: true });
       
       return () => {
@@ -188,7 +177,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     }
   }, [text, autoPlay]);
 
-  // For results page, use simplified layout
+  // For results page, use simplified layout with better audio timing
   if (isResultsPage) {
     return (
       <Card className={`p-4 bg-gradient-to-r from-purple-100 to-blue-100 border-2 border-purple-300 rounded-xl shadow-xl ${className}`}>
@@ -305,7 +294,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
               variant="outline"
               size="lg"
               onClick={toggleMute}
-              className="hover:bg-blue-100 border-blue-300 p-3 flex-shrink-0"
+              className="hover:bg-blue-100 border-blue-300 p-3 flex-shrink-0 cursor-pointer"
             >
               {isMuted ? (
                 <VolumeX className="h-5 w-5 text-gray-400" />
