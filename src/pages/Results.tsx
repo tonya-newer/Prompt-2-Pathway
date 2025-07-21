@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -17,6 +18,7 @@ interface AssessmentResult {
 interface AssessmentTemplate {
   id: number;
   title: string;
+  audience: 'individual' | 'business';
 }
 
 const Results = () => {
@@ -38,10 +40,12 @@ const Results = () => {
     } else {
       // Fallback to local storage if available
       const assessmentTitle = localStorage.getItem('assessment-title');
+      const assessmentAudience = localStorage.getItem('assessment-audience');
       if (assessmentTitle) {
         setAssessment({
-          id: 0, // Provide a default value or fetch from local storage if available
+          id: 0,
           title: assessmentTitle,
+          audience: (assessmentAudience as 'individual' | 'business') || 'individual',
         });
       }
     }
