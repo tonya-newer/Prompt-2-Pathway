@@ -138,7 +138,11 @@ const Assessment = () => {
 
     const assessmentResults = {
       overallScore: results.overallScore,
-      categoryScores: results.categories,
+      categoryScores: {
+        readiness: results.categories.readiness,
+        confidence: results.categories.confidence,
+        clarity: results.categories.clarity
+      },
       completionRate: 100,
       insights: ['Assessment completed successfully'],
     };
