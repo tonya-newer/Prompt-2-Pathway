@@ -18,119 +18,55 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
   const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Enhanced female voice selection targeting natural-sounding female voices
-  const speakWithNaturalVoice = () => {
-    if (speechSynthesis.speaking) {
-      speechSynthesis.cancel();
+  // Use custom voice recording instead of speech synthesis
+  const playCustomVoice = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
     }
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9; // Natural speaking pace
-    utterance.pitch = 1.2; // Higher pitch for female voice
-    utterance.volume = isMuted ? 0 : 1;
-
-    const voices = speechSynthesis.getVoices();
-    console.log('Available voices:', voices.map(v => `${v.name} - ${v.lang}`));
+    // Create new audio element with custom voice
+    const audio = new Audio('https://docs.google.com/uc?export=download&id=1WygE7OSQ4NUOwL6CCttQkhCsYUSH6l4B');
+    audio.volume = isMuted ? 0 : 1;
     
-    // Priority order for most natural female voices
-    const naturalFemaleVoices = [
-      'Samantha', // macOS natural female voice
-      'Microsoft Eva - English (United States)', 
-      'Microsoft Zira - English (United States)',
-      'Google US English Female',
-      'Karen', // macOS
-      'Victoria', // macOS
-      'Allison', // iOS
-      'Ava', // iOS
-      'Susan', // macOS
-      'Joanna', // AWS Polly
-      'Kendra', // AWS Polly
-      'Kimberly', // AWS Polly
-      'Salli', // AWS Polly
-      'Emma',
-      'Alice',
-      'Anna'
-    ];
+    audio.onloadstart = () => {
+      setIsLoading(true);
+    };
     
-    let selectedVoice = null;
+    audio.oncanplaythrough = () => {
+      setIsLoading(false);
+    };
     
-    // First pass: Look for exact natural voice matches
-    for (const voiceName of naturalFemaleVoices) {
-      selectedVoice = voices.find(voice => 
-        voice.name === voiceName || 
-        voice.name.includes(voiceName)
-      );
-      if (selectedVoice && selectedVoice.lang.startsWith('en')) {
-        console.log('Selected natural female voice:', selectedVoice.name);
-        break;
-      }
-    }
-    
-    // Second pass: Look for US English voices with female indicators
-    if (!selectedVoice) {
-      selectedVoice = voices.find(voice => 
-        voice.lang.startsWith('en-US') && 
-        (voice.name.toLowerCase().includes('female') ||
-         voice.name.toLowerCase().includes('woman') ||
-         voice.name.toLowerCase().includes('zira') ||
-         voice.name.toLowerCase().includes('eva') ||
-         voice.name.toLowerCase().includes('samantha'))
-      );
-      if (selectedVoice) {
-        console.log('Selected US English female voice:', selectedVoice.name);
-      }
-    }
-    
-    // Third pass: Exclude male voices and select best available
-    if (!selectedVoice) {
-      selectedVoice = voices.find(voice => 
-        voice.lang.startsWith('en') && 
-        !voice.name.toLowerCase().includes('male') &&
-        !voice.name.toLowerCase().includes('david') &&
-        !voice.name.toLowerCase().includes('mark') &&
-        !voice.name.toLowerCase().includes('daniel') &&
-        !voice.name.toLowerCase().includes('matthew') &&
-        !voice.name.toLowerCase().includes('alex') &&
-        !voice.name.toLowerCase().includes('fred') &&
-        !voice.name.toLowerCase().includes('bruce') &&
-        !voice.name.toLowerCase().includes('thomas') &&
-        !voice.name.toLowerCase().includes('james') &&
-        !voice.lang.includes('GB') // Exclude British voices
-      );
-      if (selectedVoice) {
-        console.log('Selected filtered voice:', selectedVoice.name);
-      }
-    }
-    
-    if (selectedVoice) {
-      utterance.voice = selectedVoice;
-      console.log('Final voice selection:', selectedVoice.name, selectedVoice.lang);
-    } else {
-      console.log('Using default voice - will attempt to set higher pitch for female tone');
-      utterance.pitch = 1.4; // Higher pitch if no specific female voice found
-    }
-
-    utterance.onstart = () => {
-      console.log('Voice started playing');
+    audio.onplay = () => {
       setIsPlaying(true);
     };
-    utterance.onend = () => {
-      console.log('Voice finished playing');
+    
+    audio.onpause = () => {
       setIsPlaying(false);
     };
-    utterance.onerror = (error) => {
-      console.error('Voice playback error:', error);
+    
+    audio.onended = () => {
       setIsPlaying(false);
+    };
+    
+    audio.onerror = () => {
+      setIsLoading(false);
+      setIsPlaying(false);
+      console.error('Error loading custom voice audio');
     };
 
-    speechSynthesis.speak(utterance);
+    audioRef.current = audio;
+    audio.play().catch(error => {
+      console.error('Error playing custom voice:', error);
+      setIsPlaying(false);
+    });
   };
 
   const handlePlay = () => {
     if (isPlaying) {
       handleStop();
     } else {
-      speakWithNaturalVoice();
+      playCustomVoice();
     }
   };
 
@@ -139,7 +75,6 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
-    speechSynthesis.cancel();
     setIsPlaying(false);
   };
 
@@ -147,37 +82,23 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     const newMutedState = !isMuted;
     setIsMuted(newMutedState);
     
-    if (newMutedState && speechSynthesis.speaking) {
-      speechSynthesis.cancel();
-      setIsPlaying(false);
+    if (audioRef.current) {
+      audioRef.current.volume = newMutedState ? 0 : 1;
     }
   };
 
-  // Enhanced auto-play functionality
+  // Auto-play functionality
   useEffect(() => {
-    if (autoPlay && text.trim()) {
-      const checkVoicesAndPlay = () => {
-        const voices = speechSynthesis.getVoices();
-        if (voices.length > 0) {
-          console.log('Voices loaded, starting auto-play');
-          setTimeout(() => {
-            speakWithNaturalVoice();
-          }, 1000); // Longer delay for better UX
-        } else {
-          setTimeout(checkVoicesAndPlay, 100);
-        }
-      };
-
-      checkVoicesAndPlay();
-      speechSynthesis.addEventListener('voiceschanged', checkVoicesAndPlay, { once: true });
+    if (autoPlay) {
+      const timer = setTimeout(() => {
+        playCustomVoice();
+      }, 1000);
       
-      return () => {
-        speechSynthesis.removeEventListener('voiceschanged', checkVoicesAndPlay);
-      };
+      return () => clearTimeout(timer);
     }
-  }, [text, autoPlay]);
+  }, [autoPlay, isMuted]);
 
-  // For results page, use simplified layout with better audio timing
+  // For results page, use simplified layout
   if (isResultsPage) {
     return (
       <Card className={`p-4 bg-gradient-to-r from-purple-100 to-blue-100 border-2 border-purple-300 rounded-xl shadow-xl ${className}`}>
@@ -221,7 +142,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
             variant="outline"
             size="lg"
             onClick={toggleMute}
-            className="hover:bg-blue-100 border-blue-300 p-3"
+            className="hover:bg-blue-100 border-blue-300 p-3 cursor-pointer"
           >
             {isMuted ? (
               <VolumeX className="h-5 w-5 text-gray-400" />
@@ -231,7 +152,6 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
           </Button>
         </div>
 
-        {/* Audio status indicator */}
         <div className="mt-4 text-center">
           {isPlaying ? (
             <div className="flex items-center justify-center space-x-2">
@@ -253,8 +173,6 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
             <p className="text-xs text-purple-600">🎧 Put on headphones for the best experience</p>
           )}
         </div>
-        
-        <audio ref={audioRef} className="hidden" />
       </Card>
     );
   }
@@ -304,7 +222,6 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
             </Button>
           </div>
           
-          {/* Audio status */}
           <div className="flex-1 w-full">
             <div className="bg-blue-50 p-3 rounded-lg">
               {isPlaying ? (
@@ -329,7 +246,6 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
             </div>
           </div>
           
-          {/* Audio Visualizer */}
           {isPlaying && (
             <div className="flex space-x-1 flex-shrink-0">
               {[...Array(5)].map((_, i) => (
@@ -352,8 +268,6 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
           </p>
         </div>
       </div>
-      
-      <audio ref={audioRef} className="hidden" />
     </Card>
   );
 };

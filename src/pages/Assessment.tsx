@@ -2,10 +2,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { VoicePlayer } from '@/components/VoicePlayer';
 import { QuestionRenderer } from '@/components/QuestionRenderer';
-import { LeadCaptureForm } from '@/components/LeadCaptureForm';
+import { WelcomePage } from '@/components/WelcomePage';
 import { useToast } from "@/hooks/use-toast";
 import { assessmentTemplates } from '@/data/assessmentTemplates';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -44,7 +43,6 @@ const Assessment = () => {
 
   useEffect(() => {
     if (assessment && !showLeadCapture) {
-      // Initialize answers array with null values (no pre-selected answers)
       setAnswers(new Array(assessment.questions.length).fill(null));
     }
   }, [assessment, showLeadCapture]);
@@ -123,13 +121,11 @@ const Assessment = () => {
       interpretation: interpretation,
     };
 
-    // Store results and assessment data
     localStorage.setItem('assessment-results', JSON.stringify(results));
     localStorage.setItem('assessment-title', assessment.title);
     localStorage.setItem('assessment-audience', assessment.audience);
     localStorage.setItem('user-info', JSON.stringify(userInfo));
 
-    // Store lead data
     const leadData = {
       firstName: userInfo?.firstName || 'Anonymous',
       lastName: userInfo?.lastName || 'User',
@@ -175,30 +171,19 @@ const Assessment = () => {
             </Button>
           </div>
         ) : showLeadCapture ? (
-          <div className="space-y-8">
-            {/* Welcome Voice Message */}
-            <VoicePlayer
-              text={`Welcome to your ${assessment.title} assessment! This personalized assessment will help you gain valuable insights. Please fill out your information below, and then we'll begin your journey together.`}
-              autoPlay={true}
-              className="mb-8"
-            />
-            
-            {/* Lead Capture Form */}
-            <LeadCaptureForm
-              audience={assessment.audience}
-              onSubmit={handleLeadSubmit}
-            />
-          </div>
+          <WelcomePage
+            assessmentTitle={assessment.title}
+            audience={assessment.audience}
+            onSubmit={handleLeadSubmit}
+          />
         ) : currentQuestionIndex < assessment.questions.length ? (
           <div className="space-y-8">
-            {/* Voice Player - plays for EVERY question */}
             <VoicePlayer
               text={currentQuestion?.voiceScript || `Question ${currentQuestionIndex + 1}: Let's continue with your assessment.`}
               autoPlay={true}
               className="mb-8"
             />
             
-            {/* Enhanced Progress bar */}
             <div className="max-w-5xl mx-auto">
               <div className="bg-gray-200 rounded-full h-3 mb-6 shadow-inner">
                 <div
@@ -212,7 +197,6 @@ const Assessment = () => {
               </div>
             </div>
 
-            {/* Enhanced Question */}
             <QuestionRenderer
               question={currentQuestion!}
               questionIndex={currentQuestionIndex}
@@ -221,7 +205,6 @@ const Assessment = () => {
               onAnswer={handleAnswer}
             />
 
-            {/* Enhanced Navigation */}
             <div className="flex justify-between items-center max-w-5xl mx-auto pt-8">
               <Button
                 variant="outline"

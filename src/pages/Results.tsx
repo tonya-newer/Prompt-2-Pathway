@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Share2, RefreshCw, Trophy, Star } from 'lucide-react';
+import { RefreshCw, Trophy, Star, Calendar, ArrowRight } from 'lucide-react';
 import { VoicePlayer } from '@/components/VoicePlayer';
 import { useToast } from "@/hooks/use-toast";
 import { CelebrationEffects } from '@/components/CelebrationEffects';
@@ -26,20 +26,26 @@ const Results = () => {
   const { toast } = useToast();
   const [results, setResults] = useState<AssessmentResult | null>(null);
   const [assessment, setAssessment] = useState<AssessmentTemplate | null>(null);
+  const [userInfo, setUserInfo] = useState<any>(null);
   const [showVoicePlayer, setShowVoicePlayer] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(true);
 
   useEffect(() => {
     const storedResults = localStorage.getItem('assessment-results');
+    const storedUserInfo = localStorage.getItem('user-info');
     const assessmentData = location.state?.assessment;
 
     if (storedResults) {
       setResults(JSON.parse(storedResults));
     }
     
+    if (storedUserInfo) {
+      setUserInfo(JSON.parse(storedUserInfo));
+    }
+    
     if (assessmentData) {
       setAssessment(assessmentData);
     } else {
-      // Fallback to local storage if available
       const assessmentTitle = localStorage.getItem('assessment-title');
       const assessmentAudience = localStorage.getItem('assessment-audience');
       if (assessmentTitle) {
@@ -51,12 +57,20 @@ const Results = () => {
       }
     }
 
-    // Show voice player after a 2-second delay to let celebration effects play
-    const timer = setTimeout(() => {
-      setShowVoicePlayer(true);
-    }, 2000);
+    // Extended celebration duration
+    const celebrationTimer = setTimeout(() => {
+      setShowCelebration(false);
+    }, 6000);
 
-    return () => clearTimeout(timer);
+    // Show voice player after celebration
+    const voiceTimer = setTimeout(() => {
+      setShowVoicePlayer(true);
+    }, 4000);
+
+    return () => {
+      clearTimeout(celebrationTimer);
+      clearTimeout(voiceTimer);
+    };
   }, [location.state?.assessment]);
 
   const handleStartOver = () => {
@@ -66,35 +80,6 @@ const Results = () => {
     localStorage.removeItem('assessment-audience');
     localStorage.removeItem('user-info');
     navigate('/');
-  };
-
-  const handleShareResults = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `My ${assessment?.title} Results`,
-          text: `I scored ${results?.overallScore}% on the ${assessment?.title} assessment! Check it out:`,
-          url: window.location.href,
-        });
-        toast({
-          title: "Results Shared!",
-          description: "Thanks for sharing your results!",
-        });
-      } catch (error) {
-        console.error("Sharing failed:", error);
-        toast({
-          title: "Sharing Failed",
-          description: "There was an error sharing your results. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } else {
-      toast({
-        title: "Sharing Not Supported",
-        description: "Web Share API is not supported in your browser.",
-        variant: "destructive",
-      });
-    }
   };
 
   if (!results || !assessment) {
@@ -108,30 +93,32 @@ const Results = () => {
     );
   }
 
-  const voiceScript = `Congratulations on completing your ${assessment.title} assessment! You've achieved an outstanding overall score of ${results.overallScore} percent. ${results.interpretation} Thank you for taking the time to discover more about yourself. These insights can help guide your next steps forward.`;
+  const voiceScript = `Hello ${userInfo?.firstName || 'there'}, and congratulations on completing your VoiceCard assessment! This is truly an accomplishment worth celebrating. Taking the time for this kind of self-reflection shows real commitment to your growth. Your overall clarity score of ${results.overallScore} out of 100 is a meaningful indicator.`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/50">
-      <CelebrationEffects />
+      {showCelebration && <CelebrationEffects />}
       
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto">
-          {/* Enhanced Header */}
+          {/* Enhanced Header with Name */}
           <div className="text-center mb-10">
             <div className="flex justify-center mb-6">
               <div className="bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-full shadow-2xl">
                 <Trophy className="h-12 w-12 text-white" />
               </div>
             </div>
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-              🎉 Congratulations! 🎉
+            <h1 className="text-5xl font-bold text-gray-900 mb-4">
+              🎉 CONGRATULATIONS {userInfo?.firstName?.toUpperCase() || 'THERE'}, YOU DID IT! 🎉
             </h1>
-            <p className="text-2xl text-gray-700 font-medium">
-              You've completed your <span className="font-bold text-blue-600">{assessment.title}</span> assessment
+            <p className="text-xl text-gray-600 mb-2">Assessment Complete - Your Personalized Results Are Here!</p>
+            <p className="text-lg text-gray-600">
+              You've successfully completed your <span className="font-bold text-blue-600">{assessment.title}</span> assessment. 
+              Your detailed insights and actionable next steps are outlined below.
             </p>
           </div>
 
-          {/* Voice Player - only shows after delay */}
+          {/* Voice Player */}
           {showVoicePlayer && (
             <VoicePlayer
               text={voiceScript}
@@ -141,19 +128,22 @@ const Results = () => {
             />
           )}
 
-          {/* Enhanced Results Summary */}
-          <Card className="p-10 mb-10 bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 border-2 border-blue-100 shadow-2xl rounded-2xl">
+          {/* Results in Light Green Box */}
+          <Card className="p-10 mb-10 bg-gradient-to-br from-green-50 via-white to-green-50 border-4 border-green-200 shadow-2xl rounded-2xl">
             <div className="text-center mb-8">
               <div className="relative inline-block mb-6">
                 <div className="text-8xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  {results.overallScore}%
+                  {results.overallScore}
+                </div>
+                <div className="text-2xl font-semibold text-gray-600 mt-2">
+                  out of 100
                 </div>
                 <div className="absolute -top-2 -right-2">
                   <Star className="h-8 w-8 text-yellow-500 fill-current" />
                 </div>
               </div>
               <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                Your Overall Score
+                Your Overall Score: {results.overallScore}% / 100%
               </h2>
               <div className="max-w-3xl mx-auto">
                 <p className="text-xl text-gray-700 leading-relaxed font-medium">
@@ -162,7 +152,7 @@ const Results = () => {
               </div>
             </div>
 
-            {/* Enhanced Score breakdown */}
+            {/* Score breakdown */}
             <div className="grid md:grid-cols-3 gap-8 mt-10">
               {Object.entries(results.categories).map(([category, score]) => (
                 <div key={category} className="bg-gradient-to-br from-gray-50 to-blue-50 p-6 rounded-xl border-2 border-blue-100 shadow-lg">
@@ -183,6 +173,52 @@ const Results = () => {
             </div>
           </Card>
 
+          {/* Booking Section */}
+          <Card className="p-10 mb-10 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 border-4 border-purple-200 shadow-2xl rounded-2xl">
+            <div className="text-center">
+              <h3 className="text-4xl font-bold text-gray-900 mb-6">
+                Ready to Explore More?
+              </h3>
+              <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+                Your journey doesn't end here. We're here to support your continued growth, 
+                but only if you're open to exploring what's possible.
+              </p>
+              
+              <div className="space-y-6">
+                <Button
+                  onClick={() => {
+                    toast({
+                      title: "Booking Feature",
+                      description: "Calendar booking will be implemented soon!",
+                    });
+                  }}
+                  className="bg-white text-purple-600 hover:bg-purple-50 border-2 border-purple-200 px-12 py-6 text-xl font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  <Calendar className="h-6 w-6 mr-3" />
+                  Schedule a Clarity Call
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    toast({
+                      title: "Resources",
+                      description: "Additional resources will be available soon!",
+                    });
+                  }}
+                  className="border-2 border-purple-300 hover:border-purple-500 px-12 py-6 text-xl font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  <ArrowRight className="h-6 w-6 mr-3" />
+                  Access Additional Resources
+                </Button>
+              </div>
+              
+              <p className="text-gray-500 mt-6 text-lg">
+                No pressure - we'll only follow up if you indicate you'd like us to.
+              </p>
+            </div>
+          </Card>
+
           {/* Thank you message */}
           <Card className="p-8 mb-10 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 border-2 border-purple-100 shadow-2xl rounded-2xl">
             <div className="text-center">
@@ -195,15 +231,8 @@ const Results = () => {
             </div>
           </Card>
 
-          {/* Enhanced Actions */}
-          <div className="flex flex-col sm:flex-row gap-6 justify-center">
-            <Button
-              onClick={handleShareResults}
-              className="flex items-center justify-center px-8 py-4 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold"
-            >
-              <Share2 className="h-5 w-5 mr-3" />
-              Share Results
-            </Button>
+          {/* Single Action Button */}
+          <div className="flex justify-center">
             <Button
               variant="outline"
               onClick={handleStartOver}
