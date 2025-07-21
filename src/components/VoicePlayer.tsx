@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, Volume2, VolumeX, Mic } from 'lucide-react';
@@ -18,7 +17,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
   const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Enhanced female voice selection - prioritize natural American female voices only
+  // Strict female voice selection - prioritize confirmed American female voices only
   const speakWithNaturalVoice = () => {
     if (speechSynthesis.speaking) {
       speechSynthesis.cancel();
@@ -30,10 +29,10 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     utterance.volume = isMuted ? 0 : 1;
 
     const voices = speechSynthesis.getVoices();
-    console.log('Available voices:', voices.map(v => `${v.name} - ${v.lang} - ${v.gender}`));
+    console.log('Available voices:', voices.map(v => `${v.name} - ${v.lang}`));
     
-    // Strict priority for confirmed female voices only
-    const preferredFemaleVoices = [
+    // Strict priority for confirmed American female voices only
+    const confirmedAmericanFemaleVoices = [
       'Microsoft Zira - English (United States)',
       'Microsoft Eva - English (United States)', 
       'Google US English Female',
@@ -55,19 +54,19 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     
     let selectedVoice = null;
     
-    // First pass: Look for exact matches with confirmed female voices
-    for (const voiceName of preferredFemaleVoices) {
+    // First pass: Look for exact matches with confirmed American female voices
+    for (const voiceName of confirmedAmericanFemaleVoices) {
       selectedVoice = voices.find(voice => 
         voice.name.includes(voiceName) && 
         voice.lang.startsWith('en-US')
       );
       if (selectedVoice) {
-        console.log('Selected preferred female voice:', selectedVoice.name);
+        console.log('Selected confirmed American female voice:', selectedVoice.name);
         break;
       }
     }
     
-    // Second pass: Look for any voice explicitly marked as female
+    // Second pass: Look for any voice explicitly marked as female in US English
     if (!selectedVoice) {
       selectedVoice = voices.find(voice => 
         voice.lang.startsWith('en-US') && 
@@ -81,7 +80,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
       }
     }
     
-    // Third pass: Exclude explicitly male voices and select the first remaining
+    // Third pass: Exclude all known male and non-American voices
     if (!selectedVoice) {
       selectedVoice = voices.find(voice => 
         voice.lang.startsWith('en-US') && 
@@ -89,10 +88,16 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
         !voice.name.toLowerCase().includes('david') &&
         !voice.name.toLowerCase().includes('mark') &&
         !voice.name.toLowerCase().includes('daniel') &&
-        !voice.name.toLowerCase().includes('matthew')
+        !voice.name.toLowerCase().includes('matthew') &&
+        !voice.name.toLowerCase().includes('alex') &&
+        !voice.name.toLowerCase().includes('fred') &&
+        !voice.name.toLowerCase().includes('bruce') &&
+        !voice.name.toLowerCase().includes('british') &&
+        !voice.name.toLowerCase().includes('uk') &&
+        !voice.lang.includes('GB')
       );
       if (selectedVoice) {
-        console.log('Selected non-male voice:', selectedVoice.name);
+        console.log('Selected filtered American voice:', selectedVoice.name);
       }
     }
     
@@ -100,7 +105,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
       utterance.voice = selectedVoice;
       console.log('Final voice selection:', selectedVoice.name, selectedVoice.lang);
     } else {
-      console.log('Using default voice (no female voice found)');
+      console.log('Using default voice (no confirmed female voice found)');
     }
 
     utterance.onstart = () => {
