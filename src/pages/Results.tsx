@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Trophy, Star, Calendar, ArrowRight } from 'lucide-react';
+import { RefreshCw, Trophy, Star, Calendar } from 'lucide-react';
 import { VoicePlayer } from '@/components/VoicePlayer';
 import { useToast } from "@/hooks/use-toast";
 import { CelebrationEffects } from '@/components/CelebrationEffects';
@@ -57,15 +57,15 @@ const Results = () => {
       }
     }
 
-    // Extended celebration duration
+    // Extended celebration duration - 9 seconds total
     const celebrationTimer = setTimeout(() => {
       setShowCelebration(false);
-    }, 6000);
+    }, 9000);
 
-    // Show voice player after celebration
+    // Show voice player after celebration with delay
     const voiceTimer = setTimeout(() => {
       setShowVoicePlayer(true);
-    }, 4000);
+    }, 7000);
 
     return () => {
       clearTimeout(celebrationTimer);
@@ -186,47 +186,26 @@ const Results = () => {
               
               <div className="space-y-6">
                 <Button
-                  onClick={() => {
-                    toast({
-                      title: "Booking Feature",
-                      description: "Calendar booking will be implemented soon!",
-                    });
-                  }}
                   className="bg-white text-purple-600 hover:bg-purple-50 border-2 border-purple-200 px-12 py-6 text-xl font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   <Calendar className="h-6 w-6 mr-3" />
                   Schedule a Clarity Call
                 </Button>
                 
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    toast({
-                      title: "Resources",
-                      description: "Additional resources will be available soon!",
-                    });
-                  }}
-                  className="border-2 border-purple-300 hover:border-purple-500 px-12 py-6 text-xl font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  <ArrowRight className="h-6 w-6 mr-3" />
-                  Access Additional Resources
-                </Button>
+                {/* TidyCal Booking Embed */}
+                <div className="mt-8">
+                  <div 
+                    className="tidycal-embed" 
+                    data-path="newerconsulting"
+                    dangerouslySetInnerHTML={{
+                      __html: `<script src="https://asset-tidycal.b-cdn.net/js/embed.js" async></script>`
+                    }}
+                  />
+                </div>
               </div>
               
               <p className="text-gray-500 mt-6 text-lg">
                 No pressure - we'll only follow up if you indicate you'd like us to.
-              </p>
-            </div>
-          </Card>
-
-          {/* Thank you message */}
-          <Card className="p-8 mb-10 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 border-2 border-purple-100 shadow-2xl rounded-2xl">
-            <div className="text-center">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                🙏 Thank you for completing your assessment!
-              </h3>
-              <p className="text-lg text-gray-600">
-                We hope these insights provide valuable guidance for your journey ahead.
               </p>
             </div>
           </Card>

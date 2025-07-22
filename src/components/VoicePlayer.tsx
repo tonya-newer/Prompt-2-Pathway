@@ -18,16 +18,16 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
   const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Use custom voice recording instead of speech synthesis
   const playCustomVoice = () => {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
 
-    // Create new audio element with custom voice
+    // Create new audio element with your custom voice
     const audio = new Audio('https://docs.google.com/uc?export=download&id=1WygE7OSQ4NUOwL6CCttQkhCsYUSH6l4B');
     audio.volume = isMuted ? 0 : 1;
+    audio.crossOrigin = 'anonymous';
     
     audio.onloadstart = () => {
       setIsLoading(true);
@@ -49,17 +49,23 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
       setIsPlaying(false);
     };
     
-    audio.onerror = () => {
+    audio.onerror = (e) => {
       setIsLoading(false);
       setIsPlaying(false);
-      console.error('Error loading custom voice audio');
+      console.error('Error loading custom voice audio:', e);
     };
 
     audioRef.current = audio;
-    audio.play().catch(error => {
-      console.error('Error playing custom voice:', error);
-      setIsPlaying(false);
-    });
+    
+    // Attempt to play with user gesture handling
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(error => {
+        console.error('Error playing custom voice:', error);
+        setIsPlaying(false);
+        setIsLoading(false);
+      });
+    }
   };
 
   const handlePlay = () => {
@@ -96,7 +102,17 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
       
       return () => clearTimeout(timer);
     }
-  }, [autoPlay, isMuted]);
+  }, [autoPlay]);
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   // For results page, use simplified layout
   if (isResultsPage) {
@@ -142,7 +158,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
             variant="outline"
             size="lg"
             onClick={toggleMute}
-            className="hover:bg-blue-100 border-blue-300 p-3 cursor-pointer"
+            className="hover:bg-blue-100 border-blue-300 p-3"
           >
             {isMuted ? (
               <VolumeX className="h-5 w-5 text-gray-400" />
@@ -212,7 +228,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
               variant="outline"
               size="lg"
               onClick={toggleMute}
-              className="hover:bg-blue-100 border-blue-300 p-3 flex-shrink-0 cursor-pointer"
+              className="hover:bg-blue-100 border-blue-300 p-3 flex-shrink-0"
             >
               {isMuted ? (
                 <VolumeX className="h-5 w-5 text-gray-400" />
@@ -241,7 +257,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-blue-700">Ready to play</p>
+                <p className="text-sm text-blue-700">Ready to play your custom voice message</p>
               )}
             </div>
           </div>
