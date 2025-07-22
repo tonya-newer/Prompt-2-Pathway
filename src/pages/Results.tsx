@@ -57,10 +57,16 @@ const Results = () => {
       }
     }
 
-    // Extended celebration duration - 9 seconds total
+    // Load TidyCal script
+    const script = document.createElement('script');
+    script.src = 'https://asset-tidycal.b-cdn.net/js/embed.js';
+    script.async = true;
+    document.head.appendChild(script);
+
+    // Extended celebration duration - 12 seconds total
     const celebrationTimer = setTimeout(() => {
       setShowCelebration(false);
-    }, 9000);
+    }, 12000);
 
     // Show voice player after celebration with delay
     const voiceTimer = setTimeout(() => {
@@ -70,6 +76,7 @@ const Results = () => {
     return () => {
       clearTimeout(celebrationTimer);
       clearTimeout(voiceTimer);
+      document.head.removeChild(script);
     };
   }, [location.state?.assessment]);
 
@@ -143,7 +150,7 @@ const Results = () => {
                 </div>
               </div>
               <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                Your Overall Score: {results.overallScore}% / 100%
+                Your Overall Score: {results.overallScore}%
               </h2>
               <div className="max-w-3xl mx-auto">
                 <p className="text-xl text-gray-700 leading-relaxed font-medium">
@@ -197,10 +204,7 @@ const Results = () => {
                   <div 
                     className="tidycal-embed" 
                     data-path="newerconsulting"
-                    dangerouslySetInnerHTML={{
-                      __html: `<script src="https://asset-tidycal.b-cdn.net/js/embed.js" async></script>`
-                    }}
-                  />
+                  ></div>
                 </div>
               </div>
               
@@ -210,17 +214,6 @@ const Results = () => {
             </div>
           </Card>
 
-          {/* Single Action Button */}
-          <div className="flex justify-center">
-            <Button
-              variant="outline"
-              onClick={handleStartOver}
-              className="flex items-center justify-center px-8 py-4 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-blue-300 hover:border-blue-500 font-semibold"
-            >
-              <RefreshCw className="h-5 w-5 mr-3" />
-              Take Another Assessment
-            </Button>
-          </div>
         </div>
       </div>
     </div>

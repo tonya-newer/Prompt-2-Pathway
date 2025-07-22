@@ -25,9 +25,8 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     }
 
     // Create new audio element with your custom voice
-    const audio = new Audio('https://docs.google.com/uc?export=download&id=1WygE7OSQ4NUOwL6CCttQkhCsYUSH6l4B');
+    const audio = new Audio('/custom-voice.mp3');
     audio.volume = isMuted ? 0 : 1;
-    audio.crossOrigin = 'anonymous';
     
     audio.onloadstart = () => {
       setIsLoading(true);
