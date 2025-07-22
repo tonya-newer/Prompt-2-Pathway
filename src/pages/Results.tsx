@@ -57,12 +57,6 @@ const Results = () => {
       }
     }
 
-    // Load TidyCal script
-    const script = document.createElement('script');
-    script.src = 'https://asset-tidycal.b-cdn.net/js/embed.js';
-    script.async = true;
-    document.head.appendChild(script);
-
     // Extended celebration duration - 12 seconds total
     const celebrationTimer = setTimeout(() => {
       setShowCelebration(false);
@@ -76,7 +70,6 @@ const Results = () => {
     return () => {
       clearTimeout(celebrationTimer);
       clearTimeout(voiceTimer);
-      document.head.removeChild(script);
     };
   }, [location.state?.assessment]);
 
@@ -193,19 +186,12 @@ const Results = () => {
               
               <div className="space-y-6">
                 <Button
+                  onClick={() => window.open('https://tidycal.com/newerconsulting', '_blank')}
                   className="bg-white text-purple-600 hover:bg-purple-50 border-2 border-purple-200 px-12 py-6 text-xl font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   <Calendar className="h-6 w-6 mr-3" />
                   Schedule a Clarity Call
                 </Button>
-                
-                {/* TidyCal Booking Embed */}
-                <div className="mt-8">
-                  <div 
-                    className="tidycal-embed" 
-                    data-path="newerconsulting"
-                  ></div>
-                </div>
               </div>
               
               <p className="text-gray-500 mt-6 text-lg">
