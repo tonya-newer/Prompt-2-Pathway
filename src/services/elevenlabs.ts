@@ -2,8 +2,8 @@
 // ElevenLabs service for voice generation
 const ELEVENLABS_API_KEY = 'sk_1b1fabd8123ff50b52bb77acc7b28cfb3de3eea18dee4f7d';
 
-// Your cloned voice ID - we'll use a default voice for now, but you can replace this with your actual voice ID
-const VOICE_ID = 'EXAVITQu4vr4xnSDxMaL'; // Sarah voice as placeholder
+// Your cloned voice ID - Sarah voice as placeholder
+const VOICE_ID = 'EXAVITQu4vr4xnSDxMaL';
 
 export interface VoiceGenerationOptions {
   text: string;
@@ -20,7 +20,6 @@ export const generateVoiceAudio = async (options: VoiceGenerationOptions): Promi
   try {
     console.log('Starting ElevenLabs voice generation for text:', options.text.substring(0, 100) + '...');
     
-    // Direct API call to ElevenLabs REST API
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
       method: 'POST',
       headers: {
@@ -57,14 +56,46 @@ export const generateVoiceAudio = async (options: VoiceGenerationOptions): Promi
 export const createAudioFromText = async (text: string): Promise<string> => {
   try {
     console.log('Creating audio from text:', text.substring(0, 50) + '...');
-    const audioBuffer = await generateVoiceAudio({ text });
-    const blob = new Blob([audioBuffer], { type: 'audio/mpeg' });
-    const audioUrl = URL.createObjectURL(blob);
-    console.log('Audio URL created successfully');
-    return audioUrl;
+    
+    // First try ElevenLabs
+    try {
+      const audioBuffer = await generateVoiceAudio({ text });
+      const blob = new Blob([audioBuffer], { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(blob);
+      console.log('ElevenLabs audio URL created successfully');
+      return audioUrl;
+    } catch (elevenlabsError) {
+      console.error('ElevenLabs failed, using fallback:', elevenlabsError);
+      
+      // Fallback to static audio file
+      const fallbackUrl = '/custom-voice.mp3';
+      
+      // Test if fallback file exists
+      try {
+        const testResponse = await fetch(fallbackUrl, { method: 'HEAD' });
+        if (testResponse.ok) {
+          console.log('Using fallback audio file');
+          return fallbackUrl;
+        }
+      } catch (fallbackError) {
+        console.error('Fallback audio file not found:', fallbackError);
+      }
+      
+      // If all else fails, return empty string (will be handled by components)
+      throw new Error('No audio source available');
+    }
   } catch (error) {
     console.error('Error creating audio from text:', error);
-    // Fallback to original static audio if ElevenLabs fails
-    return '/custom-voice.mp3';
+    throw error;
   }
+};
+
+// Test if audio can be played (for debugging)
+export const testAudioPlayback = (audioUrl: string): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const audio = new Audio(audioUrl);
+    audio.addEventListener('canplaythrough', () => resolve(true));
+    audio.addEventListener('error', () => resolve(false));
+    audio.load();
+  });
 };

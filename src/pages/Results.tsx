@@ -29,7 +29,6 @@ const Results = () => {
   const [userInfo, setUserInfo] = useState<any>(null);
   const [showVoicePlayer, setShowVoicePlayer] = useState(false);
   const [showCelebration, setShowCelebration] = useState(true);
-  const [celebrationAudioPlayed, setCelebrationAudioPlayed] = useState(false);
 
   useEffect(() => {
     const storedResults = localStorage.getItem('assessment-results');
@@ -57,57 +56,13 @@ const Results = () => {
         });
       }
     }
+  }, [location.state?.assessment]);
 
-    // Play celebration audio immediately
-    if (!celebrationAudioPlayed) {
-      const playCelebrationAudio = async () => {
-        try {
-          console.log('Playing celebration audio...');
-          const audio = new Audio('/celebration-audio.mp3');
-          audio.volume = 0.7;
-          
-          audio.onloadeddata = () => {
-            console.log('Celebration audio loaded and playing');
-            audio.play().catch(error => {
-              console.log('Could not play celebration audio:', error);
-            });
-          };
-          
-          audio.onerror = () => {
-            console.log('Error loading celebration audio, trying alternative path');
-            // Try alternative path
-            const altAudio = new Audio('/assets/celebration-audio.mp3');
-            altAudio.volume = 0.7;
-            altAudio.play().catch(err => {
-              console.log('Could not play alternative celebration audio:', err);
-            });
-          };
-          
-          setCelebrationAudioPlayed(true);
-        } catch (error) {
-          console.log('Audio not supported, skipping celebration audio');
-          setCelebrationAudioPlayed(true);
-        }
-      };
-
-      playCelebrationAudio();
-    }
-
-    // Extended celebration duration - 5 seconds
-    const celebrationTimer = setTimeout(() => {
-      setShowCelebration(false);
-    }, 5000);
-
-    // Show voice player after celebration with delay
-    const voiceTimer = setTimeout(() => {
-      setShowVoicePlayer(true);
-    }, 6000);
-
-    return () => {
-      clearTimeout(celebrationTimer);
-      clearTimeout(voiceTimer);
-    };
-  }, [location.state?.assessment, celebrationAudioPlayed]);
+  const handleCelebrationComplete = () => {
+    console.log('Celebration completed, showing voice player');
+    setShowCelebration(false);
+    setShowVoicePlayer(true);
+  };
 
   const handleStartOver = () => {
     localStorage.removeItem('assessment-answers');
@@ -119,7 +74,7 @@ const Results = () => {
   };
 
   const handleScheduleCall = () => {
-    // Open TidyCal in a new tab
+    // Direct link to TidyCal - opens in new tab
     window.open('https://tidycal.com/newerconsulting', '_blank');
   };
 
@@ -138,7 +93,7 @@ const Results = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/50">
-      {showCelebration && <CelebrationEffects />}
+      {showCelebration && <CelebrationEffects onComplete={handleCelebrationComplete} />}
       
       <div className="container mx-auto px-4 py-6 sm:py-8">
         <div className="max-w-5xl mx-auto">
@@ -163,7 +118,7 @@ const Results = () => {
           {showVoicePlayer && (
             <VoicePlayer
               text={voiceScript}
-              autoPlay={true}
+              autoPlay={false}
               isResultsPage={true}
               className="mb-8 sm:mb-10"
             />

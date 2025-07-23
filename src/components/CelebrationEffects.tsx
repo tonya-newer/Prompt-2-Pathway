@@ -13,43 +13,63 @@ export const CelebrationEffects = ({ onComplete }: CelebrationEffectsProps) => {
   useEffect(() => {
     // Play the celebration audio file immediately
     if (!audioPlayed) {
-      const playCelebrationAudio = () => {
+      const playCelebrationAudio = async () => {
         try {
-          // Try multiple audio paths to ensure it works
+          console.log('Attempting to play celebration audio...');
+          
+          // Try to play the celebration audio from multiple possible locations
           const audioPaths = [
             '/celebration-audio.mp3',
             '/assets/celebration-audio.mp3',
+            '/src/assets/celebration-audio.mp3',
             '/public/celebration-audio.mp3'
           ];
           
-          const tryPlayAudio = (index: number) => {
-            if (index >= audioPaths.length) {
-              console.log('No celebration audio files found, continuing without audio');
-              setAudioPlayed(true);
-              return;
-            }
-            
-            const audio = new Audio(audioPaths[index]);
-            audio.volume = 0.7;
-            
-            audio.onloadeddata = () => {
-              console.log(`Celebration audio loaded from ${audioPaths[index]} and playing`);
-              audio.play().catch(error => {
-                console.log(`Could not play celebration audio from ${audioPaths[index]}:`, error);
-                tryPlayAudio(index + 1);
-              });
-            };
-            
-            audio.onerror = () => {
-              console.log(`Error loading celebration audio from ${audioPaths[index]}, trying next path`);
-              tryPlayAudio(index + 1);
-            };
-          };
+          let audioPlayed = false;
           
-          tryPlayAudio(0);
+          for (const path of audioPaths) {
+            if (audioPlayed) break;
+            
+            try {
+              const audio = new Audio(path);
+              audio.volume = 0.7;
+              
+              // Create a promise to handle audio loading and playing
+              const playAudio = new Promise<void>((resolve, reject) => {
+                audio.oncanplaythrough = () => {
+                  console.log(`Celebration audio loaded from ${path}`);
+                  audio.play()
+                    .then(() => {
+                      console.log(`Celebration audio playing from ${path}`);
+                      audioPlayed = true;
+                      resolve();
+                    })
+                    .catch(reject);
+                };
+                
+                audio.onerror = () => {
+                  console.log(`Failed to load celebration audio from ${path}`);
+                  reject(new Error(`Failed to load from ${path}`));
+                };
+                
+                audio.load();
+              });
+              
+              await playAudio;
+              break; // Exit loop if successful
+            } catch (error) {
+              console.log(`Could not play celebration audio from ${path}:`, error);
+              continue; // Try next path
+            }
+          }
+          
+          if (!audioPlayed) {
+            console.log('No celebration audio files could be loaded');
+          }
+          
           setAudioPlayed(true);
         } catch (error) {
-          console.log('Audio not supported, skipping celebration audio');
+          console.log('Audio not supported or failed to play, continuing without celebration audio');
           setAudioPlayed(true);
         }
       };
@@ -57,13 +77,13 @@ export const CelebrationEffects = ({ onComplete }: CelebrationEffectsProps) => {
       playCelebrationAudio();
     }
 
-    // Show sparkles for 5 seconds, then hide and call onComplete
+    // Show effects for 3 seconds, then hide and call onComplete
     const timer = setTimeout(() => {
       setShowEffects(false);
       if (onComplete) {
-        setTimeout(onComplete, 1000); // 1 second pause before voice guide
+        setTimeout(onComplete, 500); // Short pause before callback
       }
-    }, 5000); // 5 seconds of sparkles
+    }, 3000); // 3 seconds of effects
 
     return () => clearTimeout(timer);
   }, [audioPlayed, onComplete]);

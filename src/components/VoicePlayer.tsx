@@ -18,6 +18,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
   const [isMuted, setIsMuted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const [volume, setVolume] = useState(1);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -83,11 +84,13 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     }
   };
 
-  const handlePlay = () => {
+  const handlePlay = async () => {
+    setHasInteracted(true);
+    
     if (isPlaying) {
       handleStop();
     } else {
-      playDynamicVoice();
+      await playDynamicVoice();
     }
   };
 
@@ -110,9 +113,9 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     console.log('Mute toggled:', newMutedState ? 'MUTED' : 'UNMUTED');
   };
 
-  // Auto-play functionality
+  // Auto-play functionality (only after user interaction)
   useEffect(() => {
-    if (autoPlay && text && text.trim().length > 0) {
+    if (autoPlay && text && text.trim().length > 0 && hasInteracted) {
       const timer = setTimeout(() => {
         console.log('Auto-playing voice...');
         playDynamicVoice();
@@ -120,7 +123,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
       
       return () => clearTimeout(timer);
     }
-  }, [autoPlay, text]);
+  }, [autoPlay, text, hasInteracted]);
 
   // Cleanup
   useEffect(() => {
@@ -209,14 +212,14 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
               </div>
             </div>
           ) : (
-            <p className="text-xs text-purple-600">🎧 Put on headphones for the best experience</p>
+            <p className="text-xs text-purple-600">🎧 Click play to hear your personalized message</p>
           )}
         </div>
       </Card>
     );
   }
 
-  // Standard assessment layout with properly functioning mute button
+  // Standard assessment layout
   return (
     <Card className={`p-6 bg-gradient-to-r from-blue-50 via-white to-purple-50 border-2 border-blue-200 shadow-lg ${className}`}>
       <div className="flex flex-col space-y-4">
@@ -282,30 +285,15 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-blue-700">Ready to play your custom voice message</p>
+                <p className="text-sm text-blue-700">Click play to hear your custom voice message</p>
               )}
             </div>
           </div>
-          
-          {isPlaying && (
-            <div className="flex space-x-1 flex-shrink-0">
-              {[...Array(5)].map((_, i) => (
-                <div
-                  key={i}
-                  className="w-2 bg-gradient-to-t from-blue-500 to-purple-500 animate-pulse rounded-full"
-                  style={{
-                    height: `${Math.random() * 20 + 15}px`,
-                    animationDelay: `${i * 0.1}s`
-                  }}
-                ></div>
-              ))}
-            </div>
-          )}
         </div>
 
         <div className="text-center">
           <p className="text-xs text-gray-500">
-            🎧 Put on headphones for the best VoiceCard experience
+            🎧 Click play to activate voice guidance
           </p>
         </div>
       </div>

@@ -14,6 +14,7 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
   const [isMuted, setIsMuted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const [volume, setVolume] = useState(1);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -30,7 +31,7 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
     setIsLoading(true);
 
     try {
-      // Generate audio from text using ElevenLabs
+      // Generate or get audio URL
       const generatedAudioUrl = await createAudioFromText(welcomeText);
       setAudioUrl(generatedAudioUrl);
 
@@ -65,6 +66,7 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
 
       audioRef.current = audio;
       
+      // Play the audio
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise.catch(error => {
@@ -80,11 +82,13 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
     }
   };
 
-  const handlePlay = () => {
+  const handlePlay = async () => {
+    setHasInteracted(true);
+    
     if (isPlaying) {
       handleStop();
     } else {
-      playWelcomeVoice();
+      await playWelcomeVoice();
     }
   };
 
@@ -107,15 +111,17 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
     console.log('Welcome mute toggled:', newMutedState ? 'MUTED' : 'UNMUTED');
   };
 
-  // Auto-play welcome message after component mounts
+  // Auto-play after user interaction (required by browser policies)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      console.log('Auto-playing welcome message...');
-      playWelcomeVoice();
-    }, 2000);
-    
-    return () => clearTimeout(timer);
-  }, []);
+    if (hasInteracted) {
+      const timer = setTimeout(() => {
+        console.log('Auto-playing welcome message after interaction...');
+        playWelcomeVoice();
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [hasInteracted]);
 
   // Cleanup
   useEffect(() => {
@@ -198,7 +204,7 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
               </div>
             </div>
           ) : (
-            <p className="text-xs text-blue-600">🎧 Put on headphones for the best experience</p>
+            <p className="text-xs text-blue-600">🎧 Click play to hear your welcome message</p>
           )}
         </div>
       </div>
