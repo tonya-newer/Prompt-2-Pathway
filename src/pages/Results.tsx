@@ -29,7 +29,7 @@ const Results = () => {
   const [userInfo, setUserInfo] = useState<any>(null);
   const [showVoicePlayer, setShowVoicePlayer] = useState(false);
   const [showCelebration, setShowCelebration] = useState(true);
-  const [showCalendar, setShowCalendar] = useState(false);
+  const [celebrationAudioPlayed, setCelebrationAudioPlayed] = useState(false);
 
   useEffect(() => {
     const storedResults = localStorage.getItem('assessment-results');
@@ -58,21 +58,56 @@ const Results = () => {
       }
     }
 
-    // Extended celebration duration - 12 seconds total
+    // Play celebration audio immediately
+    if (!celebrationAudioPlayed) {
+      const playCelebrationAudio = async () => {
+        try {
+          console.log('Playing celebration audio...');
+          const audio = new Audio('/celebration-audio.mp3');
+          audio.volume = 0.7;
+          
+          audio.onloadeddata = () => {
+            console.log('Celebration audio loaded and playing');
+            audio.play().catch(error => {
+              console.log('Could not play celebration audio:', error);
+            });
+          };
+          
+          audio.onerror = () => {
+            console.log('Error loading celebration audio, trying alternative path');
+            // Try alternative path
+            const altAudio = new Audio('/assets/celebration-audio.mp3');
+            altAudio.volume = 0.7;
+            altAudio.play().catch(err => {
+              console.log('Could not play alternative celebration audio:', err);
+            });
+          };
+          
+          setCelebrationAudioPlayed(true);
+        } catch (error) {
+          console.log('Audio not supported, skipping celebration audio');
+          setCelebrationAudioPlayed(true);
+        }
+      };
+
+      playCelebrationAudio();
+    }
+
+    // Extended celebration duration - 5 seconds
     const celebrationTimer = setTimeout(() => {
       setShowCelebration(false);
-    }, 12000);
+    }, 5000);
 
     // Show voice player after celebration with delay
     const voiceTimer = setTimeout(() => {
       setShowVoicePlayer(true);
-    }, 7000);
+    }, 6000);
 
     return () => {
       clearTimeout(celebrationTimer);
       clearTimeout(voiceTimer);
     };
-  }, [location.state?.assessment]);
+  }, [location.state?.assessment, celebrationAudioPlayed]);
 
   const handleStartOver = () => {
     localStorage.removeItem('assessment-answers');
@@ -84,7 +119,8 @@ const Results = () => {
   };
 
   const handleScheduleCall = () => {
-    setShowCalendar(true);
+    // Open TidyCal in a new tab
+    window.open('https://tidycal.com/newerconsulting', '_blank');
   };
 
   if (!results || !assessment) {
@@ -178,7 +214,7 @@ const Results = () => {
             </div>
           </Card>
 
-          {/* Booking Section - Made more prominent */}
+          {/* Booking Section - Direct link to TidyCal */}
           <Card className="p-6 sm:p-10 mb-8 sm:mb-10 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 border-4 border-purple-200 shadow-2xl rounded-2xl">
             <div className="text-center">
               <h3 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
@@ -189,46 +225,34 @@ const Results = () => {
                 but only if you're open to exploring what's possible.
               </p>
               
-              {!showCalendar ? (
-                <div className="space-y-4 sm:space-y-6">
-                  <Button
-                    onClick={handleScheduleCall}
-                    className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0 px-8 sm:px-16 py-6 sm:py-8 text-lg sm:text-2xl font-bold rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 w-full sm:w-auto"
-                  >
-                    <Calendar className="h-6 w-6 sm:h-8 sm:w-8 mr-3 sm:mr-4" />
-                    Schedule a Clarity Call
-                  </Button>
-                  
-                  <p className="text-gray-500 mt-4 sm:mt-6 text-base sm:text-lg">
-                    No pressure - we'll only follow up if you indicate you'd like us to.
-                  </p>
-                </div>
-              ) : (
-                <div className="w-full">
-                  <iframe
-                    src="https://tidycal.com/newerconsulting"
-                    width="100%"
-                    height="600"
-                    frameBorder="0"
-                    className="rounded-xl shadow-xl"
-                    title="Schedule a Clarity Call"
-                    style={{
-                      border: 'none',
-                      background: 'white'
-                    }}
-                  ></iframe>
-                  <Button
-                    onClick={() => setShowCalendar(false)}
-                    variant="outline"
-                    className="mt-4 px-6 py-2"
-                  >
-                    Back to Results
-                  </Button>
-                </div>
-              )}
+              <div className="space-y-4 sm:space-y-6">
+                <Button
+                  onClick={handleScheduleCall}
+                  className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0 px-8 sm:px-16 py-6 sm:py-8 text-lg sm:text-2xl font-bold rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 w-full sm:w-auto"
+                >
+                  <Calendar className="h-6 w-6 sm:h-8 sm:w-8 mr-3 sm:mr-4" />
+                  Schedule a Clarity Call
+                  <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5 ml-2 sm:ml-3" />
+                </Button>
+                
+                <p className="text-gray-500 mt-4 sm:mt-6 text-base sm:text-lg">
+                  No pressure - we'll only follow up if you indicate you'd like us to.
+                </p>
+              </div>
             </div>
           </Card>
 
+          {/* Start Over Button */}
+          <div className="text-center">
+            <Button
+              onClick={handleStartOver}
+              variant="outline"
+              className="px-8 py-3 text-lg border-2 border-gray-300 hover:border-blue-400 hover:bg-blue-50 transition-all duration-300"
+            >
+              <RefreshCw className="h-5 w-5 mr-3" />
+              Take Another Assessment
+            </Button>
+          </div>
         </div>
       </div>
     </div>

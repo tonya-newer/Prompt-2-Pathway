@@ -179,10 +179,12 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
             variant="outline"
             size="lg"
             onClick={toggleMute}
-            className="hover:bg-blue-100 border-blue-300 p-3 bg-white"
+            className={`hover:bg-blue-100 border-blue-300 p-3 transition-all duration-200 ${
+              isMuted ? 'bg-red-100 border-red-300' : 'bg-white'
+            }`}
           >
             {isMuted ? (
-              <VolumeX className="h-5 w-5 text-gray-400" />
+              <VolumeX className="h-5 w-5 text-red-500" />
             ) : (
               <Volume2 className="h-5 w-5 text-blue-600" />
             )}

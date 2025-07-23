@@ -1,6 +1,6 @@
+
 import { useEffect, useState } from 'react';
 import { Sparkles, Star, Heart } from 'lucide-react';
-import celebrationAudio from '@/assets/celebration-audio.mp3';
 
 interface CelebrationEffectsProps {
   onComplete?: () => void;
@@ -11,24 +11,42 @@ export const CelebrationEffects = ({ onComplete }: CelebrationEffectsProps) => {
   const [audioPlayed, setAudioPlayed] = useState(false);
 
   useEffect(() => {
-    // Play the downloaded celebration audio file
+    // Play the celebration audio file immediately
     if (!audioPlayed) {
       const playCelebrationAudio = () => {
         try {
-          const audio = new Audio(celebrationAudio);
-          audio.volume = 0.7;
+          // Try multiple audio paths to ensure it works
+          const audioPaths = [
+            '/celebration-audio.mp3',
+            '/assets/celebration-audio.mp3',
+            '/public/celebration-audio.mp3'
+          ];
           
-          audio.onloadeddata = () => {
-            console.log('Celebration audio loaded and playing');
-            audio.play().catch(error => {
-              console.log('Could not play celebration audio:', error);
-            });
+          const tryPlayAudio = (index: number) => {
+            if (index >= audioPaths.length) {
+              console.log('No celebration audio files found, continuing without audio');
+              setAudioPlayed(true);
+              return;
+            }
+            
+            const audio = new Audio(audioPaths[index]);
+            audio.volume = 0.7;
+            
+            audio.onloadeddata = () => {
+              console.log(`Celebration audio loaded from ${audioPaths[index]} and playing`);
+              audio.play().catch(error => {
+                console.log(`Could not play celebration audio from ${audioPaths[index]}:`, error);
+                tryPlayAudio(index + 1);
+              });
+            };
+            
+            audio.onerror = () => {
+              console.log(`Error loading celebration audio from ${audioPaths[index]}, trying next path`);
+              tryPlayAudio(index + 1);
+            };
           };
           
-          audio.onerror = () => {
-            console.log('Error loading celebration audio, skipping');
-          };
-          
+          tryPlayAudio(0);
           setAudioPlayed(true);
         } catch (error) {
           console.log('Audio not supported, skipping celebration audio');
