@@ -1,6 +1,4 @@
-
-
-import ElevenLabs from '@11labs/client';
+import { ElevenLabs } from '@11labs/client';
 
 const ELEVENLABS_API_KEY = 'sk_1b1fabd8123ff50b52bb77acc7b28cfb3de3eea18dee4f7d';
 
