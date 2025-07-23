@@ -92,16 +92,17 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     }
   };
 
-  // Auto-play functionality
+  // Auto-play functionality - ensure it works consistently
   useEffect(() => {
     if (autoPlay) {
+      // Add longer delay to ensure DOM is ready
       const timer = setTimeout(() => {
         playCustomVoice();
-      }, 1000);
+      }, 1500);
       
       return () => clearTimeout(timer);
     }
-  }, [autoPlay]);
+  }, [autoPlay, text]); // Add text as dependency to ensure it re-runs for each question
 
   // Cleanup
   useEffect(() => {
@@ -192,7 +193,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     );
   }
 
-  // Standard assessment layout
+  // Standard assessment layout - make mute button more prominent and functional
   return (
     <Card className={`p-6 bg-gradient-to-r from-blue-50 via-white to-purple-50 border-2 border-blue-200 shadow-lg ${className}`}>
       <div className="flex flex-col space-y-4">
@@ -223,11 +224,12 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
               )}
             </Button>
             
+            {/* Fixed mute button - now properly clickable and functional */}
             <Button
               variant="outline"
               size="lg"
               onClick={toggleMute}
-              className="hover:bg-blue-100 border-blue-300 p-3 flex-shrink-0"
+              className="hover:bg-blue-100 border-blue-300 p-3 flex-shrink-0 cursor-pointer"
             >
               {isMuted ? (
                 <VolumeX className="h-5 w-5 text-gray-400" />

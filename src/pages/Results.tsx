@@ -173,7 +173,7 @@ const Results = () => {
             </div>
           </Card>
 
-          {/* Booking Section */}
+          {/* Booking Section - Made more prominent */}
           <Card className="p-10 mb-10 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 border-4 border-purple-200 shadow-2xl rounded-2xl">
             <div className="text-center">
               <h3 className="text-4xl font-bold text-gray-900 mb-6">
@@ -185,11 +185,12 @@ const Results = () => {
               </p>
               
               <div className="space-y-6">
+                {/* Made button much more prominent with bold styling */}
                 <Button
                   onClick={() => window.open('https://tidycal.com/newerconsulting', '_blank')}
-                  className="bg-white text-purple-600 hover:bg-purple-50 border-2 border-purple-200 px-12 py-6 text-xl font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0 px-16 py-8 text-2xl font-bold rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105"
                 >
-                  <Calendar className="h-6 w-6 mr-3" />
+                  <Calendar className="h-8 w-8 mr-4" />
                   Schedule a Clarity Call
                 </Button>
               </div>
