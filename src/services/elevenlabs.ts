@@ -1,10 +1,11 @@
 
-import { ElevenLabs } from '@11labs/client';
+
+import { ElevenLabsApi } from '@11labs/client';
 
 const ELEVENLABS_API_KEY = 'sk_1b1fabd8123ff50b52bb77acc7b28cfb3de3eea18dee4f7d';
 
 // Initialize ElevenLabs client
-const client = new ElevenLabs({
+const client = new ElevenLabsApi({
   apiKey: ELEVENLABS_API_KEY,
 });
 
@@ -53,3 +54,4 @@ export const createAudioFromText = async (text: string): Promise<string> => {
     return '/custom-voice.mp3';
   }
 };
+
