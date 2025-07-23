@@ -18,9 +18,12 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
   const [isMuted, setIsMuted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [volume, setVolume] = useState(1);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const playDynamicVoice = async () => {
+    console.log('Starting voice playback...');
+    
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
@@ -35,28 +38,32 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
 
       // Create new audio element
       const audio = new Audio(generatedAudioUrl);
-      audio.volume = isMuted ? 0 : 1;
+      audio.volume = isMuted ? 0 : volume;
       
       audio.oncanplaythrough = () => {
+        console.log('Audio can play through');
         setIsLoading(false);
       };
       
       audio.onplay = () => {
+        console.log('Audio started playing');
         setIsPlaying(true);
       };
       
       audio.onpause = () => {
+        console.log('Audio paused');
         setIsPlaying(false);
       };
       
       audio.onended = () => {
+        console.log('Audio ended');
         setIsPlaying(false);
       };
       
       audio.onerror = (e) => {
+        console.error('Audio error:', e);
         setIsLoading(false);
         setIsPlaying(false);
-        console.error('Error playing dynamic voice audio:', e);
       };
 
       audioRef.current = audio;
@@ -64,13 +71,13 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise.catch(error => {
-          console.error('Error playing dynamic voice:', error);
+          console.error('Error playing voice:', error);
           setIsPlaying(false);
           setIsLoading(false);
         });
       }
     } catch (error) {
-      console.error('Error generating dynamic voice:', error);
+      console.error('Error generating voice:', error);
       setIsLoading(false);
       setIsPlaying(false);
     }
@@ -97,14 +104,17 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     setIsMuted(newMutedState);
     
     if (audioRef.current) {
-      audioRef.current.volume = newMutedState ? 0 : 1;
+      audioRef.current.volume = newMutedState ? 0 : volume;
     }
+    
+    console.log('Mute toggled:', newMutedState ? 'MUTED' : 'UNMUTED');
   };
 
   // Auto-play functionality
   useEffect(() => {
-    if (autoPlay && text) {
+    if (autoPlay && text && text.trim().length > 0) {
       const timer = setTimeout(() => {
+        console.log('Auto-playing voice...');
         playDynamicVoice();
       }, 1500);
       
@@ -239,10 +249,12 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
               variant="outline"
               size="lg"
               onClick={toggleMute}
-              className="hover:bg-blue-100 border-blue-300 p-3 flex-shrink-0 bg-white"
+              className={`hover:bg-blue-100 border-blue-300 p-3 flex-shrink-0 transition-all duration-200 ${
+                isMuted ? 'bg-red-100 border-red-300' : 'bg-white'
+              }`}
             >
               {isMuted ? (
-                <VolumeX className="h-5 w-5 text-gray-400" />
+                <VolumeX className="h-5 w-5 text-red-500" />
               ) : (
                 <Volume2 className="h-5 w-5 text-blue-600" />
               )}

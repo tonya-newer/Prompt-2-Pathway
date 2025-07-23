@@ -29,6 +29,7 @@ const Results = () => {
   const [userInfo, setUserInfo] = useState<any>(null);
   const [showVoicePlayer, setShowVoicePlayer] = useState(false);
   const [showCelebration, setShowCelebration] = useState(true);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   useEffect(() => {
     const storedResults = localStorage.getItem('assessment-results');
@@ -83,7 +84,7 @@ const Results = () => {
   };
 
   const handleScheduleCall = () => {
-    window.open('https://tidycal.com/newerconsulting', '_blank');
+    setShowCalendar(true);
   };
 
   if (!results || !assessment) {
@@ -188,20 +189,43 @@ const Results = () => {
                 but only if you're open to exploring what's possible.
               </p>
               
-              <div className="space-y-4 sm:space-y-6">
-                <Button
-                  onClick={handleScheduleCall}
-                  className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0 px-8 sm:px-16 py-6 sm:py-8 text-lg sm:text-2xl font-bold rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 w-full sm:w-auto"
-                >
-                  <Calendar className="h-6 w-6 sm:h-8 sm:w-8 mr-3 sm:mr-4" />
-                  Schedule a Clarity Call
-                  <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5 ml-2 sm:ml-3" />
-                </Button>
-              </div>
-              
-              <p className="text-gray-500 mt-4 sm:mt-6 text-base sm:text-lg">
-                No pressure - we'll only follow up if you indicate you'd like us to.
-              </p>
+              {!showCalendar ? (
+                <div className="space-y-4 sm:space-y-6">
+                  <Button
+                    onClick={handleScheduleCall}
+                    className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0 px-8 sm:px-16 py-6 sm:py-8 text-lg sm:text-2xl font-bold rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 w-full sm:w-auto"
+                  >
+                    <Calendar className="h-6 w-6 sm:h-8 sm:w-8 mr-3 sm:mr-4" />
+                    Schedule a Clarity Call
+                  </Button>
+                  
+                  <p className="text-gray-500 mt-4 sm:mt-6 text-base sm:text-lg">
+                    No pressure - we'll only follow up if you indicate you'd like us to.
+                  </p>
+                </div>
+              ) : (
+                <div className="w-full">
+                  <iframe
+                    src="https://tidycal.com/newerconsulting"
+                    width="100%"
+                    height="600"
+                    frameBorder="0"
+                    className="rounded-xl shadow-xl"
+                    title="Schedule a Clarity Call"
+                    style={{
+                      border: 'none',
+                      background: 'white'
+                    }}
+                  ></iframe>
+                  <Button
+                    onClick={() => setShowCalendar(false)}
+                    variant="outline"
+                    className="mt-4 px-6 py-2"
+                  >
+                    Back to Results
+                  </Button>
+                </div>
+              )}
             </div>
           </Card>
 

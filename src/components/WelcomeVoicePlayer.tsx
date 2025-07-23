@@ -14,11 +14,14 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
   const [isMuted, setIsMuted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [volume, setVolume] = useState(1);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const welcomeText = "Welcome to your VoiceCard assessment! This personalized assessment will help you gain valuable insights about yourself. Please fill out your information below, and then we'll begin your journey of discovery together. Take your time and answer honestly for the best results.";
 
   const playWelcomeVoice = async () => {
+    console.log('Starting welcome voice playback...');
+    
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
@@ -32,28 +35,32 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
       setAudioUrl(generatedAudioUrl);
 
       const audio = new Audio(generatedAudioUrl);
-      audio.volume = isMuted ? 0 : 1;
+      audio.volume = isMuted ? 0 : volume;
       
       audio.oncanplaythrough = () => {
+        console.log('Welcome audio can play through');
         setIsLoading(false);
       };
       
       audio.onplay = () => {
+        console.log('Welcome audio started playing');
         setIsPlaying(true);
       };
       
       audio.onpause = () => {
+        console.log('Welcome audio paused');
         setIsPlaying(false);
       };
       
       audio.onended = () => {
+        console.log('Welcome audio ended');
         setIsPlaying(false);
       };
       
       audio.onerror = (e) => {
+        console.error('Welcome audio error:', e);
         setIsLoading(false);
         setIsPlaying(false);
-        console.error('Error loading welcome voice audio:', e);
       };
 
       audioRef.current = audio;
@@ -94,13 +101,16 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
     setIsMuted(newMutedState);
     
     if (audioRef.current) {
-      audioRef.current.volume = newMutedState ? 0 : 1;
+      audioRef.current.volume = newMutedState ? 0 : volume;
     }
+    
+    console.log('Welcome mute toggled:', newMutedState ? 'MUTED' : 'UNMUTED');
   };
 
   // Auto-play welcome message after component mounts
   useEffect(() => {
     const timer = setTimeout(() => {
+      console.log('Auto-playing welcome message...');
       playWelcomeVoice();
     }, 2000);
     
@@ -158,10 +168,12 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
             variant="outline"
             size="lg"
             onClick={toggleMute}
-            className="hover:bg-blue-100 border-blue-300 p-3 bg-white"
+            className={`hover:bg-blue-100 border-blue-300 p-3 transition-all duration-200 ${
+              isMuted ? 'bg-red-100 border-red-300' : 'bg-white'
+            }`}
           >
             {isMuted ? (
-              <VolumeX className="h-5 w-5 text-gray-400" />
+              <VolumeX className="h-5 w-5 text-red-500" />
             ) : (
               <Volume2 className="h-5 w-5 text-blue-600" />
             )}

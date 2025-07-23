@@ -1,4 +1,5 @@
-// Fallback implementation without ElevenLabs API for now
+
+// ElevenLabs service for voice generation
 const ELEVENLABS_API_KEY = 'sk_1b1fabd8123ff50b52bb77acc7b28cfb3de3eea18dee4f7d';
 
 // Your cloned voice ID - we'll use a default voice for now, but you can replace this with your actual voice ID
@@ -17,6 +18,8 @@ export interface VoiceGenerationOptions {
 
 export const generateVoiceAudio = async (options: VoiceGenerationOptions): Promise<ArrayBuffer> => {
   try {
+    console.log('Starting ElevenLabs voice generation for text:', options.text.substring(0, 100) + '...');
+    
     // Direct API call to ElevenLabs REST API
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
       method: 'POST',
@@ -38,9 +41,12 @@ export const generateVoiceAudio = async (options: VoiceGenerationOptions): Promi
     });
 
     if (!response.ok) {
-      throw new Error(`ElevenLabs API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('ElevenLabs API error:', response.status, errorText);
+      throw new Error(`ElevenLabs API error: ${response.status} - ${errorText}`);
     }
 
+    console.log('ElevenLabs voice generation successful');
     return await response.arrayBuffer();
   } catch (error) {
     console.error('Error generating voice audio:', error);
@@ -50,9 +56,12 @@ export const generateVoiceAudio = async (options: VoiceGenerationOptions): Promi
 
 export const createAudioFromText = async (text: string): Promise<string> => {
   try {
+    console.log('Creating audio from text:', text.substring(0, 50) + '...');
     const audioBuffer = await generateVoiceAudio({ text });
     const blob = new Blob([audioBuffer], { type: 'audio/mpeg' });
-    return URL.createObjectURL(blob);
+    const audioUrl = URL.createObjectURL(blob);
+    console.log('Audio URL created successfully');
+    return audioUrl;
   } catch (error) {
     console.error('Error creating audio from text:', error);
     // Fallback to original static audio if ElevenLabs fails
