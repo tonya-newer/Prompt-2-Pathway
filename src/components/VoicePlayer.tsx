@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, Volume2, VolumeX, Mic } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { createAudioFromText } from '@/services/elevenlabs';
 
 interface VoicePlayerProps {
   text: string;
@@ -16,54 +17,62 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const playCustomVoice = () => {
+  const playDynamicVoice = async () => {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
 
-    // Create new audio element with your custom voice
-    const audio = new Audio('/custom-voice.mp3');
-    audio.volume = isMuted ? 0 : 1;
-    
-    audio.onloadstart = () => {
-      setIsLoading(true);
-    };
-    
-    audio.oncanplaythrough = () => {
-      setIsLoading(false);
-    };
-    
-    audio.onplay = () => {
-      setIsPlaying(true);
-    };
-    
-    audio.onpause = () => {
-      setIsPlaying(false);
-    };
-    
-    audio.onended = () => {
-      setIsPlaying(false);
-    };
-    
-    audio.onerror = (e) => {
-      setIsLoading(false);
-      setIsPlaying(false);
-      console.error('Error loading custom voice audio:', e);
-    };
+    setIsLoading(true);
 
-    audioRef.current = audio;
-    
-    // Attempt to play with user gesture handling
-    const playPromise = audio.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(error => {
-        console.error('Error playing custom voice:', error);
-        setIsPlaying(false);
+    try {
+      // Generate audio from text using ElevenLabs
+      const generatedAudioUrl = await createAudioFromText(text);
+      setAudioUrl(generatedAudioUrl);
+
+      // Create new audio element
+      const audio = new Audio(generatedAudioUrl);
+      audio.volume = isMuted ? 0 : 1;
+      
+      audio.oncanplaythrough = () => {
         setIsLoading(false);
-      });
+      };
+      
+      audio.onplay = () => {
+        setIsPlaying(true);
+      };
+      
+      audio.onpause = () => {
+        setIsPlaying(false);
+      };
+      
+      audio.onended = () => {
+        setIsPlaying(false);
+      };
+      
+      audio.onerror = (e) => {
+        setIsLoading(false);
+        setIsPlaying(false);
+        console.error('Error playing dynamic voice audio:', e);
+      };
+
+      audioRef.current = audio;
+      
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error('Error playing dynamic voice:', error);
+          setIsPlaying(false);
+          setIsLoading(false);
+        });
+      }
+    } catch (error) {
+      console.error('Error generating dynamic voice:', error);
+      setIsLoading(false);
+      setIsPlaying(false);
     }
   };
 
@@ -71,7 +80,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     if (isPlaying) {
       handleStop();
     } else {
-      playCustomVoice();
+      playDynamicVoice();
     }
   };
 
@@ -92,17 +101,16 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     }
   };
 
-  // Auto-play functionality - ensure it works consistently
+  // Auto-play functionality
   useEffect(() => {
-    if (autoPlay) {
-      // Add longer delay to ensure DOM is ready
+    if (autoPlay && text) {
       const timer = setTimeout(() => {
-        playCustomVoice();
+        playDynamicVoice();
       }, 1500);
       
       return () => clearTimeout(timer);
     }
-  }, [autoPlay, text]); // Add text as dependency to ensure it re-runs for each question
+  }, [autoPlay, text]);
 
   // Cleanup
   useEffect(() => {
@@ -111,8 +119,11 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
         audioRef.current.pause();
         audioRef.current = null;
       }
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
     };
-  }, []);
+  }, [audioUrl]);
 
   // For results page, use simplified layout
   if (isResultsPage) {
@@ -158,7 +169,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
             variant="outline"
             size="lg"
             onClick={toggleMute}
-            className="hover:bg-blue-100 border-blue-300 p-3"
+            className="hover:bg-blue-100 border-blue-300 p-3 bg-white"
           >
             {isMuted ? (
               <VolumeX className="h-5 w-5 text-gray-400" />
@@ -193,7 +204,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     );
   }
 
-  // Standard assessment layout - make mute button more prominent and functional
+  // Standard assessment layout with properly functioning mute button
   return (
     <Card className={`p-6 bg-gradient-to-r from-blue-50 via-white to-purple-50 border-2 border-blue-200 shadow-lg ${className}`}>
       <div className="flex flex-col space-y-4">
@@ -224,12 +235,11 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
               )}
             </Button>
             
-            {/* Fixed mute button - now properly clickable and functional */}
             <Button
               variant="outline"
               size="lg"
               onClick={toggleMute}
-              className="hover:bg-blue-100 border-blue-300 p-3 flex-shrink-0 cursor-pointer"
+              className="hover:bg-blue-100 border-blue-300 p-3 flex-shrink-0 bg-white"
             >
               {isMuted ? (
                 <VolumeX className="h-5 w-5 text-gray-400" />

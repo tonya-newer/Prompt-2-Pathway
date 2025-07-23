@@ -1,6 +1,6 @@
 
 import { Card } from '@/components/ui/card';
-import { VoicePlayer } from './VoicePlayer';
+import { WelcomeVoicePlayer } from './WelcomeVoicePlayer';
 import { LeadCaptureForm } from './LeadCaptureForm';
 import { Sparkles, Heart, Target } from 'lucide-react';
 
@@ -38,11 +38,7 @@ export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePage
 
           {/* Voice Player Section */}
           <div className="mb-12">
-            <VoicePlayer
-              text="Welcome to your VoiceCard assessment! This personalized assessment will help you gain valuable insights. Please fill out your information below, and then we'll begin your journey together."
-              autoPlay={true}
-              className="mb-8"
-            />
+            <WelcomeVoicePlayer className="mb-8" />
           </div>
 
           {/* Features Section */}

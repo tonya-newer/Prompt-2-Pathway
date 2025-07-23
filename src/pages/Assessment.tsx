@@ -154,7 +154,7 @@ const Assessment = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/50">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 sm:py-8">
         {loading ? (
           <div className="flex justify-center items-center min-h-[400px]">
             <div className="text-center">
@@ -177,21 +177,21 @@ const Assessment = () => {
             onSubmit={handleLeadSubmit}
           />
         ) : currentQuestionIndex < assessment.questions.length ? (
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             <VoicePlayer
               text={currentQuestion?.voiceScript || `Question ${currentQuestionIndex + 1}: Let's continue with your assessment.`}
               autoPlay={true}
-              className="mb-8"
+              className="mb-6 sm:mb-8"
             />
             
             <div className="max-w-5xl mx-auto">
-              <div className="bg-gray-200 rounded-full h-3 mb-6 shadow-inner">
+              <div className="bg-gray-200 rounded-full h-2 sm:h-3 mb-4 sm:mb-6 shadow-inner">
                 <div
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500 shadow-lg"
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 sm:h-3 rounded-full transition-all duration-500 shadow-lg"
                   style={{ width: `${((currentQuestionIndex + 1) / assessment.questions.length) * 100}%` }}
                 ></div>
               </div>
-              <div className="flex justify-between items-center text-sm text-gray-600">
+              <div className="flex justify-between items-center text-xs sm:text-sm text-gray-600 px-2">
                 <span className="font-medium">Progress: {currentQuestionIndex + 1} of {assessment.questions.length}</span>
                 <span className="font-medium">{Math.round(((currentQuestionIndex + 1) / assessment.questions.length) * 100)}% Complete</span>
               </div>
@@ -205,24 +205,24 @@ const Assessment = () => {
               onAnswer={handleAnswer}
             />
 
-            <div className="flex justify-between items-center max-w-5xl mx-auto pt-8">
+            <div className="flex flex-col sm:flex-row justify-between items-center max-w-5xl mx-auto pt-6 sm:pt-8 space-y-4 sm:space-y-0">
               <Button
                 variant="outline"
                 onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
                 disabled={currentQuestionIndex === 0}
-                className="flex items-center px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-gray-300 hover:border-blue-400"
+                className="flex items-center px-4 sm:px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-gray-300 hover:border-blue-400 w-full sm:w-auto"
               >
-                <ChevronLeft className="h-5 w-5 mr-2" />
+                <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                 Previous
               </Button>
               
               <Button
                 onClick={handleNextQuestion}
                 disabled={!isAnswered}
-                className="flex items-center px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold"
+                className="flex items-center px-6 sm:px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold w-full sm:w-auto"
               >
                 {currentQuestionIndex === assessment.questions.length - 1 ? 'Complete Assessment' : 'Next Question'}
-                <ChevronRight className="h-5 w-5 ml-2" />
+                <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
               </Button>
             </div>
           </div>
