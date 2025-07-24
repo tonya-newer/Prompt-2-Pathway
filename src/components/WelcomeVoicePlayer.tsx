@@ -1,9 +1,9 @@
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { createAudioFromText } from '@/services/elevenlabs';
+import { nativeSpeech } from '@/services/nativeSpeech';
 
 interface WelcomeVoicePlayerProps {
   className?: string;
@@ -11,74 +11,32 @@ interface WelcomeVoicePlayerProps {
 
 export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [hasInteracted, setHasInteracted] = useState(false);
-  const [volume, setVolume] = useState(1);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const welcomeText = "Welcome to your VoiceCard assessment! This personalized assessment will help you gain valuable insights about yourself. Please fill out your information below, and then we'll begin your journey of discovery together. Take your time and answer honestly for the best results.";
 
   const playWelcomeVoice = async () => {
     console.log('Starting welcome voice playback...');
     
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-
+    // Stop any current speech
+    nativeSpeech.stop();
     setIsLoading(true);
 
     try {
-      // Generate or get audio URL
-      const generatedAudioUrl = await createAudioFromText(welcomeText);
-      setAudioUrl(generatedAudioUrl);
-
-      const audio = new Audio(generatedAudioUrl);
-      audio.volume = isMuted ? 0 : volume;
-      
-      audio.oncanplaythrough = () => {
-        console.log('Welcome audio can play through');
-        setIsLoading(false);
-      };
-      
-      audio.onplay = () => {
-        console.log('Welcome audio started playing');
-        setIsPlaying(true);
-      };
-      
-      audio.onpause = () => {
-        console.log('Welcome audio paused');
-        setIsPlaying(false);
-      };
-      
-      audio.onended = () => {
-        console.log('Welcome audio ended');
-        setIsPlaying(false);
-      };
-      
-      audio.onerror = (e) => {
-        console.error('Welcome audio error:', e);
-        setIsLoading(false);
-        setIsPlaying(false);
-      };
-
-      audioRef.current = audio;
-      
-      // Play the audio
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error('Error playing welcome voice:', error);
-          setIsPlaying(false);
-          setIsLoading(false);
-        });
-      }
-    } catch (error) {
-      console.error('Error generating welcome voice:', error);
-      setIsLoading(false);
+      setIsPlaying(true);
+      await nativeSpeech.speak({
+        text: welcomeText,
+        rate: 0.9,
+        pitch: 1,
+        volume: 1
+      });
       setIsPlaying(false);
+    } catch (error) {
+      console.error('Error playing welcome voice:', error);
+      setIsPlaying(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -93,25 +51,11 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
   };
 
   const handleStop = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
+    nativeSpeech.stop();
     setIsPlaying(false);
   };
 
-  const toggleMute = () => {
-    const newMutedState = !isMuted;
-    setIsMuted(newMutedState);
-    
-    if (audioRef.current) {
-      audioRef.current.volume = newMutedState ? 0 : volume;
-    }
-    
-    console.log('Welcome mute toggled:', newMutedState ? 'MUTED' : 'UNMUTED');
-  };
-
-  // Auto-play after user interaction (required by browser policies)
+  // Auto-play after user interaction
   useEffect(() => {
     if (hasInteracted) {
       const timer = setTimeout(() => {
@@ -126,15 +70,9 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
   // Cleanup
   useEffect(() => {
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
-      }
+      nativeSpeech.stop();
     };
-  }, [audioUrl]);
+  }, []);
 
   return (
     <Card className={`p-6 bg-gradient-to-r from-blue-50 via-white to-purple-50 border-2 border-blue-200 shadow-lg ${className}`}>
@@ -167,21 +105,6 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
                 <Play className="h-5 w-5 mr-3" />
                 <span>Play Welcome</span>
               </>
-            )}
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={toggleMute}
-            className={`hover:bg-blue-100 border-blue-300 p-3 transition-all duration-200 ${
-              isMuted ? 'bg-red-100 border-red-300' : 'bg-white'
-            }`}
-          >
-            {isMuted ? (
-              <VolumeX className="h-5 w-5 text-red-500" />
-            ) : (
-              <Volume2 className="h-5 w-5 text-blue-600" />
             )}
           </Button>
         </div>

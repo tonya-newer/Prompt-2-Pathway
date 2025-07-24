@@ -1,9 +1,9 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, Volume2, VolumeX, Mic } from 'lucide-react';
+import { Play, Pause, Mic } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { createAudioFromText } from '@/services/elevenlabs';
+import { nativeSpeech } from '@/services/nativeSpeech';
 
 interface VoicePlayerProps {
   text: string;
@@ -15,72 +15,30 @@ interface VoicePlayerProps {
 
 export const VoicePlayer = ({ text, autoPlay = false, className = '', showTranscript = false, isResultsPage = false }: VoicePlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [hasInteracted, setHasInteracted] = useState(false);
-  const [volume, setVolume] = useState(1);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const playDynamicVoice = async () => {
-    console.log('Starting voice playback...');
+  const playVoice = async () => {
+    console.log('Starting native voice playback...');
     
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-
+    // Stop any current speech
+    nativeSpeech.stop();
     setIsLoading(true);
 
     try {
-      // Generate audio from text using ElevenLabs
-      const generatedAudioUrl = await createAudioFromText(text);
-      setAudioUrl(generatedAudioUrl);
-
-      // Create new audio element
-      const audio = new Audio(generatedAudioUrl);
-      audio.volume = isMuted ? 0 : volume;
-      
-      audio.oncanplaythrough = () => {
-        console.log('Audio can play through');
-        setIsLoading(false);
-      };
-      
-      audio.onplay = () => {
-        console.log('Audio started playing');
-        setIsPlaying(true);
-      };
-      
-      audio.onpause = () => {
-        console.log('Audio paused');
-        setIsPlaying(false);
-      };
-      
-      audio.onended = () => {
-        console.log('Audio ended');
-        setIsPlaying(false);
-      };
-      
-      audio.onerror = (e) => {
-        console.error('Audio error:', e);
-        setIsLoading(false);
-        setIsPlaying(false);
-      };
-
-      audioRef.current = audio;
-      
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error('Error playing voice:', error);
-          setIsPlaying(false);
-          setIsLoading(false);
-        });
-      }
-    } catch (error) {
-      console.error('Error generating voice:', error);
-      setIsLoading(false);
+      setIsPlaying(true);
+      await nativeSpeech.speak({
+        text: text,
+        rate: 0.9,
+        pitch: 1,
+        volume: 1
+      });
       setIsPlaying(false);
+    } catch (error) {
+      console.error('Error playing voice:', error);
+      setIsPlaying(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -90,27 +48,13 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     if (isPlaying) {
       handleStop();
     } else {
-      await playDynamicVoice();
+      await playVoice();
     }
   };
 
   const handleStop = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
+    nativeSpeech.stop();
     setIsPlaying(false);
-  };
-
-  const toggleMute = () => {
-    const newMutedState = !isMuted;
-    setIsMuted(newMutedState);
-    
-    if (audioRef.current) {
-      audioRef.current.volume = newMutedState ? 0 : volume;
-    }
-    
-    console.log('Mute toggled:', newMutedState ? 'MUTED' : 'UNMUTED');
   };
 
   // Auto-play functionality (only after user interaction)
@@ -118,7 +62,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     if (autoPlay && text && text.trim().length > 0 && hasInteracted) {
       const timer = setTimeout(() => {
         console.log('Auto-playing voice...');
-        playDynamicVoice();
+        playVoice();
       }, 1500);
       
       return () => clearTimeout(timer);
@@ -128,15 +72,9 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
   // Cleanup
   useEffect(() => {
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
-      }
+      nativeSpeech.stop();
     };
-  }, [audioUrl]);
+  }, []);
 
   // For results page, use simplified layout
   if (isResultsPage) {
@@ -177,21 +115,6 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
               </>
             )}
           </Button>
-          
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={toggleMute}
-            className={`hover:bg-blue-100 border-blue-300 p-3 transition-all duration-200 ${
-              isMuted ? 'bg-red-100 border-red-300' : 'bg-white'
-            }`}
-          >
-            {isMuted ? (
-              <VolumeX className="h-5 w-5 text-red-500" />
-            ) : (
-              <Volume2 className="h-5 w-5 text-blue-600" />
-            )}
-          </Button>
         </div>
 
         <div className="mt-4 text-center">
@@ -219,7 +142,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     );
   }
 
-  // Standard assessment layout
+  // Standard assessment layout - REMOVED mute button entirely
   return (
     <Card className={`p-6 bg-gradient-to-r from-blue-50 via-white to-purple-50 border-2 border-blue-200 shadow-lg ${className}`}>
       <div className="flex flex-col space-y-4">
@@ -247,21 +170,6 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
                   <Play className="h-5 w-5 mr-3" />
                   <span>Play</span>
                 </>
-              )}
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={toggleMute}
-              className={`hover:bg-blue-100 border-blue-300 p-3 flex-shrink-0 transition-all duration-200 ${
-                isMuted ? 'bg-red-100 border-red-300' : 'bg-white'
-              }`}
-            >
-              {isMuted ? (
-                <VolumeX className="h-5 w-5 text-red-500" />
-              ) : (
-                <Volume2 className="h-5 w-5 text-blue-600" />
               )}
             </Button>
           </div>

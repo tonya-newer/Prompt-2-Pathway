@@ -1,9 +1,8 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Trophy, Star, Calendar, ExternalLink } from 'lucide-react';
+import { Trophy, Star, Calendar, ExternalLink } from 'lucide-react';
 import { VoicePlayer } from '@/components/VoicePlayer';
 import { useToast } from "@/hooks/use-toast";
 import { CelebrationEffects } from '@/components/CelebrationEffects';
@@ -62,15 +61,6 @@ const Results = () => {
     console.log('Celebration completed, showing voice player');
     setShowCelebration(false);
     setShowVoicePlayer(true);
-  };
-
-  const handleStartOver = () => {
-    localStorage.removeItem('assessment-answers');
-    localStorage.removeItem('assessment-results');
-    localStorage.removeItem('assessment-title');
-    localStorage.removeItem('assessment-audience');
-    localStorage.removeItem('user-info');
-    navigate('/');
   };
 
   const handleScheduleCall = () => {
@@ -196,18 +186,6 @@ const Results = () => {
               </div>
             </div>
           </Card>
-
-          {/* Start Over Button */}
-          <div className="text-center">
-            <Button
-              onClick={handleStartOver}
-              variant="outline"
-              className="px-8 py-3 text-lg border-2 border-gray-300 hover:border-blue-400 hover:bg-blue-50 transition-all duration-300"
-            >
-              <RefreshCw className="h-5 w-5 mr-3" />
-              Take Another Assessment
-            </Button>
-          </div>
         </div>
       </div>
     </div>
