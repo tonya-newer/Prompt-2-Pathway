@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Pause } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { nativeSpeech } from '@/services/nativeSpeech';
 
@@ -12,24 +12,31 @@ interface WelcomeVoicePlayerProps {
 export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [selectedVoice, setSelectedVoice] = useState<string | null>(null);
 
   const welcomeText = "Welcome to your VoiceCard assessment! This personalized assessment will help you gain valuable insights about yourself. Please fill out your information below, and then we'll begin your journey of discovery together. Take your time and answer honestly for the best results.";
 
+  useEffect(() => {
+    // Get the selected voice for display
+    const voice = nativeSpeech.getSelectedVoice();
+    setSelectedVoice(voice);
+  }, []);
+
   const playWelcomeVoice = async () => {
-    console.log('Starting welcome voice playback...');
+    if (isMuted) return;
     
-    // Stop any current speech
-    nativeSpeech.stop();
+    console.log('Starting welcome voice playback...');
     setIsLoading(true);
 
     try {
       setIsPlaying(true);
       await nativeSpeech.speak({
         text: welcomeText,
-        rate: 0.9,
-        pitch: 1,
-        volume: 1
+        rate: 0.85,
+        pitch: 1.0,
+        volume: 1.0
       });
       setIsPlaying(false);
     } catch (error) {
@@ -55,17 +62,25 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
     setIsPlaying(false);
   };
 
-  // Auto-play after user interaction
+  const handleMute = () => {
+    if (isPlaying) {
+      nativeSpeech.stop();
+      setIsPlaying(false);
+    }
+    setIsMuted(!isMuted);
+  };
+
+  // Auto-play after user interaction (required for browser autoplay policy)
   useEffect(() => {
-    if (hasInteracted) {
+    if (hasInteracted && !isMuted) {
       const timer = setTimeout(() => {
         console.log('Auto-playing welcome message after interaction...');
         playWelcomeVoice();
-      }, 500);
+      }, 1000);
       
       return () => clearTimeout(timer);
     }
-  }, [hasInteracted]);
+  }, [hasInteracted, isMuted]);
 
   // Cleanup
   useEffect(() => {
@@ -80,6 +95,9 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
         <div className="text-center mb-4">
           <h3 className="text-xl font-bold text-blue-800 mb-2">🎧 Welcome Message</h3>
           <p className="text-sm text-blue-600">Listen to your personalized greeting</p>
+          {selectedVoice && (
+            <p className="text-xs text-blue-500 mt-1">Voice: {selectedVoice}</p>
+          )}
         </div>
         
         <div className="flex items-center justify-center space-x-4">
@@ -87,7 +105,7 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
             variant="default"
             size="lg"
             onClick={handlePlay}
-            disabled={isLoading}
+            disabled={isLoading || isMuted}
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 text-lg font-semibold shadow-lg"
           >
             {isLoading ? (
@@ -107,10 +125,25 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
               </>
             )}
           </Button>
+
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={handleMute}
+            className="px-4 py-3 border-2 border-blue-300 hover:bg-blue-50"
+          >
+            {isMuted ? (
+              <VolumeX className="h-5 w-5 text-red-500" />
+            ) : (
+              <Volume2 className="h-5 w-5 text-blue-600" />
+            )}
+          </Button>
         </div>
 
         <div className="text-center">
-          {isPlaying ? (
+          {isMuted ? (
+            <p className="text-sm text-red-600 font-medium">🔇 Audio muted</p>
+          ) : isPlaying ? (
             <div className="flex items-center justify-center space-x-2">
               <div className="text-sm text-blue-700 font-medium">🎵 Playing welcome message...</div>
               <div className="flex space-x-1">

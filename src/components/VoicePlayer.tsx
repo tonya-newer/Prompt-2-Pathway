@@ -1,7 +1,7 @@
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, Mic } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Mic } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { nativeSpeech } from '@/services/nativeSpeech';
 
@@ -16,22 +16,29 @@ interface VoicePlayerProps {
 export const VoicePlayer = ({ text, autoPlay = false, className = '', showTranscript = false, isResultsPage = false }: VoicePlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [selectedVoice, setSelectedVoice] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Get the selected voice for display
+    const voice = nativeSpeech.getSelectedVoice();
+    setSelectedVoice(voice);
+  }, []);
 
   const playVoice = async () => {
-    console.log('Starting native voice playback...');
+    if (isMuted) return;
     
-    // Stop any current speech
-    nativeSpeech.stop();
+    console.log('Starting native voice playback...');
     setIsLoading(true);
 
     try {
       setIsPlaying(true);
       await nativeSpeech.speak({
         text: text,
-        rate: 0.9,
-        pitch: 1,
-        volume: 1
+        rate: 0.85,
+        pitch: 1.0,
+        volume: 1.0
       });
       setIsPlaying(false);
     } catch (error) {
@@ -57,9 +64,17 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     setIsPlaying(false);
   };
 
+  const handleMute = () => {
+    if (isPlaying) {
+      nativeSpeech.stop();
+      setIsPlaying(false);
+    }
+    setIsMuted(!isMuted);
+  };
+
   // Auto-play functionality (only after user interaction)
   useEffect(() => {
-    if (autoPlay && text && text.trim().length > 0 && hasInteracted) {
+    if (autoPlay && text && text.trim().length > 0 && hasInteracted && !isMuted) {
       const timer = setTimeout(() => {
         console.log('Auto-playing voice...');
         playVoice();
@@ -67,7 +82,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
       
       return () => clearTimeout(timer);
     }
-  }, [autoPlay, text, hasInteracted]);
+  }, [autoPlay, text, hasInteracted, isMuted]);
 
   // Cleanup
   useEffect(() => {
@@ -87,6 +102,9 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
           <div className="text-center sm:text-left">
             <h3 className="text-lg font-black text-purple-900 mb-1">🎧 Your Personalized Voice Message</h3>
             <p className="text-sm text-purple-700 font-bold">Press play to hear your results!</p>
+            {selectedVoice && (
+              <p className="text-xs text-purple-600 mt-1">Voice: {selectedVoice}</p>
+            )}
           </div>
         </div>
         
@@ -95,7 +113,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
             variant="default"
             size="lg"
             onClick={handlePlay}
-            disabled={isLoading}
+            disabled={isLoading || isMuted}
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 font-semibold shadow-lg"
           >
             {isLoading ? (
@@ -115,10 +133,25 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
               </>
             )}
           </Button>
+
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={handleMute}
+            className="px-4 py-3 border-2 border-purple-300 hover:bg-purple-50"
+          >
+            {isMuted ? (
+              <VolumeX className="h-5 w-5 text-red-500" />
+            ) : (
+              <Volume2 className="h-5 w-5 text-purple-600" />
+            )}
+          </Button>
         </div>
 
         <div className="mt-4 text-center">
-          {isPlaying ? (
+          {isMuted ? (
+            <p className="text-sm text-red-600 font-medium">🔇 Audio muted</p>
+          ) : isPlaying ? (
             <div className="flex items-center justify-center space-x-2">
               <div className="text-sm text-purple-700 font-medium">🎵 Playing your message...</div>
               <div className="flex space-x-1">
@@ -142,7 +175,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     );
   }
 
-  // Standard assessment layout - REMOVED mute button entirely
+  // Standard assessment layout with mute functionality
   return (
     <Card className={`p-6 bg-gradient-to-r from-blue-50 via-white to-purple-50 border-2 border-blue-200 shadow-lg ${className}`}>
       <div className="flex flex-col space-y-4">
@@ -152,8 +185,8 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
               variant="default"
               size="lg"
               onClick={handlePlay}
-              disabled={isLoading}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 w-full sm:w-auto text-base font-semibold shadow-lg"
+              disabled={isLoading || isMuted}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 flex-1 sm:flex-none text-base font-semibold shadow-lg"
             >
               {isLoading ? (
                 <>
@@ -172,11 +205,26 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
                 </>
               )}
             </Button>
+
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={handleMute}
+              className="px-4 py-3 border-2 border-blue-300 hover:bg-blue-50"
+            >
+              {isMuted ? (
+                <VolumeX className="h-5 w-5 text-red-500" />
+              ) : (
+                <Volume2 className="h-5 w-5 text-blue-600" />
+              )}
+            </Button>
           </div>
           
           <div className="flex-1 w-full">
             <div className="bg-blue-50 p-3 rounded-lg">
-              {isPlaying ? (
+              {isMuted ? (
+                <p className="text-sm text-red-600 font-medium">🔇 Audio muted</p>
+              ) : isPlaying ? (
                 <div className="flex items-center space-x-2">
                   <div className="text-sm text-blue-700 font-medium">🎵 Playing...</div>
                   <div className="flex space-x-1">
@@ -193,7 +241,12 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-blue-700">Click play to hear your custom voice message</p>
+                <div>
+                  <p className="text-sm text-blue-700">Click play to hear your custom voice message</p>
+                  {selectedVoice && (
+                    <p className="text-xs text-blue-600 mt-1">Voice: {selectedVoice}</p>
+                  )}
+                </div>
               )}
             </div>
           </div>
