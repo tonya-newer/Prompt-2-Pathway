@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,22 +9,27 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Edit, Copy, Trash2, Mic, Settings, Link, Save, X, Upload, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { assessmentTemplates } from '@/data/assessmentTemplates';
 import { AssessmentTemplate, Question } from '@/types/assessment';
 import { AssessmentEditor } from './AssessmentEditor';
+import { assessmentStorageService } from '@/services/assessmentStorage';
 
 export const AssessmentManager = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<AssessmentTemplate | null>(null);
   const [editMode, setEditMode] = useState(false);
-  const [templates, setTemplates] = useState(assessmentTemplates);
+  const [templates, setTemplates] = useState<AssessmentTemplate[]>([]);
   const [voiceScripts, setVoiceScripts] = useState({
     intro: "Welcome to your VoiceCard assessment. I'm here to guide you through a personalized experience that will help you gain clarity on your path forward. Let's begin this journey together.",
     mid: "You're doing great! These insights are helping us understand your unique situation. Let's continue with the next set of questions.",
     outro: "Congratulations on completing your assessment. Your personalized results are ready, and I'm excited to share the insights we've discovered about your journey."
   });
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('elevenlabs-api-key') || '');
-  const [selectedVoice, setSelectedVoice] = useState('rhKGiHCLeAC5KPBEZiUq'); // Apple – Quirky & Relatable
+  const [selectedVoice, setSelectedVoice] = useState('rhKGiHCLeAC5KPBEZiUq');
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Load assessments from storage service
+    setTemplates(assessmentStorageService.getAllAssessments());
+  }, []);
 
   const handleEditTemplate = (template: AssessmentTemplate) => {
     console.log('Opening template for editing:', template.title);
@@ -44,7 +49,14 @@ export const AssessmentManager = () => {
       description: 'New assessment description',
       audience: 'individual',
       tags: ['new'],
-      questions: [],
+      questions: [
+        {
+          id: 1,
+          type: "yes-no",
+          question: "Sample question - Do you agree?",
+          voiceScript: "This is a sample question. Do you agree with this statement?"
+        }
+      ],
       image: ''
     };
     setSelectedTemplate(newTemplate);
@@ -57,48 +69,77 @@ export const AssessmentManager = () => {
 
   const handleSaveTemplate = (updatedTemplate: AssessmentTemplate) => {
     console.log('Saving template:', updatedTemplate);
-    const existingIndex = templates.findIndex(t => t.id === updatedTemplate.id);
-    if (existingIndex >= 0) {
-      const updatedTemplates = [...templates];
-      updatedTemplates[existingIndex] = updatedTemplate;
-      setTemplates(updatedTemplates);
+    
+    try {
+      let savedTemplate: AssessmentTemplate;
+      
+      if (templates.find(t => t.id === updatedTemplate.id)) {
+        // Update existing assessment
+        savedTemplate = assessmentStorageService.updateAssessment(updatedTemplate);
+        toast({
+          title: "Template Updated",
+          description: `"${updatedTemplate.title}" has been saved successfully.`,
+        });
+      } else {
+        // Create new assessment
+        savedTemplate = assessmentStorageService.createAssessment(updatedTemplate);
+        toast({
+          title: "Template Created",
+          description: `"${updatedTemplate.title}" has been created successfully.`,
+        });
+      }
+      
+      // Refresh the templates list
+      setTemplates(assessmentStorageService.getAllAssessments());
+      setEditMode(false);
+      setSelectedTemplate(null);
+      
+    } catch (error) {
+      console.error('Error saving template:', error);
       toast({
-        title: "Template Updated",
-        description: `"${updatedTemplate.title}" has been saved successfully.`,
-      });
-    } else {
-      setTemplates([...templates, updatedTemplate]);
-      toast({
-        title: "Template Created",
-        description: `"${updatedTemplate.title}" has been created successfully.`,
+        title: "Save Error",
+        description: "Failed to save the template. Please try again.",
+        variant: "destructive",
       });
     }
-    setEditMode(false);
-    setSelectedTemplate(null);
   };
 
   const handleDuplicateTemplate = (template: AssessmentTemplate) => {
-    const duplicated: AssessmentTemplate = {
-      ...template,
-      id: Date.now(),
-      title: `${template.title} (Copy)`,
-      tags: [...template.tags, 'duplicate']
-    };
-    setTemplates([...templates, duplicated]);
-    toast({
-      title: "Template Duplicated",
-      description: `"${duplicated.title}" has been created.`,
-    });
+    try {
+      const duplicated = assessmentStorageService.duplicateAssessment(template.id);
+      setTemplates(assessmentStorageService.getAllAssessments());
+      toast({
+        title: "Template Duplicated",
+        description: `"${duplicated.title}" has been created.`,
+      });
+    } catch (error) {
+      console.error('Error duplicating template:', error);
+      toast({
+        title: "Duplicate Error",
+        description: "Failed to duplicate the template. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDeleteTemplate = (templateId: number) => {
-    const templateToDelete = templates.find(t => t.id === templateId);
-    setTemplates(templates.filter(t => t.id !== templateId));
-    toast({
-      title: "Template Deleted",
-      description: `"${templateToDelete?.title}" has been deleted.`,
-      variant: "destructive",
-    });
+    try {
+      const templateToDelete = assessmentStorageService.getAssessmentById(templateId);
+      assessmentStorageService.deleteAssessment(templateId);
+      setTemplates(assessmentStorageService.getAllAssessments());
+      toast({
+        title: "Template Deleted",
+        description: `"${templateToDelete?.title}" has been deleted.`,
+        variant: "destructive",
+      });
+    } catch (error) {
+      console.error('Error deleting template:', error);
+      toast({
+        title: "Delete Error",
+        description: "Failed to delete the template. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const copyAssessmentLink = async (template: AssessmentTemplate) => {
@@ -146,7 +187,7 @@ export const AssessmentManager = () => {
           'xi-api-key': apiKey,
         },
         body: JSON.stringify({
-          text: voiceScripts.intro.substring(0, 100) + "...", // Test with shortened text
+          text: voiceScripts.intro.substring(0, 100) + "...",
           model_id: 'eleven_multilingual_v2',
           voice_settings: {
             stability: 0.5,
@@ -182,12 +223,10 @@ export const AssessmentManager = () => {
 
   const saveVoiceScripts = () => {
     try {
-      // Save API key to localStorage
       if (apiKey && apiKey.trim()) {
         localStorage.setItem('elevenlabs-api-key', apiKey.trim());
       }
       
-      // Save voice scripts to localStorage
       localStorage.setItem('voice-scripts', JSON.stringify(voiceScripts));
       localStorage.setItem('selected-voice', selectedVoice);
       
@@ -278,7 +317,6 @@ export const AssessmentManager = () => {
                       {template.questions.length} questions • Est. {Math.ceil(template.questions.length * 0.75)} min
                     </p>
                     
-                    {/* Assessment Link with Copy Button */}
                     <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-4">
                       <div className="flex items-center justify-between mb-2">
                         <p className="text-sm font-medium text-blue-900">Assessment Link:</p>

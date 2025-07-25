@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,16 +8,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus, Edit, Copy, Trash2, Link, Users, BarChart3, Settings, Mic } from 'lucide-react';
-import { assessmentTemplates } from '@/data/assessmentTemplates';
 import { AssessmentTemplate } from '@/types/assessment';
 import { useToast } from '@/hooks/use-toast';
 import { AssessmentEditor } from '@/components/admin/AssessmentEditor';
 import { LeadsList } from '@/components/admin/LeadsList';
 import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
 import { leadStorageService } from '@/services/leadStorage';
+import { assessmentStorageService } from '@/services/assessmentStorage';
 
 const Index = () => {
-  const [templates, setTemplates] = useState(assessmentTemplates);
+  const [templates, setTemplates] = useState<AssessmentTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<AssessmentTemplate | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [selectedTemplateForVoice, setSelectedTemplateForVoice] = useState<AssessmentTemplate | null>(null);
@@ -28,7 +28,11 @@ const Index = () => {
   });
   const { toast } = useToast();
 
-  // Get leads data for analytics
+  // Load templates from storage service
+  useEffect(() => {
+    setTemplates(assessmentStorageService.getAllAssessments());
+  }, []);
+
   const leads = leadStorageService.getLeads();
 
   const handleCreateNew = () => {
@@ -38,7 +42,14 @@ const Index = () => {
       description: 'New assessment description',
       audience: 'individual',
       tags: ['new'],
-      questions: [],
+      questions: [
+        {
+          id: 1,
+          type: "yes-no",
+          question: "Sample question - Do you agree?",
+          voiceScript: "This is a sample question. Do you agree with this statement?"
+        }
+      ],
       image: ''
     };
     setSelectedTemplate(newTemplate);
@@ -59,48 +70,73 @@ const Index = () => {
   };
 
   const handleSaveTemplate = (updatedTemplate: AssessmentTemplate) => {
-    const existingIndex = templates.findIndex(t => t.id === updatedTemplate.id);
-    if (existingIndex >= 0) {
-      const updatedTemplates = [...templates];
-      updatedTemplates[existingIndex] = updatedTemplate;
-      setTemplates(updatedTemplates);
+    try {
+      let savedTemplate: AssessmentTemplate;
+      
+      if (templates.find(t => t.id === updatedTemplate.id)) {
+        savedTemplate = assessmentStorageService.updateAssessment(updatedTemplate);
+        toast({
+          title: "Template Updated",
+          description: `"${updatedTemplate.title}" has been saved successfully.`,
+        });
+      } else {
+        savedTemplate = assessmentStorageService.createAssessment(updatedTemplate);
+        toast({
+          title: "Template Created",
+          description: `"${updatedTemplate.title}" has been created successfully.`,
+        });
+      }
+      
+      setTemplates(assessmentStorageService.getAllAssessments());
+      setEditMode(false);
+      setSelectedTemplate(null);
+      
+    } catch (error) {
+      console.error('Error saving template:', error);
       toast({
-        title: "Template Updated",
-        description: `"${updatedTemplate.title}" has been saved successfully.`,
-      });
-    } else {
-      setTemplates([...templates, updatedTemplate]);
-      toast({
-        title: "Template Created",
-        description: `"${updatedTemplate.title}" has been created successfully.`,
+        title: "Save Error",
+        description: "Failed to save the template. Please try again.",
+        variant: "destructive",
       });
     }
-    setEditMode(false);
-    setSelectedTemplate(null);
   };
 
   const handleDuplicateTemplate = (template: AssessmentTemplate) => {
-    const duplicated: AssessmentTemplate = {
-      ...template,
-      id: Date.now(),
-      title: `${template.title} (Copy)`,
-      tags: [...template.tags, 'duplicate']
-    };
-    setTemplates([...templates, duplicated]);
-    toast({
-      title: "Template Duplicated",
-      description: `"${duplicated.title}" has been created.`,
-    });
+    try {
+      const duplicated = assessmentStorageService.duplicateAssessment(template.id);
+      setTemplates(assessmentStorageService.getAllAssessments());
+      toast({
+        title: "Template Duplicated",
+        description: `"${duplicated.title}" has been created.`,
+      });
+    } catch (error) {
+      console.error('Error duplicating template:', error);
+      toast({
+        title: "Duplicate Error",
+        description: "Failed to duplicate the template. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDeleteTemplate = (templateId: number) => {
-    const templateToDelete = templates.find(t => t.id === templateId);
-    setTemplates(templates.filter(t => t.id !== templateId));
-    toast({
-      title: "Template Deleted",
-      description: `"${templateToDelete?.title}" has been deleted.`,
-      variant: "destructive",
-    });
+    try {
+      const templateToDelete = assessmentStorageService.getAssessmentById(templateId);
+      assessmentStorageService.deleteAssessment(templateId);
+      setTemplates(assessmentStorageService.getAllAssessments());
+      toast({
+        title: "Template Deleted",
+        description: `"${templateToDelete?.title}" has been deleted.`,
+        variant: "destructive",
+      });
+    } catch (error) {
+      console.error('Error deleting template:', error);
+      toast({
+        title: "Delete Error",
+        description: "Failed to delete the template. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const copyAssessmentLink = async (template: AssessmentTemplate) => {
@@ -226,7 +262,6 @@ const Index = () => {
                           {template.questions.length} questions • Est. {Math.ceil(template.questions.length * 0.75)} min
                         </p>
                         
-                        {/* Assessment Link */}
                         <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4">
                           <p className="text-sm font-medium text-blue-900 mb-1">Public Link:</p>
                           <code className="text-xs bg-white px-2 py-1 rounded border block w-full text-gray-700 break-all">
@@ -286,7 +321,6 @@ const Index = () => {
             </div>
 
             <div className="grid gap-6">
-              {/* Assessment Selection */}
               <Card className="p-6">
                 <h4 className="text-lg font-semibold mb-4">Select Assessment to Edit Voice Scripts</h4>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -304,7 +338,6 @@ const Index = () => {
                 </div>
               </Card>
 
-              {/* Global Voice Settings */}
               <Card className="p-6">
                 <h4 className="text-lg font-semibold mb-4">Global Voice Settings</h4>
                 <div className="space-y-4">
@@ -345,7 +378,6 @@ const Index = () => {
                 </div>
               </Card>
 
-              {/* Question-by-Question Voice Scripts */}
               {selectedTemplateForVoice && (
                 <Card className="p-6">
                   <h4 className="text-lg font-semibold mb-4">
@@ -379,7 +411,6 @@ const Index = () => {
                 </Card>
               )}
 
-              {/* Voice Preview */}
               <Card className="p-6 bg-blue-50 border-blue-200">
                 <h4 className="text-lg font-semibold mb-4 text-blue-900">Voice Configuration</h4>
                 <div className="bg-white p-4 rounded-lg border border-blue-200">
