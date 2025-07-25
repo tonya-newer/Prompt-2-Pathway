@@ -6,10 +6,10 @@ import { VoicePlayer } from '@/components/VoicePlayer';
 import { QuestionRenderer } from '@/components/QuestionRenderer';
 import { WelcomePage } from '@/components/WelcomePage';
 import { useToast } from "@/hooks/use-toast";
-import { assessmentTemplates } from '@/data/assessmentTemplates';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { AssessmentTemplate } from '@/types/assessment';
 import { leadStorageService } from '@/services/leadStorage';
+import { assessmentStorageService } from '@/services/assessmentStorage';
 
 interface AssessmentResult {
   overallScore: number;
@@ -31,7 +31,7 @@ const Assessment = () => {
   useEffect(() => {
     if (id) {
       const assessmentId = parseInt(id, 10);
-      const template = assessmentTemplates.find(template => template.id === assessmentId);
+      const template = assessmentStorageService.getAssessmentById(assessmentId);
       if (template) {
         setAssessment(template);
       }
