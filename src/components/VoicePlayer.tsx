@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, Mic } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { customVoiceService } from '@/services/customVoiceService';
 import { nativeSpeech } from '@/services/nativeSpeech';
 
 interface VoicePlayerProps {
@@ -11,32 +12,61 @@ interface VoicePlayerProps {
   className?: string;
   showTranscript?: boolean;
   isResultsPage?: boolean;
+  questionId?: number;
 }
 
-export const VoicePlayer = ({ text, autoPlay = false, className = '', showTranscript = false, isResultsPage = false }: VoicePlayerProps) => {
+export const VoicePlayer = ({ 
+  text, 
+  autoPlay = false, 
+  className = '', 
+  showTranscript = false, 
+  isResultsPage = false, 
+  questionId 
+}: VoicePlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
-  const [selectedVoice, setSelectedVoice] = useState<string | null>(null);
+  const [useCustomVoice, setUseCustomVoice] = useState(false);
 
   useEffect(() => {
-    // Get the selected voice for display
-    const voice = nativeSpeech.getSelectedVoice();
-    setSelectedVoice(voice);
-  }, []);
+    // Check if custom voice file exists
+    const checkCustomVoice = async () => {
+      if (isResultsPage) {
+        const exists = await customVoiceService.checkVoiceExists('congratulations');
+        setUseCustomVoice(exists);
+      } else if (questionId) {
+        const exists = await customVoiceService.checkVoiceExists('question', questionId);
+        setUseCustomVoice(exists);
+      }
+    };
+
+    checkCustomVoice();
+  }, [isResultsPage, questionId]);
 
   const playVoice = async () => {
-    console.log('Starting native voice playback...');
+    console.log('Starting voice playback...');
     setIsLoading(true);
 
     try {
       setIsPlaying(true);
-      await nativeSpeech.speak({
-        text: text,
-        rate: 0.85,
-        pitch: 1.0,
-        volume: 1.0
-      });
+      
+      if (useCustomVoice) {
+        // Use custom ElevenLabs voice
+        if (isResultsPage) {
+          await customVoiceService.playVoice('congratulations');
+        } else if (questionId) {
+          await customVoiceService.playVoice('question', questionId);
+        }
+      } else {
+        // Fallback to native speech
+        await nativeSpeech.speak({
+          text: text,
+          rate: 0.85,
+          pitch: 1.0,
+          volume: 1.0
+        });
+      }
+      
       setIsPlaying(false);
     } catch (error) {
       console.error('Error playing voice:', error);
@@ -57,7 +87,11 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
   };
 
   const handleStop = () => {
-    nativeSpeech.stop();
+    if (useCustomVoice) {
+      customVoiceService.stopVoice();
+    } else {
+      nativeSpeech.stop();
+    }
     setIsPlaying(false);
   };
 
@@ -76,11 +110,15 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
   // Cleanup
   useEffect(() => {
     return () => {
-      nativeSpeech.stop();
+      if (useCustomVoice) {
+        customVoiceService.stopVoice();
+      } else {
+        nativeSpeech.stop();
+      }
     };
   }, []);
 
-  // For results page, use the enhanced layout with mute functionality
+  // For results page, use the enhanced layout
   if (isResultsPage) {
     return (
       <Card className={`p-4 bg-gradient-to-r from-purple-100 to-blue-100 border-2 border-purple-300 rounded-xl shadow-xl ${className}`}>
@@ -91,9 +129,9 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
           <div className="text-center sm:text-left">
             <h3 className="text-lg font-black text-purple-900 mb-1">🎧 Your Personalized Voice Message</h3>
             <p className="text-sm text-purple-700 font-bold">Press play to hear your results!</p>
-            {selectedVoice && (
-              <p className="text-xs text-purple-600 mt-1">Voice: {selectedVoice}</p>
-            )}
+            <p className="text-xs text-purple-600 mt-1">
+              {useCustomVoice ? 'Custom ElevenLabs Voice' : 'Native Voice'}
+            </p>
           </div>
         </div>
         
@@ -149,7 +187,7 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
     );
   }
 
-  // Standard assessment layout - simplified without mute functionality
+  // Standard assessment layout - no mute button
   return (
     <Card className={`p-6 bg-gradient-to-r from-blue-50 via-white to-purple-50 border-2 border-blue-200 shadow-lg ${className}`}>
       <div className="flex flex-col space-y-4">
@@ -202,9 +240,9 @@ export const VoicePlayer = ({ text, autoPlay = false, className = '', showTransc
               ) : (
                 <div>
                   <p className="text-sm text-blue-700">Click play to hear your custom voice message</p>
-                  {selectedVoice && (
-                    <p className="text-xs text-blue-600 mt-1">Voice: {selectedVoice}</p>
-                  )}
+                  <p className="text-xs text-blue-600 mt-1">
+                    {useCustomVoice ? 'Custom ElevenLabs Voice' : 'Native Voice'}
+                  </p>
                 </div>
               )}
             </div>

@@ -191,5 +191,21 @@ export const assessmentTemplates: AssessmentTemplate[] = [
         voiceScript: "Let's identify what's not working. Which work situations cause you the most stress or dissatisfaction?"
       }
     ]
+  },
+  {
+    id: 1753400777288,
+    title: "New Assessment",
+    description: "New assessment description",
+    audience: "individual",
+    tags: ["new"],
+    image: "",
+    questions: [
+      {
+        id: 1,
+        type: "yes-no",
+        question: "Sample question - Do you agree?",
+        voiceScript: "This is a sample question. Do you agree with this statement?"
+      }
+    ]
   }
 ];

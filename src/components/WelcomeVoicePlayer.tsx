@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Pause } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { customVoiceService } from '@/services/customVoiceService';
 import { nativeSpeech } from '@/services/nativeSpeech';
 
 interface WelcomeVoicePlayerProps {
@@ -13,14 +14,18 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
-  const [selectedVoice, setSelectedVoice] = useState<string | null>(null);
+  const [useCustomVoice, setUseCustomVoice] = useState(false);
 
   const welcomeText = "Welcome to your VoiceCard assessment! This personalized assessment will help you gain valuable insights about yourself. Please fill out your information below, and then we'll begin your journey of discovery together. Take your time and answer honestly for the best results.";
 
   useEffect(() => {
-    // Get the selected voice for display
-    const voice = nativeSpeech.getSelectedVoice();
-    setSelectedVoice(voice);
+    // Check if custom welcome voice exists
+    const checkCustomVoice = async () => {
+      const exists = await customVoiceService.checkVoiceExists('welcome');
+      setUseCustomVoice(exists);
+    };
+
+    checkCustomVoice();
   }, []);
 
   const playWelcomeVoice = async () => {
@@ -29,12 +34,20 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
 
     try {
       setIsPlaying(true);
-      await nativeSpeech.speak({
-        text: welcomeText,
-        rate: 0.85,
-        pitch: 1.0,
-        volume: 1.0
-      });
+      
+      if (useCustomVoice) {
+        // Use custom ElevenLabs voice
+        await customVoiceService.playVoice('welcome');
+      } else {
+        // Fallback to native speech
+        await nativeSpeech.speak({
+          text: welcomeText,
+          rate: 0.85,
+          pitch: 1.0,
+          volume: 1.0
+        });
+      }
+      
       setIsPlaying(false);
     } catch (error) {
       console.error('Error playing welcome voice:', error);
@@ -55,7 +68,11 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
   };
 
   const handleStop = () => {
-    nativeSpeech.stop();
+    if (useCustomVoice) {
+      customVoiceService.stopVoice();
+    } else {
+      nativeSpeech.stop();
+    }
     setIsPlaying(false);
   };
 
@@ -74,7 +91,11 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
   // Cleanup
   useEffect(() => {
     return () => {
-      nativeSpeech.stop();
+      if (useCustomVoice) {
+        customVoiceService.stopVoice();
+      } else {
+        nativeSpeech.stop();
+      }
     };
   }, []);
 
@@ -84,9 +105,9 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
         <div className="text-center mb-4">
           <h3 className="text-xl font-bold text-blue-800 mb-2">🎧 Welcome Message</h3>
           <p className="text-sm text-blue-600">Listen to your personalized greeting</p>
-          {selectedVoice && (
-            <p className="text-xs text-blue-500 mt-1">Voice: {selectedVoice}</p>
-          )}
+          <p className="text-xs text-blue-500 mt-1">
+            {useCustomVoice ? 'Custom ElevenLabs Voice' : 'Native Voice'}
+          </p>
         </div>
         
         <div className="flex items-center justify-center">
