@@ -21,7 +21,7 @@ export class CustomVoiceService {
           if (questionId) {
             return `/custom-voices/question-${questionId}.mp3`;
           }
-          return '/custom-voices/default-question.mp3';
+          return '/custom-voices/question-1.mp3';
         case 'congratulations':
           return '/custom-voices/congratulations-message.mp3';
         default:
@@ -38,11 +38,14 @@ export class CustomVoiceService {
     const voiceUrl = this.getVoiceUrl(type, questionId);
     
     if (!voiceUrl) {
-      console.warn(`No voice file found for type: ${type}`);
+      console.warn(`No voice file found for type: ${type}${questionId ? `, question: ${questionId}` : ''}`);
       return;
     }
 
     try {
+      // Stop any currently playing audio first
+      this.stopVoice();
+      
       const audio = new Audio(voiceUrl);
       audio.preload = 'auto';
       
@@ -89,6 +92,11 @@ export class CustomVoiceService {
       audio.pause();
       audio.currentTime = 0;
     });
+  }
+
+  // Get all available question voice files (1-15 based on your upload)
+  getAvailableQuestionVoices(): number[] {
+    return Array.from({length: 15}, (_, i) => i + 1);
   }
 }
 
