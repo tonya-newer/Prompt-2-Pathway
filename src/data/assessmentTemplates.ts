@@ -248,6 +248,104 @@ export const assessmentTemplates: AssessmentTemplate[] = [
           "The opportunity to enhance creativity and capabilities"
         ],
         voiceScript: "When you think about AI's potential, what motivates you more?"
+      },
+      {
+        id: 6,
+        type: "yes-no",
+        question: "Do you feel overwhelmed by the pace of technological change?",
+        voiceScript: "Do you feel overwhelmed by the pace of technological change?"
+      },
+      {
+        id: 7,
+        type: "rating",
+        question: "How would you rate your current productivity level?",
+        voiceScript: "On a scale of 1 to 10, how would you rate your current productivity level?"
+      },
+      {
+        id: 8,
+        type: "multiple-choice",
+        question: "What's your biggest concern about using AI?",
+        options: [
+          "Job security and being replaced",
+          "Privacy and data security",
+          "Learning curve and complexity",
+          "Cost and accessibility",
+          "Reliability and accuracy"
+        ],
+        voiceScript: "What's your biggest concern about using AI? Choose the option that resonates most with you."
+      },
+      {
+        id: 9,
+        type: "desires",
+        question: "Which work tasks do you find most repetitive or time-consuming?",
+        options: [
+          "Email management and communication",
+          "Data entry and organization",
+          "Scheduling and calendar management",
+          "Research and information gathering",
+          "Report writing and documentation",
+          "Social media and content creation"
+        ],
+        voiceScript: "Which work tasks do you find most repetitive or time-consuming? Select all that apply."
+      },
+      {
+        id: 10,
+        type: "this-that",
+        question: "When learning new technology, do you prefer:",
+        options: [
+          "Step-by-step tutorials and guided learning",
+          "Hands-on experimentation and trial-and-error"
+        ],
+        voiceScript: "When learning new technology, do you prefer step-by-step tutorials or hands-on experimentation?"
+      },
+      {
+        id: 11,
+        type: "yes-no",
+        question: "Have you ever felt left behind by technological advances in your field?",
+        voiceScript: "Have you ever felt left behind by technological advances in your field?"
+      },
+      {
+        id: 12,
+        type: "rating",
+        question: "How confident are you in your ability to adapt to new AI tools?",
+        voiceScript: "On a scale of 1 to 10, how confident are you in your ability to adapt to new AI tools?"
+      },
+      {
+        id: 13,
+        type: "multiple-choice",
+        question: "What would motivate you most to start using AI regularly?",
+        options: [
+          "Seeing clear time savings and efficiency gains",
+          "Having personalized training and support",
+          "Knowing my job security won't be threatened",
+          "Understanding the competitive advantage",
+          "Having affordable and accessible tools"
+        ],
+        voiceScript: "What would motivate you most to start using AI regularly? Choose the factor that would make the biggest difference for you."
+      },
+      {
+        id: 14,
+        type: "desires",
+        question: "Which areas of your life could benefit from AI assistance?",
+        options: [
+          "Work and professional tasks",
+          "Personal organization and planning",
+          "Learning and skill development",
+          "Creative projects and hobbies",
+          "Health and wellness tracking",
+          "Financial planning and management"
+        ],
+        voiceScript: "Which areas of your life could benefit from AI assistance? Select all areas where you see potential."
+      },
+      {
+        id: 15,
+        type: "this-that",
+        question: "When it comes to AI adoption, are you more:",
+        options: [
+          "Cautious and prefer to wait and see",
+          "Eager and ready to dive in immediately"
+        ],
+        voiceScript: "When it comes to AI adoption, are you more cautious and prefer to wait, or are you eager and ready to dive in?"
       }
     ]
   }

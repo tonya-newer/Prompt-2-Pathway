@@ -14,6 +14,8 @@ class AssessmentStorageService {
   }
 
   constructor() {
+    // Clear localStorage to force refresh of assessment data
+    localStorage.removeItem('voicecard-assessments');
     this.loadAssessments();
   }
 
