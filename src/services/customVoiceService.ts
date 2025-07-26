@@ -73,13 +73,19 @@ export class CustomVoiceService {
   async checkVoiceExists(type: 'welcome' | 'question' | 'congratulations', questionId?: number): Promise<boolean> {
     const voiceUrl = this.getVoiceUrl(type, questionId);
     
-    if (!voiceUrl) return false;
+    console.log(`Checking voice file: ${voiceUrl}`);
+    
+    if (!voiceUrl) {
+      console.log('No voice URL generated');
+      return false;
+    }
 
     try {
       const response = await fetch(voiceUrl, { method: 'HEAD' });
+      console.log(`Voice file check result for ${voiceUrl}: ${response.ok} (status: ${response.status})`);
       return response.ok;
     } catch (error) {
-      console.error('Error checking voice file:', error);
+      console.error('Error checking voice file:', voiceUrl, error);
       return false;
     }
   }
