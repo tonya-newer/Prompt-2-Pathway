@@ -1,192 +1,236 @@
-
 import { AssessmentTemplate } from '@/types/assessment';
 
 export const assessmentTemplates: AssessmentTemplate[] = [
   {
     id: 1,
-    title: "Personal Clarity Flow",
-    description: "Discover your path to personal and professional clarity",
-    audience: "individual",
-    tags: ["clarity", "personal-growth", "career"],
-    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=250&fit=crop",
+    title: "Career Clarity Assessment",
+    description: "Discover your ideal career path and unlock your professional potential",
+    audience: "business",
+    tags: ["career", "professional development", "purpose"],
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=250&fit=crop",
     questions: [
       {
         id: 1,
         type: "yes-no",
-        question: "Do you have a clear vision of where you want to be in 3 years?",
-        voiceScript: "Let's start with your vision. Do you have a clear picture of where you want to be in three years from now?"
+        question: "Do you feel excited about your work most days?",
+        voiceScript: "Let's start with something important. Do you feel excited about your work most days?"
       },
       {
         id: 2,
         type: "rating",
-        question: "How confident do you feel about your current direction in life?",
-        voiceScript: "On a scale of 1 to 10, how confident do you feel about your current direction in life?"
+        question: "How satisfied are you with your current career trajectory?",
+        voiceScript: "On a scale of 1 to 10, how satisfied are you with your current career trajectory?"
       },
       {
         id: 3,
-        type: "this-that",
-        question: "What motivates you more right now?",
+        type: "multiple-choice",
+        question: "What motivates you most in your professional life?",
         options: [
-          "Achieving specific goals and milestones",
-          "Finding deeper meaning and purpose"
+          "Making a meaningful impact",
+          "Financial success and security",
+          "Creative expression and innovation",
+          "Leadership and influence",
+          "Work-life balance and flexibility"
         ],
-        voiceScript: "Think about what drives you most. What motivates you more right now?"
+        voiceScript: "Think about what drives you professionally. What motivates you most in your work life?"
       },
       {
         id: 4,
         type: "desires",
-        question: "Which of these areas would you most like to improve?",
+        question: "Which professional skills would you most like to develop?",
         options: [
-          "Career advancement and professional growth",
-          "Work-life balance and personal time",
-          "Financial security and independence",
-          "Relationships and social connections",
-          "Health and personal wellness",
-          "Learning new skills and knowledge"
+          "Leadership and management",
+          "Communication and presentation",
+          "Technical and digital skills",
+          "Creative and innovative thinking",
+          "Strategic planning and analysis",
+          "Networking and relationship building"
         ],
-        voiceScript: "Now let's explore the areas where you'd like to see improvement. Select all that resonate with you."
+        voiceScript: "Looking at your professional growth, which skills would you most like to develop? Select all that appeal to you."
       },
       {
         id: 5,
-        type: "multiple-choice",
-        question: "What's your biggest challenge right now?",
+        type: "this-that",
+        question: "When facing career decisions, are you more:",
         options: [
-          "Lack of clarity about my next steps",
-          "Too many options and can't decide",
-          "Fear of making the wrong choice",
-          "Feeling stuck in my current situation",
-          "Not enough time or resources"
+          "Risk-taking and adventurous",
+          "Cautious and security-focused"
         ],
-        voiceScript: "Every journey has its challenges. What would you say is your biggest challenge right now?"
+        voiceScript: "When it comes to career decisions, are you more of a risk-taker or do you prefer security and caution?"
       }
     ]
   },
   {
     id: 2,
-    title: "Business Growth Flow",
-    description: "Assess your business readiness and growth opportunities",
-    audience: "business",
-    tags: ["business", "growth", "strategy"],
-    image: "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?w=400&h=250&fit=crop",
+    title: "Relationship Readiness Check",
+    description: "Understand your readiness for meaningful relationships and personal connections",
+    audience: "individual",
+    tags: ["relationships", "personal growth", "connection"],
+    image: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=400&h=250&fit=crop",
     questions: [
       {
         id: 1,
         type: "yes-no",
-        question: "Do you have a clear growth strategy for the next 12 months?",
-        voiceScript: "Let's talk about your business growth. Do you have a clear strategy for the next twelve months?"
+        question: "Do you feel comfortable being vulnerable with others?",
+        voiceScript: "Let's explore your relationship readiness. Do you feel comfortable being vulnerable with others?"
       },
       {
         id: 2,
         type: "rating",
-        question: "How confident are you in your current marketing approach?",
-        voiceScript: "Rate your confidence in your current marketing approach on a scale of 1 to 10."
+        question: "How satisfied are you with your current social connections?",
+        voiceScript: "Rate your satisfaction with your current social connections on a scale of 1 to 10."
       },
       {
         id: 3,
-        type: "this-that",
-        question: "What's your primary focus right now?",
-        options: [
-          "Acquiring new customers and expanding reach",
-          "Optimizing operations and improving efficiency"
-        ],
-        voiceScript: "Every business has priorities. What's your primary focus right now?"
-      },
-      {
-        id: 4,
-        type: "desires",
-        question: "Which business areas need the most attention?",
-        options: [
-          "Marketing and lead generation",
-          "Sales process and conversion",
-          "Operations and workflow",
-          "Team building and management",
-          "Financial planning and cash flow",
-          "Product or service development"
-        ],
-        voiceScript: "Let's identify where your business needs attention. Select all areas that could use improvement."
-      },
-      {
-        id: 5,
         type: "multiple-choice",
-        question: "What's holding your business back the most?",
+        question: "What do you value most in relationships?",
         options: [
-          "Limited marketing budget or resources",
-          "Lack of clear systems and processes",
-          "Too much manual work, not enough automation",
-          "Difficulty finding and retaining good people",
-          "Competition and market challenges"
+          "Trust and honesty",
+          "Fun and shared experiences",
+          "Deep emotional connection",
+          "Mutual support and growth",
+          "Independence and space"
         ],
-        voiceScript: "Now let's identify what might be holding your business back. What would you say is the biggest obstacle?"
+        voiceScript: "What do you value most in your relationships? Choose what matters most to you."
       }
     ]
   },
   {
     id: 3,
-    title: "Marketing Readiness Assessment",
-    description: "Evaluate your marketing foundation and growth potential",
-    audience: "business",
-    tags: ["marketing", "digital", "readiness"],
-    image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=250&fit=crop",
+    title: "Wellness & Life Balance Assessment",
+    description: "Evaluate your current wellness practices and discover areas for improvement",
+    audience: "individual",
+    tags: ["wellness", "health", "balance", "lifestyle"],
+    image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=250&fit=crop",
     questions: [
       {
         id: 1,
         type: "yes-no",
-        question: "Do you have a documented marketing strategy?",
-        voiceScript: "Let's assess your marketing readiness. Do you have a documented marketing strategy in place?"
+        question: "Do you have a consistent daily routine that supports your wellbeing?",
+        voiceScript: "Let's talk about your wellness. Do you have a consistent daily routine that supports your wellbeing?"
       },
       {
         id: 2,
         type: "rating",
-        question: "How well do you understand your ideal customer?",
-        voiceScript: "On a scale of 1 to 10, how well would you say you understand your ideal customer?"
+        question: "How would you rate your current stress levels?",
+        voiceScript: "On a scale of 1 to 10, with 10 being very high stress, how would you rate your current stress levels?"
       },
       {
         id: 3,
         type: "multiple-choice",
-        question: "Which marketing channels are you currently using?",
+        question: "Which wellness area needs the most attention in your life?",
         options: [
-          "Social media marketing",
-          "Email marketing campaigns",
-          "Content marketing and blogging",
-          "Paid advertising (Google, Facebook)",
-          "Networking and referrals",
-          "None of the above consistently"
+          "Physical fitness and exercise",
+          "Mental health and stress management",
+          "Nutrition and healthy eating",
+          "Sleep quality and rest",
+          "Work-life balance"
         ],
-        voiceScript: "Tell me about your current marketing activities. Which channels are you actively using?"
+        voiceScript: "Which wellness area needs the most attention in your life right now?"
       }
     ]
   },
   {
     id: 4,
-    title: "Career Transition Readiness",
-    description: "Assess your readiness for a career change or advancement",
-    audience: "individual",
-    tags: ["career", "transition", "professional"],
-    image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=400&h=250&fit=crop",
+    title: "Financial Freedom Readiness",
+    description: "Assess your financial mindset and readiness for building wealth",
+    audience: "business",
+    tags: ["finance", "wealth", "money mindset", "investing"],
+    image: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=400&h=250&fit=crop",
     questions: [
       {
         id: 1,
         type: "yes-no",
-        question: "Are you actively looking to change your career or role?",
-        voiceScript: "Let's explore your career transition. Are you actively looking to change your career or current role?"
+        question: "Do you have a clear understanding of your monthly expenses?",
+        voiceScript: "Let's talk about your financial awareness. Do you have a clear understanding of your monthly expenses?"
       },
       {
         id: 2,
         type: "rating",
-        question: "How satisfied are you with your current job or career?",
-        voiceScript: "Rate your satisfaction with your current job or career path on a scale of 1 to 10."
+        question: "How comfortable are you with your current financial situation?",
+        voiceScript: "Rate your comfort level with your current financial situation on a scale of 1 to 10."
+      },
+      {
+        id: 3,
+        type: "multiple-choice",
+        question: "What's your biggest financial priority right now?",
+        options: [
+          "Building an emergency fund",
+          "Paying off debt",
+          "Saving for retirement",
+          "Investing for growth",
+          "Increasing income"
+        ],
+        voiceScript: "What's your biggest financial priority right now? Choose your top concern."
+      }
+    ]
+  },
+  {
+    id: 5,
+    title: "Leadership Potential Assessment",
+    description: "Discover your natural leadership strengths and areas for development",
+    audience: "business",
+    tags: ["leadership", "management", "influence", "team building"],
+    image: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=250&fit=crop",
+    questions: [
+      {
+        id: 1,
+        type: "yes-no",
+        question: "Do people often come to you for advice or guidance?",
+        voiceScript: "Let's explore your leadership potential. Do people often come to you for advice or guidance?"
+      },
+      {
+        id: 2,
+        type: "rating",
+        question: "How comfortable are you with making difficult decisions?",
+        voiceScript: "On a scale of 1 to 10, how comfortable are you with making difficult decisions?"
+      },
+      {
+        id: 3,
+        type: "multiple-choice",
+        question: "What leadership style feels most natural to you?",
+        options: [
+          "Collaborative and team-focused",
+          "Decisive and directive",
+          "Inspirational and visionary",
+          "Supportive and coaching-oriented",
+          "Innovative and change-driven"
+        ],
+        voiceScript: "What leadership style feels most natural to you? Think about how you naturally interact with others."
+      }
+    ]
+  },
+  {
+    id: 6,
+    title: "Life Satisfaction & Fulfillment Check",
+    description: "Evaluate your overall life satisfaction and identify areas that need attention",
+    audience: "individual",
+    tags: ["life satisfaction", "fulfillment", "happiness", "personal growth"],
+    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=250&fit=crop",
+    questions: [
+      {
+        id: 1,
+        type: "yes-no",
+        question: "Do you wake up most days feeling purposeful and motivated?",
+        voiceScript: "Let's reflect on your life satisfaction. Do you wake up most days feeling purposeful and motivated?"
+      },
+      {
+        id: 2,
+        type: "rating",
+        question: "How fulfilled do you feel with your life overall?",
+        voiceScript: "On a scale of 1 to 10, how fulfilled do you feel with your life overall?"
       },
       {
         id: 3,
         type: "pain-avoidance",
-        question: "Which work situations cause you the most stress?",
+        question: "Which life areas cause you the most dissatisfaction?",
         options: [
-          "Lack of growth opportunities",
-          "Poor work-life balance",
-          "Insufficient compensation",
-          "Toxic workplace culture",
-          "Boring or unchallenging work",
-          "Lack of recognition or appreciation"
+          "Work and career stagnation",
+          "Relationship conflicts or loneliness",
+          "Financial stress and insecurity",
+          "Health and energy issues",
+          "Lack of personal growth or learning",
+          "Missing sense of purpose or meaning"
         ],
         voiceScript: "Let's identify what's not working. Which work situations cause you the most stress or dissatisfaction?"
       }
@@ -195,157 +239,158 @@ export const assessmentTemplates: AssessmentTemplate[] = [
   {
     id: 1753400777288,
     title: "Are You AI-Ready? Let's Find Out",
-    description: "Discover your readiness for the AI revolution and learn how to leverage AI tools in your daily routine",
-    audience: "individual",
+    description: "Discover your readiness to embrace AI and unlock new levels of productivity in your personal and professional life.",
+    audience: "business",
     tags: ["AI", "technology", "readiness", "productivity"],
     image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=250&fit=crop",
     questions: [
       {
         id: 1,
         type: "yes-no",
-        question: "Are you already using tools like ChatGPT, Gemini, or Claude in your daily routine?",
-        voiceScript: "Let's start simple. Are you already using tools like ChatGPT, Gemini, or Claude in your daily routine?"
+        question: "Do you currently use any AI tools like ChatGPT, Claude, or Gemini in your daily work or personal life?",
+        voiceScript: "Let's dive right in. Do you currently use any AI tools like ChatGPT, Claude, or Gemini in your daily work or personal life?"
       },
       {
         id: 2,
         type: "rating",
-        question: "How comfortable do you feel with learning new technology tools?",
-        voiceScript: "On a scale of 1 to 10, how comfortable do you feel with learning new technology tools?"
+        question: "On a scale of 1-10, how comfortable are you with adopting new technology in general?",
+        voiceScript: "On a scale of 1 to 10, how comfortable are you with adopting new technology in general? Think about your past experiences with learning new apps, software, or devices."
       },
       {
         id: 3,
         type: "multiple-choice",
-        question: "Which best describes your current relationship with AI?",
+        question: "What best describes your current knowledge level about AI?",
         options: [
-          "I'm excited and actively exploring AI tools",
-          "I'm curious but haven't started using AI yet",
-          "I'm skeptical but open to learning more",
-          "I'm concerned about AI's impact on my work",
-          "I prefer to avoid AI tools altogether"
+          "I'm a complete beginner with little to no knowledge",
+          "I know the basics but haven't used AI tools much",
+          "I've experimented with some AI tools",
+          "I use AI tools regularly and understand their capabilities",
+          "I consider myself advanced in AI applications"
         ],
-        voiceScript: "Think about your current relationship with AI. Which of these options best describes how you feel about artificial intelligence?"
+        voiceScript: "What best describes your current knowledge level about AI? Choose the option that most accurately reflects where you are right now."
       },
       {
         id: 4,
-        type: "desires",
-        question: "Which areas would you most like AI to help you with?",
+        type: "this-that",
+        question: "When it comes to new technology, are you typically:",
         options: [
-          "Writing and content creation",
-          "Research and information gathering",
-          "Task automation and efficiency",
-          "Creative projects and brainstorming",
-          "Data analysis and insights",
-          "Learning new skills faster"
+          "An early adopter who tries new things quickly",
+          "A careful observer who waits to see how others use it first"
         ],
-        voiceScript: "Now let's explore where AI could help you most. Select all the areas where you'd like AI assistance."
+        voiceScript: "When it comes to new technology, are you typically an early adopter who tries new things quickly, or a careful observer who waits to see how others use it first?"
       },
       {
         id: 5,
-        type: "this-that",
-        question: "What motivates you more about AI?",
+        type: "desires",
+        question: "Which areas of your life would you most like to improve with AI assistance?",
         options: [
-          "The potential to save time and increase productivity",
-          "The opportunity to enhance creativity and capabilities"
+          "Work productivity and efficiency",
+          "Creative projects and content creation",
+          "Learning and skill development",
+          "Personal organization and planning",
+          "Communication and writing",
+          "Research and information gathering"
         ],
-        voiceScript: "When you think about AI's potential, what motivates you more?"
+        voiceScript: "Which areas of your life would you most like to improve with AI assistance? Select all the areas that interest you."
       },
       {
         id: 6,
         type: "yes-no",
-        question: "Do you feel overwhelmed by the pace of technological change?",
-        voiceScript: "Do you feel overwhelmed by the pace of technological change?"
+        question: "Have you ever felt overwhelmed by the rapid pace of technological change?",
+        voiceScript: "Have you ever felt overwhelmed by the rapid pace of technological change? It's okay to be honest here."
       },
       {
         id: 7,
         type: "rating",
-        question: "How would you rate your current productivity level?",
-        voiceScript: "On a scale of 1 to 10, how would you rate your current productivity level?"
+        question: "How important is it for you to stay current with technology trends in your field?",
+        voiceScript: "On a scale of 1 to 10, how important is it for you to stay current with technology trends in your field?"
       },
       {
         id: 8,
         type: "multiple-choice",
-        question: "What's your biggest concern about using AI?",
+        question: "What's your biggest concern about using AI tools?",
         options: [
-          "Job security and being replaced",
-          "Privacy and data security",
-          "Learning curve and complexity",
-          "Cost and accessibility",
-          "Reliability and accuracy"
+          "They might replace my job or make my skills obsolete",
+          "Privacy and security of my personal information",
+          "The learning curve seems too steep",
+          "They're too expensive or complex",
+          "I'm worried about becoming too dependent on them",
+          "I don't have any major concerns"
         ],
-        voiceScript: "What's your biggest concern about using AI? Choose the option that resonates most with you."
+        voiceScript: "What's your biggest concern about using AI tools? Choose the option that resonates most with your feelings."
       },
       {
         id: 9,
-        type: "desires",
-        question: "Which work tasks do you find most repetitive or time-consuming?",
+        type: "pain-avoidance",
+        question: "Which work-related frustrations would you most like to eliminate?",
         options: [
-          "Email management and communication",
-          "Data entry and organization",
-          "Scheduling and calendar management",
-          "Research and information gathering",
-          "Report writing and documentation",
-          "Social media and content creation"
+          "Repetitive, time-consuming tasks",
+          "Writer's block or creative blocks",
+          "Information overload and research time",
+          "Poor organization and lost productivity",
+          "Difficulty keeping up with industry changes",
+          "Inefficient communication and collaboration"
         ],
-        voiceScript: "Which work tasks do you find most repetitive or time-consuming? Select all that apply."
+        voiceScript: "Which work-related frustrations would you most like to eliminate? Think about the pain points that slow you down or stress you out."
       },
       {
         id: 10,
         type: "this-that",
-        question: "When learning new technology, do you prefer:",
+        question: "When learning something new, do you prefer:",
         options: [
-          "Step-by-step tutorials and guided learning",
-          "Hands-on experimentation and trial-and-error"
+          "Structured, step-by-step instruction",
+          "Hands-on experimentation and discovery"
         ],
-        voiceScript: "When learning new technology, do you prefer step-by-step tutorials or hands-on experimentation?"
+        voiceScript: "When learning something new, do you prefer structured, step-by-step instruction, or hands-on experimentation and discovery?"
       },
       {
         id: 11,
         type: "yes-no",
-        question: "Have you ever felt left behind by technological advances in your field?",
-        voiceScript: "Have you ever felt left behind by technological advances in your field?"
+        question: "Do you believe AI will create more opportunities than it eliminates?",
+        voiceScript: "Here's a big picture question: Do you believe AI will create more opportunities than it eliminates?"
       },
       {
         id: 12,
         type: "rating",
-        question: "How confident are you in your ability to adapt to new AI tools?",
-        voiceScript: "On a scale of 1 to 10, how confident are you in your ability to adapt to new AI tools?"
+        question: "How confident are you in your ability to adapt to AI-powered changes in your industry?",
+        voiceScript: "On a scale of 1 to 10, how confident are you in your ability to adapt to AI-powered changes in your industry?"
       },
       {
         id: 13,
         type: "multiple-choice",
-        question: "What would motivate you most to start using AI regularly?",
+        question: "What would most motivate you to start using AI tools regularly?",
         options: [
-          "Seeing clear time savings and efficiency gains",
-          "Having personalized training and support",
-          "Knowing my job security won't be threatened",
-          "Understanding the competitive advantage",
-          "Having affordable and accessible tools"
+          "Seeing clear evidence of time savings",
+          "Having someone teach me step-by-step",
+          "Knowing my competitors are using them",
+          "Understanding they're secure and private",
+          "Having affordable, easy-to-use options available"
         ],
-        voiceScript: "What would motivate you most to start using AI regularly? Choose the factor that would make the biggest difference for you."
+        voiceScript: "What would most motivate you to start using AI tools regularly? Think about what would tip the scales for you."
       },
       {
         id: 14,
         type: "desires",
-        question: "Which areas of your life could benefit from AI assistance?",
+        question: "Which benefits of AI are most appealing to you personally?",
         options: [
-          "Work and professional tasks",
-          "Personal organization and planning",
-          "Learning and skill development",
-          "Creative projects and hobbies",
-          "Health and wellness tracking",
-          "Financial planning and management"
+          "Saving time on routine tasks",
+          "Enhancing creativity and brainstorming",
+          "Making better, data-driven decisions",
+          "Learning new skills more efficiently",
+          "Improving work quality and accuracy",
+          "Having a 24/7 intelligent assistant"
         ],
-        voiceScript: "Which areas of your life could benefit from AI assistance? Select all areas where you see potential."
+        voiceScript: "Which benefits of AI are most appealing to you personally? Select all the benefits that excite you."
       },
       {
         id: 15,
         type: "this-that",
-        question: "When it comes to AI adoption, are you more:",
+        question: "Looking ahead, are you more:",
         options: [
-          "Cautious and prefer to wait and see",
-          "Eager and ready to dive in immediately"
+          "Excited about AI's potential to transform your life",
+          "Cautious about moving too quickly with AI adoption"
         ],
-        voiceScript: "When it comes to AI adoption, are you more cautious and prefer to wait, or are you eager and ready to dive in?"
+        voiceScript: "As we wrap up, looking ahead, are you more excited about AI's potential to transform your life, or cautious about moving too quickly with AI adoption?"
       }
     ]
   }
