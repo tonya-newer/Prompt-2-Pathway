@@ -30,10 +30,14 @@ const Assessment = () => {
 
   useEffect(() => {
     if (id) {
-      const assessmentId = parseInt(id, 10);
+      // Handle both string and number IDs
+      const assessmentId = isNaN(Number(id)) ? id : Number(id);
       const template = assessmentStorageService.getAssessmentById(assessmentId);
       if (template) {
         setAssessment(template);
+        console.log('Loaded assessment:', template.title, 'with', template.questions.length, 'questions');
+      } else {
+        console.error('Assessment not found for ID:', assessmentId);
       }
       setLoading(false);
     } else {

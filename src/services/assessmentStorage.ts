@@ -65,8 +65,13 @@ class AssessmentStorageService {
     return this.assessments;
   }
 
-  getAssessmentById(id: number): AssessmentTemplate | undefined {
-    return this.assessments.find(assessment => assessment.id === id);
+  getAssessmentById(id: number | string): AssessmentTemplate | undefined {
+    // Handle both string and number IDs for better compatibility
+    const assessmentId = typeof id === 'string' ? Number(id) : id;
+    const found = this.assessments.find(assessment => assessment.id === assessmentId);
+    console.log('Looking for assessment ID:', assessmentId, 'Found:', found ? found.title : 'Not found');
+    console.log('Available assessments:', this.assessments.map(a => ({ id: a.id, title: a.title })));
+    return found;
   }
 
   createAssessment(assessment: AssessmentTemplate): AssessmentTemplate {
