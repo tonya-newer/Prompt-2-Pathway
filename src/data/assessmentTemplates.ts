@@ -252,145 +252,99 @@ export const assessmentTemplates: AssessmentTemplate[] = [
       },
       {
         id: 2,
-        type: "rating",
-        question: "On a scale of 1-10, how comfortable are you with adopting new technology in general?",
-        voiceScript: "On a scale of 1 to 10, how comfortable are you with adopting new technology in general? Think about your past experiences with learning new apps, software, or devices."
+        type: "yes-no",
+        question: "Be honest with yourself here— have you ever felt lost or overwhelmed when trying to figure out what AI even is?",
+        voiceScript: "Be honest with yourself here— have you ever felt lost or overwhelmed when trying to figure out what AI even is?"
       },
       {
         id: 3,
-        type: "multiple-choice",
-        question: "What best describes your current knowledge level about AI?",
-        options: [
-          "I'm a complete beginner with little to no knowledge",
-          "I know the basics but haven't used AI tools much",
-          "I've experimented with some AI tools",
-          "I use AI tools regularly and understand their capabilities",
-          "I consider myself advanced in AI applications"
-        ],
-        voiceScript: "What best describes your current knowledge level about AI? Choose the option that most accurately reflects where you are right now."
+        type: "yes-no",
+        question: "This one's important— have you ever tried using an AI tool, but then gave up because you weren't sure how to use it effectively?",
+        voiceScript: "This one's important— have you ever tried using an AI tool, but then gave up because you weren't sure how to use it effectively?"
       },
       {
         id: 4,
-        type: "this-that",
-        question: "When it comes to new technology, are you typically:",
-        options: [
-          "An early adopter who tries new things quickly",
-          "A careful observer who waits to see how others use it first"
-        ],
-        voiceScript: "When it comes to new technology, are you typically an early adopter who tries new things quickly, or a careful observer who waits to see how others use it first?"
+        type: "yes-no",
+        question: "Let's talk about your expectations. Do you believe that AI could help you save time or money, even if you're not sure where to begin?",
+        voiceScript: "Let's talk about your expectations. Do you believe that AI could help you save time or money, even if you're not sure where to begin?"
       },
       {
         id: 5,
-        type: "desires",
-        question: "Which areas of your life would you most like to improve with AI assistance?",
+        type: "this-that",
+        question: "Which one feels more like you— are you just curious about AI but unsure where to begin, or have you tried a few tools and now want a more structured path?",
         options: [
-          "Work productivity and efficiency",
-          "Creative projects and content creation",
-          "Learning and skill development",
-          "Personal organization and planning",
-          "Communication and writing",
-          "Research and information gathering"
+          "Just curious about AI but unsure where to begin",
+          "Tried a few tools and now want a more structured path"
         ],
-        voiceScript: "Which areas of your life would you most like to improve with AI assistance? Select all the areas that interest you."
+        voiceScript: "Which one feels more like you— are you just curious about AI but unsure where to begin, or have you tried a few tools and now want a more structured path?"
       },
       {
         id: 6,
-        type: "yes-no",
-        question: "Have you ever felt overwhelmed by the rapid pace of technological change?",
-        voiceScript: "Have you ever felt overwhelmed by the rapid pace of technological change? It's okay to be honest here."
+        type: "this-that",
+        question: "Let's talk learning style— would you rather get a quick checklist or watch a short video that walks you through your first steps?",
+        options: [
+          "Get a quick checklist",
+          "Watch a short video that walks me through first steps"
+        ],
+        voiceScript: "Let's talk learning style— would you rather get a quick checklist or watch a short video that walks you through your first steps?"
       },
       {
         id: 7,
-        type: "rating",
-        question: "How important is it for you to stay current with technology trends in your field?",
-        voiceScript: "On a scale of 1 to 10, how important is it for you to stay current with technology trends in your field?"
+        type: "this-that",
+        question: "Picture this: You get one instant AI benefit today. Would you want more productivity—or a better way to earn more income?",
+        options: [
+          "More productivity",
+          "A better way to earn more income"
+        ],
+        voiceScript: "Picture this: You get one instant AI benefit today. Would you want more productivity—or a better way to earn more income?"
       },
       {
         id: 8,
-        type: "multiple-choice",
-        question: "What's your biggest concern about using AI tools?",
-        options: [
-          "They might replace my job or make my skills obsolete",
-          "Privacy and security of my personal information",
-          "The learning curve seems too steep",
-          "They're too expensive or complex",
-          "I'm worried about becoming too dependent on them",
-          "I don't have any major concerns"
-        ],
-        voiceScript: "What's your biggest concern about using AI tools? Choose the option that resonates most with your feelings."
+        type: "yes-no",
+        question: "Clarity can change everything— would having a clear beginner-friendly roadmap make you feel more confident using AI?",
+        voiceScript: "Clarity can change everything— would having a clear beginner-friendly roadmap make you feel more confident using AI?"
       },
       {
         id: 9,
-        type: "pain-avoidance",
-        question: "Which work-related frustrations would you most like to eliminate?",
-        options: [
-          "Repetitive, time-consuming tasks",
-          "Writer's block or creative blocks",
-          "Information overload and research time",
-          "Poor organization and lost productivity",
-          "Difficulty keeping up with industry changes",
-          "Inefficient communication and collaboration"
-        ],
-        voiceScript: "Which work-related frustrations would you most like to eliminate? Think about the pain points that slow you down or stress you out."
+        type: "yes-no",
+        question: "No tech headaches here— would you love to start using AI without feeling overwhelmed or too 'techie'?",
+        voiceScript: "No tech headaches here— would you love to start using AI without feeling overwhelmed or too 'techie'?"
       },
       {
         id: 10,
-        type: "this-that",
-        question: "When learning something new, do you prefer:",
-        options: [
-          "Structured, step-by-step instruction",
-          "Hands-on experimentation and discovery"
-        ],
-        voiceScript: "When learning something new, do you prefer structured, step-by-step instruction, or hands-on experimentation and discovery?"
+        type: "yes-no",
+        question: "Here's the big picture— do you think learning the right AI tools now would give you peace of mind about your future success?",
+        voiceScript: "Here's the big picture— do you think learning the right AI tools now would give you peace of mind about your future success?"
       },
       {
         id: 11,
         type: "yes-no",
-        question: "Do you believe AI will create more opportunities than it eliminates?",
-        voiceScript: "Here's a big picture question: Do you believe AI will create more opportunities than it eliminates?"
+        question: "Let's keep it real— if I gave you a simple 3-step AI checklist right now, would you actually try it?",
+        voiceScript: "Let's keep it real— if I gave you a simple 3-step AI checklist right now, would you actually try it?"
       },
       {
         id: 12,
-        type: "rating",
-        question: "How confident are you in your ability to adapt to AI-powered changes in your industry?",
-        voiceScript: "On a scale of 1 to 10, how confident are you in your ability to adapt to AI-powered changes in your industry?"
+        type: "yes-no",
+        question: "This is about commitment— are you willing to spend just 30 minutes learning how AI could improve your everyday life?",
+        voiceScript: "This is about commitment— are you willing to spend just 30 minutes learning how AI could improve your everyday life?"
       },
       {
         id: 13,
-        type: "multiple-choice",
-        question: "What would most motivate you to start using AI tools regularly?",
-        options: [
-          "Seeing clear evidence of time savings",
-          "Having someone teach me step-by-step",
-          "Knowing my competitors are using them",
-          "Understanding they're secure and private",
-          "Having affordable, easy-to-use options available"
-        ],
-        voiceScript: "What would most motivate you to start using AI tools regularly? Think about what would tip the scales for you."
+        type: "yes-no",
+        question: "Here's something exclusive— would you like me to send you a free AI starter kit to help you get going today?",
+        voiceScript: "Here's something exclusive— would you like me to send you a free AI starter kit to help you get going today?"
       },
       {
         id: 14,
-        type: "desires",
-        question: "Which benefits of AI are most appealing to you personally?",
-        options: [
-          "Saving time on routine tasks",
-          "Enhancing creativity and brainstorming",
-          "Making better, data-driven decisions",
-          "Learning new skills more efficiently",
-          "Improving work quality and accuracy",
-          "Having a 24/7 intelligent assistant"
-        ],
-        voiceScript: "Which benefits of AI are most appealing to you personally? Select all the benefits that excite you."
+        type: "yes-no",
+        question: "Let's take it further— would you be interested in joining a free live AI workshop where we walk through tools together?",
+        voiceScript: "Let's take it further— would you be interested in joining a free live AI workshop where we walk through tools together?"
       },
       {
         id: 15,
-        type: "this-that",
-        question: "Looking ahead, are you more:",
-        options: [
-          "Excited about AI's potential to transform your life",
-          "Cautious about moving too quickly with AI adoption"
-        ],
-        voiceScript: "As we wrap up, looking ahead, are you more excited about AI's potential to transform your life, or cautious about moving too quickly with AI adoption?"
+        type: "yes-no",
+        question: "And finally— would you be open to a quick call so I can show you how AI could support your specific goals?",
+        voiceScript: "And finally— would you be open to a quick call so I can show you how AI could support your specific goals?"
       }
     ]
   }
