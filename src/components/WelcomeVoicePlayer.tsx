@@ -76,17 +76,15 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
     setIsPlaying(false);
   };
 
-  // Auto-play after user interaction (required for browser autoplay policy)
+  // Auto-play on component mount (immediate welcome)
   useEffect(() => {
-    if (hasInteracted) {
-      const timer = setTimeout(() => {
-        console.log('Auto-playing welcome message after interaction...');
-        playWelcomeVoice();
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [hasInteracted]);
+    const timer = setTimeout(() => {
+      console.log('Auto-playing welcome message...');
+      playWelcomeVoice();
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [useCustomVoice]); // Depend on useCustomVoice so it plays after voice check completes
 
   // Cleanup
   useEffect(() => {
@@ -105,9 +103,6 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
         <div className="text-center mb-4">
           <h3 className="text-xl font-bold text-blue-800 mb-2">🎧 Welcome Message</h3>
           <p className="text-sm text-blue-600">Listen to your personalized greeting</p>
-          <p className="text-xs text-blue-500 mt-1">
-            {useCustomVoice ? 'Custom ElevenLabs Voice' : 'Native Voice'}
-          </p>
         </div>
         
         <div className="flex items-center justify-center">

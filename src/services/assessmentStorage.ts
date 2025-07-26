@@ -21,7 +21,16 @@ class AssessmentStorageService {
     try {
       const stored = localStorage.getItem('voicecard-assessments');
       if (stored) {
-        this.assessments = JSON.parse(stored);
+        const storedAssessments = JSON.parse(stored);
+        // Always merge with the latest default templates to ensure new assessments are available
+        const defaultIds = assessmentTemplates.map(t => t.id);
+        const existingIds = storedAssessments.map((t: AssessmentTemplate) => t.id);
+        
+        // Add any new default templates that aren't already stored
+        const newTemplates = assessmentTemplates.filter(template => !existingIds.includes(template.id));
+        
+        this.assessments = [...storedAssessments, ...newTemplates];
+        this.saveAssessments(); // Save the merged list
       } else {
         // Initialize with default templates
         this.assessments = [...assessmentTemplates];

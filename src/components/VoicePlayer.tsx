@@ -129,9 +129,6 @@ export const VoicePlayer = ({
           <div className="text-center sm:text-left">
             <h3 className="text-lg font-black text-purple-900 mb-1">🎧 Your Personalized Voice Message</h3>
             <p className="text-sm text-purple-700 font-bold">Press play to hear your results!</p>
-            <p className="text-xs text-purple-600 mt-1">
-              {useCustomVoice ? 'Custom ElevenLabs Voice' : 'Native Voice'}
-            </p>
           </div>
         </div>
         
@@ -240,9 +237,6 @@ export const VoicePlayer = ({
               ) : (
                 <div>
                   <p className="text-sm text-blue-700">Click play to hear your custom voice message</p>
-                  <p className="text-xs text-blue-600 mt-1">
-                    {useCustomVoice ? 'Custom ElevenLabs Voice' : 'Native Voice'}
-                  </p>
                 </div>
               )}
             </div>

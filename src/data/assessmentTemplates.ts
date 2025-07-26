@@ -193,18 +193,61 @@ export const assessmentTemplates: AssessmentTemplate[] = [
     ]
   },
   {
-    id: 1753400777288,
-    title: "New Assessment",
-    description: "New assessment description",
+    id: 5,
+    title: "Are You AI-Ready? Let's Find Out",
+    description: "Discover your readiness for the AI revolution and learn how to leverage AI tools in your daily routine",
     audience: "individual",
-    tags: ["new"],
-    image: "",
+    tags: ["AI", "technology", "readiness", "productivity"],
+    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=250&fit=crop",
     questions: [
       {
         id: 1,
         type: "yes-no",
-        question: "Sample question - Do you agree?",
-        voiceScript: "This is a sample question. Do you agree with this statement?"
+        question: "Are you already using tools like ChatGPT, Gemini, or Claude in your daily routine?",
+        voiceScript: "Let's start simple. Are you already using tools like ChatGPT, Gemini, or Claude in your daily routine?"
+      },
+      {
+        id: 2,
+        type: "rating",
+        question: "How comfortable do you feel with learning new technology tools?",
+        voiceScript: "On a scale of 1 to 10, how comfortable do you feel with learning new technology tools?"
+      },
+      {
+        id: 3,
+        type: "multiple-choice",
+        question: "Which best describes your current relationship with AI?",
+        options: [
+          "I'm excited and actively exploring AI tools",
+          "I'm curious but haven't started using AI yet",
+          "I'm skeptical but open to learning more",
+          "I'm concerned about AI's impact on my work",
+          "I prefer to avoid AI tools altogether"
+        ],
+        voiceScript: "Think about your current relationship with AI. Which of these options best describes how you feel about artificial intelligence?"
+      },
+      {
+        id: 4,
+        type: "desires",
+        question: "Which areas would you most like AI to help you with?",
+        options: [
+          "Writing and content creation",
+          "Research and information gathering",
+          "Task automation and efficiency",
+          "Creative projects and brainstorming",
+          "Data analysis and insights",
+          "Learning new skills faster"
+        ],
+        voiceScript: "Now let's explore where AI could help you most. Select all the areas where you'd like AI assistance."
+      },
+      {
+        id: 5,
+        type: "this-that",
+        question: "What motivates you more about AI?",
+        options: [
+          "The potential to save time and increase productivity",
+          "The opportunity to enhance creativity and capabilities"
+        ],
+        voiceScript: "When you think about AI's potential, what motivates you more?"
       }
     ]
   }
