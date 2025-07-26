@@ -95,17 +95,18 @@ export const VoicePlayer = ({
     setIsPlaying(false);
   };
 
-  // Auto-play functionality (only after user interaction)
+  // Auto-play functionality
   useEffect(() => {
-    if (autoPlay && text && text.trim().length > 0 && hasInteracted) {
+    if (autoPlay && text && text.trim().length > 0) {
       const timer = setTimeout(() => {
         console.log('Auto-playing voice...');
+        setHasInteracted(true); // Enable interaction for audio playback
         playVoice();
-      }, 1500);
+      }, 2000);
       
       return () => clearTimeout(timer);
     }
-  }, [autoPlay, text, hasInteracted]);
+  }, [autoPlay, text, useCustomVoice]);
 
   // Cleanup
   useEffect(() => {
@@ -216,31 +217,23 @@ export const VoicePlayer = ({
             </Button>
           </div>
           
-          <div className="flex-1 w-full">
-            <div className="bg-blue-50 p-3 rounded-lg">
-              {isPlaying ? (
-                <div className="flex items-center space-x-2">
-                  <div className="text-sm text-blue-700 font-medium">🎵 Playing...</div>
-                  <div className="flex space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-1 bg-gradient-to-t from-blue-500 to-purple-500 animate-pulse rounded-full"
-                        style={{
-                          height: `${Math.random() * 12 + 8}px`,
-                          animationDelay: `${i * 0.1}s`
-                        }}
-                      ></div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <p className="text-sm text-blue-700">Click play to hear your custom voice message</p>
-                </div>
-              )}
+          {isPlaying && (
+            <div className="flex items-center space-x-2">
+              <div className="text-sm text-blue-700 font-medium">🎵 Playing voice message...</div>
+              <div className="flex space-x-1">
+                {[...Array(5)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="w-1 bg-gradient-to-t from-blue-500 to-purple-500 animate-pulse rounded-full"
+                    style={{
+                      height: `${Math.random() * 12 + 8}px`,
+                      animationDelay: `${i * 0.1}s`
+                    }}
+                  ></div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="text-center">

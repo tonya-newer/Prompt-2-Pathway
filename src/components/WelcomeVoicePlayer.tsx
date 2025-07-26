@@ -80,8 +80,9 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
   useEffect(() => {
     const timer = setTimeout(() => {
       console.log('Auto-playing welcome message...');
+      setHasInteracted(true); // Enable interaction to allow playback
       playWelcomeVoice();
-    }, 1000);
+    }, 1500);
     
     return () => clearTimeout(timer);
   }, [useCustomVoice]); // Depend on useCustomVoice so it plays after voice check completes

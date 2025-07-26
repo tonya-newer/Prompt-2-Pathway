@@ -193,7 +193,7 @@ export const assessmentTemplates: AssessmentTemplate[] = [
     ]
   },
   {
-    id: 5,
+    id: 1753400777288,
     title: "Are You AI-Ready? Let's Find Out",
     description: "Discover your readiness for the AI revolution and learn how to leverage AI tools in your daily routine",
     audience: "individual",
