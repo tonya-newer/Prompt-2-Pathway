@@ -33,12 +33,21 @@ export const VoicePlayer = ({
   useEffect(() => {
     // Check if custom voice file exists
     const checkCustomVoice = async () => {
+      console.log('[VoicePlayer] Checking custom voice - isResultsPage:', isResultsPage, 'questionId:', questionId);
+      
       if (isResultsPage) {
+        console.log('[VoicePlayer] Checking congratulations voice...');
         const exists = await customVoiceService.checkVoiceExists('congratulations');
+        console.log('[VoicePlayer] Congratulations voice exists:', exists);
         setUseCustomVoice(exists);
       } else if (questionId) {
+        console.log('[VoicePlayer] Checking question voice for question:', questionId);
         const exists = await customVoiceService.checkVoiceExists('question', questionId);
+        console.log('[VoicePlayer] Question voice exists:', exists);
         setUseCustomVoice(exists);
+      } else {
+        console.log('[VoicePlayer] No questionId or isResultsPage - using native speech');
+        setUseCustomVoice(false);
       }
     };
 
