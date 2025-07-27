@@ -5,6 +5,7 @@ import { Play, Pause, Mic } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { customVoiceService } from '@/services/customVoiceService';
 import { nativeSpeech } from '@/services/nativeSpeech';
+import { InteractionGate } from './InteractionGate';
 
 interface VoicePlayerProps {
   text: string;
@@ -27,6 +28,7 @@ export const VoicePlayer = ({
   const [isLoading, setIsLoading] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [useCustomVoice, setUseCustomVoice] = useState(false);
+  const [showInteractionGate, setShowInteractionGate] = useState(!isResultsPage);
 
   useEffect(() => {
     // Check if custom voice file exists
@@ -95,18 +97,18 @@ export const VoicePlayer = ({
     setIsPlaying(false);
   };
 
-  // Auto-play functionality
-  useEffect(() => {
+  const handleInteractionGateStart = () => {
+    setShowInteractionGate(false);
+    setHasInteracted(true);
+    
+    // Auto-play after user interaction if autoPlay is enabled
     if (autoPlay && text && text.trim().length > 0) {
-      const timer = setTimeout(() => {
-        console.log('Auto-playing voice...');
-        setHasInteracted(true); // Enable interaction for audio playback
+      setTimeout(() => {
+        console.log('Auto-playing voice after user interaction...');
         playVoice();
-      }, 2000);
-      
-      return () => clearTimeout(timer);
+      }, 500);
     }
-  }, [autoPlay, text, useCustomVoice]);
+  };
 
   // Cleanup
   useEffect(() => {
@@ -185,63 +187,73 @@ export const VoicePlayer = ({
     );
   }
 
-  // Standard assessment layout - no mute button
+  // Standard assessment layout with interaction gate
   return (
-    <Card className={`p-6 bg-gradient-to-r from-blue-50 via-white to-purple-50 border-2 border-blue-200 shadow-lg ${className}`}>
-      <div className="flex flex-col space-y-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
-          <div className="flex items-center space-x-3 w-full sm:w-auto">
-            <Button
-              variant="default"
-              size="lg"
-              onClick={handlePlay}
-              disabled={isLoading}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 flex-1 sm:flex-none text-base font-semibold shadow-lg"
-            >
-              {isLoading ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                  <span>Loading...</span>
-                </>
-              ) : isPlaying ? (
-                <>
-                  <Pause className="h-5 w-5 mr-3" />
-                  <span>Pause</span>
-                </>
-              ) : (
-                <>
-                  <Play className="h-5 w-5 mr-3" />
-                  <span>Play</span>
-                </>
-              )}
-            </Button>
-          </div>
-          
-          {isPlaying && (
-            <div className="flex items-center space-x-2">
-              <div className="text-sm text-blue-700 font-medium">🎵 Playing voice message...</div>
-              <div className="flex space-x-1">
-                {[...Array(5)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-1 bg-gradient-to-t from-blue-500 to-purple-500 animate-pulse rounded-full"
-                    style={{
-                      height: `${Math.random() * 12 + 8}px`,
-                      animationDelay: `${i * 0.1}s`
-                    }}
-                  ></div>
-                ))}
-              </div>
+    <>
+      {showInteractionGate && questionId && (
+        <InteractionGate
+          onInteraction={handleInteractionGateStart}
+          title={`🎧 Question ${questionId} Voice Guide`}
+          description="Listen to your question with voice guidance. Tap to continue."
+        />
+      )}
+      
+      <Card className={`p-4 sm:p-6 bg-gradient-to-r from-blue-50 via-white to-purple-50 border-2 border-blue-200 shadow-lg ${className}`}>
+        <div className="flex flex-col space-y-3 sm:space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+            <div className="flex items-center space-x-3 w-full sm:w-auto">
+              <Button
+                variant="default"
+                size="lg"
+                onClick={handlePlay}
+                disabled={isLoading}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 sm:px-6 py-3 flex-1 sm:flex-none text-sm sm:text-base font-semibold shadow-lg"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white mr-2 sm:mr-3"></div>
+                    <span>Loading...</span>
+                  </>
+                ) : isPlaying ? (
+                  <>
+                    <Pause className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
+                    <span>Pause</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
+                    <span>Play</span>
+                  </>
+                )}
+              </Button>
             </div>
-          )}
-        </div>
+            
+            {isPlaying && (
+              <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                <div className="text-xs sm:text-sm text-blue-700 font-medium">🎵 Playing voice message...</div>
+                <div className="flex space-x-1">
+                  {[...Array(5)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-1 bg-gradient-to-t from-blue-500 to-purple-500 animate-pulse rounded-full"
+                      style={{
+                        height: `${Math.random() * 12 + 8}px`,
+                        animationDelay: `${i * 0.1}s`
+                      }}
+                    ></div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
-        <div className="text-center">
-          <p className="text-xs text-gray-500">
-            🎧 Click play to activate voice guidance
-          </p>
+          <div className="text-center">
+            <p className="text-xs text-gray-500">
+              🎧 Click play to activate voice guidance
+            </p>
+          </div>
         </div>
-      </div>
-    </Card>
+      </Card>
+    </>
   );
 };

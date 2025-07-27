@@ -22,15 +22,15 @@ export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePage
                 <Sparkles className="h-12 w-12 text-white" />
               </div>
             </div>
-            <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-6 px-2">
               Welcome to Your VoiceCard
             </h1>
-            <div className="text-3xl font-bold text-gray-800 mb-4">
-              <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-4 px-2">
+              <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent break-words">
                 {assessmentTitle}
               </span>
             </div>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed px-4">
               Discover powerful insights about yourself through this personalized assessment experience. 
               Your journey to clarity begins here.
             </p>
@@ -42,45 +42,45 @@ export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePage
           </div>
 
           {/* Features Section */}
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            <Card className="p-6 bg-gradient-to-br from-white to-purple-50 border-2 border-purple-200 shadow-lg">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12">
+            <Card className="p-4 sm:p-6 bg-gradient-to-br from-white to-purple-50 border-2 border-purple-200 shadow-lg">
               <div className="text-center">
-                <div className="bg-purple-100 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <Target className="h-8 w-8 text-purple-600" />
+                <div className="bg-purple-100 p-3 sm:p-4 rounded-full w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <Target className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-800 mb-2">Personalized Insights</h3>
-                <p className="text-gray-600">Get tailored results based on your unique responses</p>
+                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2">Personalized Insights</h3>
+                <p className="text-sm sm:text-base text-gray-600">Get tailored results based on your unique responses</p>
               </div>
             </Card>
             
-            <Card className="p-6 bg-gradient-to-br from-white to-blue-50 border-2 border-blue-200 shadow-lg">
+            <Card className="p-4 sm:p-6 bg-gradient-to-br from-white to-blue-50 border-2 border-blue-200 shadow-lg">
               <div className="text-center">
-                <div className="bg-blue-100 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <Heart className="h-8 w-8 text-blue-600" />
+                <div className="bg-blue-100 p-3 sm:p-4 rounded-full w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-800 mb-2">Voice-Guided Experience</h3>
-                <p className="text-gray-600">Enjoy a personal touch with voice narration throughout</p>
+                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2">Voice-Guided Experience</h3>
+                <p className="text-sm sm:text-base text-gray-600">Enjoy a personal touch with voice narration throughout</p>
               </div>
             </Card>
             
-            <Card className="p-6 bg-gradient-to-br from-white to-indigo-50 border-2 border-indigo-200 shadow-lg">
+            <Card className="p-4 sm:p-6 bg-gradient-to-br from-white to-indigo-50 border-2 border-indigo-200 shadow-lg">
               <div className="text-center">
-                <div className="bg-indigo-100 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <Sparkles className="h-8 w-8 text-indigo-600" />
+                <div className="bg-indigo-100 p-3 sm:p-4 rounded-full w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-800 mb-2">Actionable Results</h3>
-                <p className="text-gray-600">Receive clear next steps to accelerate your progress</p>
+                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2">Actionable Results</h3>
+                <p className="text-sm sm:text-base text-gray-600">Receive clear next steps to accelerate your progress</p>
               </div>
             </Card>
           </div>
 
           {/* Lead Capture Form */}
-          <Card className="p-8 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 border-2 border-purple-200 shadow-xl rounded-2xl">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">
+          <Card className="p-6 sm:p-8 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 border-2 border-purple-200 shadow-xl rounded-2xl">
+            <div className="text-center mb-6 sm:mb-8">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">
                 Let's Get Started! 🚀
               </h2>
-              <p className="text-lg text-gray-600">
+              <p className="text-base sm:text-lg text-gray-600 px-2">
                 Please share a few details so we can personalize your experience
               </p>
             </div>
