@@ -37,8 +37,10 @@ export class CustomVoiceService {
   async playVoice(type: 'welcome' | 'question' | 'congratulations', questionId?: number): Promise<void> {
     const voiceUrl = this.getVoiceUrl(type, questionId);
     
+    console.log(`[CustomVoice] Attempting to play ${type} voice: ${voiceUrl} (questionId: ${questionId})`);
+    
     if (!voiceUrl) {
-      console.warn(`No voice file found for type: ${type}${questionId ? `, question: ${questionId}` : ''}`);
+      console.warn(`[CustomVoice] No voice file found for type: ${type}${questionId ? `, question: ${questionId}` : ''}`);
       return;
     }
 
@@ -51,20 +53,28 @@ export class CustomVoiceService {
       
       return new Promise((resolve, reject) => {
         audio.addEventListener('canplaythrough', () => {
+          console.log(`[CustomVoice] Audio ready to play: ${voiceUrl}`);
           audio.play().then(() => {
-            audio.addEventListener('ended', () => resolve());
-          }).catch(reject);
+            console.log(`[CustomVoice] Audio playback started: ${voiceUrl}`);
+            audio.addEventListener('ended', () => {
+              console.log(`[CustomVoice] Audio playback ended: ${voiceUrl}`);
+              resolve();
+            });
+          }).catch((playError) => {
+            console.error(`[CustomVoice] Audio play failed: ${voiceUrl}`, playError);
+            reject(playError);
+          });
         });
         
         audio.addEventListener('error', (e) => {
-          console.error('Audio playback error:', e);
+          console.error(`[CustomVoice] Audio error for ${voiceUrl}:`, e);
           reject(new Error(`Failed to play voice file: ${voiceUrl}`));
         });
         
         audio.load();
       });
     } catch (error) {
-      console.error('Error playing custom voice:', error);
+      console.error(`[CustomVoice] Error playing custom voice ${voiceUrl}:`, error);
       throw error;
     }
   }
@@ -73,19 +83,19 @@ export class CustomVoiceService {
   async checkVoiceExists(type: 'welcome' | 'question' | 'congratulations', questionId?: number): Promise<boolean> {
     const voiceUrl = this.getVoiceUrl(type, questionId);
     
-    console.log(`Checking voice file: ${voiceUrl}`);
+    console.log(`[CustomVoice] Checking ${type} voice file: ${voiceUrl} (questionId: ${questionId})`);
     
     if (!voiceUrl) {
-      console.log('No voice URL generated');
+      console.log('[CustomVoice] No voice URL generated');
       return false;
     }
 
     try {
       const response = await fetch(voiceUrl, { method: 'HEAD' });
-      console.log(`Voice file check result for ${voiceUrl}: ${response.ok} (status: ${response.status})`);
+      console.log(`[CustomVoice] Check result for ${voiceUrl}: ${response.ok} (status: ${response.status})`);
       return response.ok;
     } catch (error) {
-      console.error('Error checking voice file:', voiceUrl, error);
+      console.error('[CustomVoice] Error checking voice file:', voiceUrl, error);
       return false;
     }
   }
