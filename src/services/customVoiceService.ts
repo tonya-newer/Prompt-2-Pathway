@@ -51,6 +51,19 @@ export class CustomVoiceService {
       const audio = new Audio(voiceUrl);
       audio.preload = 'auto';
       
+      // Add more detailed error logging
+      audio.addEventListener('loadstart', () => {
+        console.log(`[CustomVoice] Started loading: ${voiceUrl}`);
+      });
+      
+      audio.addEventListener('loadedmetadata', () => {
+        console.log(`[CustomVoice] Metadata loaded for: ${voiceUrl} - Duration: ${audio.duration}s`);
+      });
+      
+      audio.addEventListener('canplay', () => {
+        console.log(`[CustomVoice] Can start playing: ${voiceUrl}`);
+      });
+      
       return new Promise((resolve, reject) => {
         audio.addEventListener('canplaythrough', () => {
           console.log(`[CustomVoice] Audio ready to play: ${voiceUrl}`);
@@ -68,10 +81,25 @@ export class CustomVoiceService {
         
         audio.addEventListener('error', (e) => {
           console.error(`[CustomVoice] Audio error for ${voiceUrl}:`, e);
+          console.error(`[CustomVoice] Audio error details:`, {
+            error: audio.error,
+            networkState: audio.networkState,
+            readyState: audio.readyState,
+            src: audio.src
+          });
           reject(new Error(`Failed to play voice file: ${voiceUrl}`));
         });
         
+        // Try to load the audio
         audio.load();
+        
+        // Add a timeout to catch hanging loads
+        setTimeout(() => {
+          if (audio.readyState === 0) {
+            console.error(`[CustomVoice] Audio load timeout for: ${voiceUrl}`);
+            reject(new Error(`Audio load timeout: ${voiceUrl}`));
+          }
+        }, 10000);
       });
     } catch (error) {
       console.error(`[CustomVoice] Error playing custom voice ${voiceUrl}:`, error);
