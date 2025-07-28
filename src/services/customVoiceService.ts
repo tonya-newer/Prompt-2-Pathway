@@ -59,9 +59,14 @@ export class CustomVoiceService {
       // Set the source after creating the audio element
       audio.src = voiceUrl;
       
-      // Add more detailed error logging
+      // Add more detailed error logging including file info
       audio.addEventListener('loadstart', () => {
         console.log(`[CustomVoice] Started loading: ${voiceUrl}`);
+        console.log(`[CustomVoice] Audio element details:`, {
+          preload: audio.preload,
+          type: audio.getAttribute('type'),
+          crossOrigin: audio.crossOrigin
+        });
       });
       
       audio.addEventListener('loadedmetadata', () => {

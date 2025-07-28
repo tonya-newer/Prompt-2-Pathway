@@ -31,7 +31,8 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
   }, []);
 
   const playWelcomeVoice = async () => {
-    console.log('Starting welcome voice playback...');
+    console.log('[WelcomeVoicePlayer] Starting welcome voice playback...');
+    console.log('[WelcomeVoicePlayer] useCustomVoice:', useCustomVoice);
     setIsLoading(true);
 
     try {
@@ -39,9 +40,22 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
       
       if (useCustomVoice) {
         // Use custom ElevenLabs voice
-        await customVoiceService.playVoice('welcome');
+        console.log('[WelcomeVoicePlayer] Playing custom welcome voice...');
+        const voiceExists = await customVoiceService.checkVoiceExists('welcome');
+        if (!voiceExists) {
+          console.warn('[WelcomeVoicePlayer] Custom welcome voice file missing, falling back to native speech');
+          await nativeSpeech.speak({
+            text: welcomeText,
+            rate: 0.85,
+            pitch: 1.0,
+            volume: 1.0
+          });
+        } else {
+          await customVoiceService.playVoice('welcome');
+        }
       } else {
         // Fallback to native speech
+        console.log('[WelcomeVoicePlayer] Using native speech (no custom voice available)');
         await nativeSpeech.speak({
           text: welcomeText,
           rate: 0.85,
@@ -52,7 +66,18 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
       
       setIsPlaying(false);
     } catch (error) {
-      console.error('Error playing welcome voice:', error);
+      console.error('[WelcomeVoicePlayer] Error playing welcome voice:', error);
+      console.log('[WelcomeVoicePlayer] Attempting fallback to native speech due to error...');
+      try {
+        await nativeSpeech.speak({
+          text: welcomeText,
+          rate: 0.85,
+          pitch: 1.0,
+          volume: 1.0
+        });
+      } catch (fallbackError) {
+        console.error('[WelcomeVoicePlayer] Fallback to native speech also failed:', fallbackError);
+      }
       setIsPlaying(false);
     } finally {
       setIsLoading(false);
