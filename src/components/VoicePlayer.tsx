@@ -54,8 +54,19 @@ export const VoicePlayer = ({
     checkCustomVoice();
   }, [isResultsPage, questionId]);
 
+  const playDefaultVoice = async () => {
+    console.log('[VoicePlayer] Playing fallback native speech...');
+    await nativeSpeech.speak({
+      text: text,
+      rate: 0.85,
+      pitch: 1.0,
+      volume: 1.0
+    });
+  };
+
   const playVoice = async () => {
-    console.log('Starting voice playback...');
+    console.log('[VoicePlayer] Starting voice playback...');
+    console.log('[VoicePlayer] useCustomVoice:', useCustomVoice, 'isResultsPage:', isResultsPage, 'questionId:', questionId);
     setIsLoading(true);
 
     try {
@@ -64,23 +75,42 @@ export const VoicePlayer = ({
       if (useCustomVoice) {
         // Use custom ElevenLabs voice
         if (isResultsPage) {
-          await customVoiceService.playVoice('congratulations');
+          console.log('[VoicePlayer] Playing custom congratulations voice...');
+          const voiceExists = await customVoiceService.checkVoiceExists('congratulations');
+          if (!voiceExists) {
+            console.warn('[VoicePlayer] Custom congratulations voice file missing, falling back to native speech');
+            await playDefaultVoice();
+          } else {
+            await customVoiceService.playVoice('congratulations');
+          }
         } else if (questionId) {
-          await customVoiceService.playVoice('question', questionId);
+          console.log('[VoicePlayer] Playing custom question voice for question:', questionId);
+          const voiceExists = await customVoiceService.checkVoiceExists('question', questionId);
+          if (!voiceExists) {
+            console.warn(`[VoicePlayer] Custom voice file missing for: type=question, questionId=${questionId}, falling back to native speech`);
+            await playDefaultVoice();
+          } else {
+            await customVoiceService.playVoice('question', questionId);
+          }
+        } else {
+          console.warn('[VoicePlayer] Missing questionId for question voice, falling back to native speech');
+          await playDefaultVoice();
         }
       } else {
-        // Fallback to native speech
-        await nativeSpeech.speak({
-          text: text,
-          rate: 0.85,
-          pitch: 1.0,
-          volume: 1.0
-        });
+        // Direct fallback to native speech
+        console.log('[VoicePlayer] Using native speech (no custom voice available)');
+        await playDefaultVoice();
       }
       
       setIsPlaying(false);
     } catch (error) {
-      console.error('Error playing voice:', error);
+      console.error('[VoicePlayer] Error playing voice:', error);
+      console.log('[VoicePlayer] Attempting fallback to native speech due to error...');
+      try {
+        await playDefaultVoice();
+      } catch (fallbackError) {
+        console.error('[VoicePlayer] Fallback to native speech also failed:', fallbackError);
+      }
       setIsPlaying(false);
     } finally {
       setIsLoading(false);
