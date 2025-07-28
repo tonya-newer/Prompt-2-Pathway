@@ -50,9 +50,11 @@ export class CustomVoiceService {
       
       const audio = new Audio();
       
-      // Set CORS and cache settings for better compatibility
-      audio.crossOrigin = 'anonymous';
-      audio.preload = 'auto';
+      // Remove CORS for local files - this was causing the format errors
+      audio.preload = 'metadata';
+      
+      // Add proper MIME type handling
+      audio.setAttribute('type', 'audio/mpeg');
       
       // Set the source after creating the audio element
       audio.src = voiceUrl;
