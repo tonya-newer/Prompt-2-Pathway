@@ -82,12 +82,35 @@ export class CustomVoiceService {
         audio.addEventListener('error', (e) => {
           console.error(`[CustomVoice] Audio error for ${voiceUrl}:`, e);
           console.error(`[CustomVoice] Audio error details:`, {
-            error: audio.error,
+            error: audio.error?.message || 'Unknown error',
+            errorCode: audio.error?.code || 'No error code',
             networkState: audio.networkState,
             readyState: audio.readyState,
-            src: audio.src
+            src: audio.src,
+            currentSrc: audio.currentSrc
           });
-          reject(new Error(`Failed to play voice file: ${voiceUrl}`));
+          
+          // Try to provide more specific error information
+          if (audio.error) {
+            switch (audio.error.code) {
+              case 1:
+                console.error('[CustomVoice] MEDIA_ERR_ABORTED - The user aborted the loading');
+                break;
+              case 2:
+                console.error('[CustomVoice] MEDIA_ERR_NETWORK - A network error occurred');
+                break;
+              case 3:
+                console.error('[CustomVoice] MEDIA_ERR_DECODE - Error occurred when decoding');
+                break;
+              case 4:
+                console.error('[CustomVoice] MEDIA_ERR_SRC_NOT_SUPPORTED - Audio format not supported');
+                break;
+              default:
+                console.error('[CustomVoice] Unknown media error');
+            }
+          }
+          
+          reject(new Error(`Failed to play voice file: ${voiceUrl} - Error code: ${audio.error?.code}`));
         });
         
         // Try to load the audio
