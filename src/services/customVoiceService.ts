@@ -48,8 +48,14 @@ export class CustomVoiceService {
       // Stop any currently playing audio first
       this.stopVoice();
       
-      const audio = new Audio(voiceUrl);
+      const audio = new Audio();
+      
+      // Set CORS and cache settings for better compatibility
+      audio.crossOrigin = 'anonymous';
       audio.preload = 'auto';
+      
+      // Set the source after creating the audio element
+      audio.src = voiceUrl;
       
       // Add more detailed error logging
       audio.addEventListener('loadstart', () => {
