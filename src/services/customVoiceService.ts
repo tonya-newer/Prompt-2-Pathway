@@ -33,114 +33,154 @@ export class CustomVoiceService {
     }
   }
 
-  // Play custom voice file
+  // Play custom voice file with multi-format support
   async playVoice(type: 'welcome' | 'question' | 'congratulations', questionId?: number): Promise<void> {
-    const voiceUrl = this.getVoiceUrl(type, questionId);
+    const baseUrl = this.getVoiceUrl(type, questionId);
     
-    console.log(`[CustomVoice] Attempting to play ${type} voice: ${voiceUrl} (questionId: ${questionId})`);
+    console.log(`[CustomVoice] Attempting to play ${type} voice (questionId: ${questionId})`);
     
-    if (!voiceUrl) {
+    if (!baseUrl) {
       console.warn(`[CustomVoice] No voice file found for type: ${type}${questionId ? `, question: ${questionId}` : ''}`);
       return;
     }
 
+    // Try multiple formats: WAV first (most compatible), then MP3
+    const formats = [
+      { url: baseUrl.replace('.mp3', '.wav'), type: 'audio/wav' },
+      { url: baseUrl, type: 'audio/mpeg' }
+    ];
+
+    for (const format of formats) {
+      try {
+        console.log(`[CustomVoice] Trying format: ${format.url}`);
+        
+        // First check if file exists
+        const exists = await this.checkFileExists(format.url);
+        if (!exists) {
+          console.log(`[CustomVoice] File not found: ${format.url}`);
+          continue;
+        }
+
+        // Try to play this format
+        await this.playAudioFile(format.url, format.type);
+        return; // Success, exit
+      } catch (error) {
+        console.warn(`[CustomVoice] Failed to play ${format.url}:`, error);
+        continue; // Try next format
+      }
+    }
+
+    throw new Error(`[CustomVoice] All audio formats failed for ${baseUrl}`);
+  }
+
+  // Check if file exists with better error handling
+  private async checkFileExists(url: string): Promise<boolean> {
     try {
-      // Stop any currently playing audio first
-      this.stopVoice();
-      
+      const response = await fetch(url, { method: 'HEAD' });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  // Play a specific audio file with enhanced error handling
+  private async playAudioFile(url: string, mimeType: string): Promise<void> {
+    return new Promise((resolve, reject) => {
       const audio = new Audio();
       
-      // Remove CORS for local files - this was causing the format errors
-      audio.preload = 'metadata';
+      // Configure audio element for maximum compatibility
+      audio.preload = 'auto';
+      audio.crossOrigin = null; // Remove CORS for local files
       
-      // Add proper MIME type handling
-      audio.setAttribute('type', 'audio/mpeg');
+      // Set source and MIME type
+      audio.src = url;
+      if (mimeType) {
+        audio.setAttribute('type', mimeType);
+      }
       
-      // Set the source after creating the audio element
-      audio.src = voiceUrl;
-      
-      // Add more detailed error logging including file info
+      // Add detailed logging
       audio.addEventListener('loadstart', () => {
-        console.log(`[CustomVoice] Started loading: ${voiceUrl}`);
-        console.log(`[CustomVoice] Audio element details:`, {
+        console.log(`[CustomVoice] Started loading: ${url}`);
+        console.log(`[CustomVoice] Audio details:`, {
           preload: audio.preload,
           type: audio.getAttribute('type'),
-          crossOrigin: audio.crossOrigin
+          mimeType
         });
       });
       
       audio.addEventListener('loadedmetadata', () => {
-        console.log(`[CustomVoice] Metadata loaded for: ${voiceUrl} - Duration: ${audio.duration}s`);
+        console.log(`[CustomVoice] Metadata loaded: ${url} - Duration: ${audio.duration}s`);
       });
       
-      audio.addEventListener('canplay', () => {
-        console.log(`[CustomVoice] Can start playing: ${voiceUrl}`);
+      audio.addEventListener('canplaythrough', () => {
+        console.log(`[CustomVoice] Ready to play: ${url}`);
+        audio.play().then(() => {
+          console.log(`[CustomVoice] Playback started: ${url}`);
+          
+          audio.addEventListener('ended', () => {
+            console.log(`[CustomVoice] Playback ended: ${url}`);
+            resolve();
+          });
+        }).catch((playError) => {
+          console.error(`[CustomVoice] Play failed: ${url}`, playError);
+          reject(playError);
+        });
       });
       
-      return new Promise((resolve, reject) => {
-        audio.addEventListener('canplaythrough', () => {
-          console.log(`[CustomVoice] Audio ready to play: ${voiceUrl}`);
-          audio.play().then(() => {
-            console.log(`[CustomVoice] Audio playback started: ${voiceUrl}`);
-            audio.addEventListener('ended', () => {
-              console.log(`[CustomVoice] Audio playback ended: ${voiceUrl}`);
-              resolve();
-            });
-          }).catch((playError) => {
-            console.error(`[CustomVoice] Audio play failed: ${voiceUrl}`, playError);
-            reject(playError);
-          });
-        });
+      audio.addEventListener('error', (e) => {
+        console.error(`[CustomVoice] Audio error for ${url}:`, e);
         
-        audio.addEventListener('error', (e) => {
-          console.error(`[CustomVoice] Audio error for ${voiceUrl}:`, e);
-          console.error(`[CustomVoice] Audio error details:`, {
-            error: audio.error?.message || 'Unknown error',
-            errorCode: audio.error?.code || 'No error code',
-            networkState: audio.networkState,
-            readyState: audio.readyState,
-            src: audio.src,
-            currentSrc: audio.currentSrc
-          });
-          
-          // Try to provide more specific error information
-          if (audio.error) {
-            switch (audio.error.code) {
-              case 1:
-                console.error('[CustomVoice] MEDIA_ERR_ABORTED - The user aborted the loading');
-                break;
-              case 2:
-                console.error('[CustomVoice] MEDIA_ERR_NETWORK - A network error occurred');
-                break;
-              case 3:
-                console.error('[CustomVoice] MEDIA_ERR_DECODE - Error occurred when decoding');
-                break;
-              case 4:
-                console.error('[CustomVoice] MEDIA_ERR_SRC_NOT_SUPPORTED - Audio format not supported');
-                break;
-              default:
-                console.error('[CustomVoice] Unknown media error');
-            }
+        const errorDetails = {
+          error: audio.error?.message || 'Unknown error',
+          errorCode: audio.error?.code || 'No error code',
+          networkState: audio.networkState,
+          readyState: audio.readyState,
+          src: audio.src,
+          currentSrc: audio.currentSrc,
+          mimeType
+        };
+        
+        console.error(`[CustomVoice] Error details:`, errorDetails);
+        
+        // Provide specific error information
+        if (audio.error) {
+          switch (audio.error.code) {
+            case 1:
+              console.error('[CustomVoice] MEDIA_ERR_ABORTED - Loading aborted');
+              break;
+            case 2:
+              console.error('[CustomVoice] MEDIA_ERR_NETWORK - Network error');
+              break;
+            case 3:
+              console.error('[CustomVoice] MEDIA_ERR_DECODE - Decoding error');
+              break;
+            case 4:
+              console.error('[CustomVoice] MEDIA_ERR_SRC_NOT_SUPPORTED - Format not supported');
+              break;
+            default:
+              console.error('[CustomVoice] Unknown media error');
           }
-          
-          reject(new Error(`Failed to play voice file: ${voiceUrl} - Error code: ${audio.error?.code}`));
-        });
+        }
         
-        // Try to load the audio
-        audio.load();
-        
-        // Add a timeout to catch hanging loads
-        setTimeout(() => {
-          if (audio.readyState === 0) {
-            console.error(`[CustomVoice] Audio load timeout for: ${voiceUrl}`);
-            reject(new Error(`Audio load timeout: ${voiceUrl}`));
-          }
-        }, 10000);
+        reject(new Error(`Audio playback failed: ${url} (Error code: ${audio.error?.code})`));
       });
-    } catch (error) {
-      console.error(`[CustomVoice] Error playing custom voice ${voiceUrl}:`, error);
-      throw error;
-    }
+      
+      // Set a timeout for loading
+      const loadTimeout = setTimeout(() => {
+        if (audio.readyState === 0) {
+          console.error(`[CustomVoice] Load timeout: ${url}`);
+          reject(new Error(`Audio load timeout: ${url}`));
+        }
+      }, 10000);
+      
+      // Clear timeout when loading starts progressing
+      audio.addEventListener('loadstart', () => {
+        clearTimeout(loadTimeout);
+      });
+      
+      // Start loading
+      audio.load();
+    });
   }
 
   // Check if a voice file exists
