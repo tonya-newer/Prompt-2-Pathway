@@ -219,7 +219,7 @@ export const QuestionRenderer = ({
               </div>
               <div className="flex-1">
                 <h3 className="text-sm font-bold text-blue-700 mb-2 uppercase tracking-wide">Voice Guide</h3>
-                <p className="text-blue-900 text-xl leading-relaxed font-medium">
+                <p className="text-blue-900 text-base sm:text-lg md:text-xl leading-relaxed font-medium break-words">
                   {question.voiceScript}
                 </p>
               </div>

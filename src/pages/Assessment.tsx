@@ -30,16 +30,32 @@ const Assessment = () => {
 
   useEffect(() => {
     if (id) {
-      // Handle both string and number IDs
+      // Handle both string and number IDs with retry logic
       const assessmentId = isNaN(Number(id)) ? id : Number(id);
-      const template = assessmentStorageService.getAssessmentById(assessmentId);
-      if (template) {
-        setAssessment(template);
-        console.log('Loaded assessment:', template.title, 'with', template.questions.length, 'questions');
-      } else {
-        console.error('Assessment not found for ID:', assessmentId);
-      }
-      setLoading(false);
+      
+      const loadAssessment = () => {
+        const template = assessmentStorageService.getAssessmentById(assessmentId);
+        if (template) {
+          setAssessment(template);
+          console.log('Loaded assessment:', template.title, 'with', template.questions.length, 'questions');
+          setLoading(false);
+        } else {
+          console.warn('Assessment not found for ID:', assessmentId, 'retrying in 1s...');
+          // Retry after 1 second in case of race condition
+          setTimeout(() => {
+            const retryTemplate = assessmentStorageService.getAssessmentById(assessmentId);
+            if (retryTemplate) {
+              setAssessment(retryTemplate);
+              console.log('Loaded assessment on retry:', retryTemplate.title);
+            } else {
+              console.error('Assessment not found after retry for ID:', assessmentId);
+            }
+            setLoading(false);
+          }, 1000);
+        }
+      };
+      
+      loadAssessment();
     } else {
       setLoading(false);
     }
@@ -67,6 +83,15 @@ const Assessment = () => {
     const newAnswers = [...answers];
     newAnswers[currentQuestionIndex] = answer;
     setAnswers(newAnswers);
+    
+    // Auto-advance to next question after 1.5 seconds
+    setTimeout(() => {
+      if (currentQuestionIndex < (assessment?.questions.length || 0) - 1) {
+        setCurrentQuestionIndex(currentQuestionIndex + 1);
+      } else {
+        calculateResults();
+      }
+    }, 1500);
   };
 
   const handleNextQuestion = () => {

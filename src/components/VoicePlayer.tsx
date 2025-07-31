@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, Mic } from 'lucide-react';
+import { Play, Pause, Mic, VolumeX, Volume2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { customVoiceService } from '@/services/customVoiceService';
 import { nativeSpeech } from '@/services/nativeSpeech';
@@ -28,7 +28,8 @@ export const VoicePlayer = ({
   const [isLoading, setIsLoading] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [useCustomVoice, setUseCustomVoice] = useState(false);
-  const [showInteractionGate, setShowInteractionGate] = useState(!isResultsPage);
+  const [showInteractionGate, setShowInteractionGate] = useState(!isResultsPage && !autoPlay);
+  const [isMuted, setIsMuted] = useState(false);
 
   useEffect(() => {
     // Check if custom voice file exists
@@ -45,6 +46,14 @@ export const VoicePlayer = ({
         const exists = await customVoiceService.checkVoiceExists('question', questionId);
         console.log('[VoicePlayer] Question voice exists:', exists);
         setUseCustomVoice(exists);
+        
+        // Auto-play if enabled and not muted
+        if (autoPlay && !isMuted && text && text.trim().length > 0) {
+          setTimeout(() => {
+            console.log('[VoicePlayer] Auto-playing voice...');
+            playVoice();
+          }, 1000);
+        }
       } else {
         console.log('[VoicePlayer] No questionId or isResultsPage - using native speech');
         setUseCustomVoice(false);
@@ -52,7 +61,7 @@ export const VoicePlayer = ({
     };
 
     checkCustomVoice();
-  }, [isResultsPage, questionId]);
+  }, [isResultsPage, questionId, autoPlay, isMuted]);
 
   const playDefaultVoice = async () => {
     console.log('[VoicePlayer] Playing fallback native speech...');
@@ -65,6 +74,11 @@ export const VoicePlayer = ({
   };
 
   const playVoice = async () => {
+    if (isMuted) {
+      console.log('[VoicePlayer] Playback muted, skipping...');
+      return;
+    }
+    
     console.log('[VoicePlayer] Starting voice playback...');
     console.log('[VoicePlayer] useCustomVoice:', useCustomVoice, 'isResultsPage:', isResultsPage, 'questionId:', questionId);
     setIsLoading(true);
@@ -179,7 +193,7 @@ export const VoicePlayer = ({
             variant="default"
             size="lg"
             onClick={handlePlay}
-            disabled={isLoading}
+            disabled={isLoading || isMuted}
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 font-semibold shadow-lg"
           >
             {isLoading ? (
@@ -197,6 +211,24 @@ export const VoicePlayer = ({
                 <Play className="h-5 w-5 mr-3" />
                 <span>Play</span>
               </>
+            )}
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => {
+              setIsMuted(!isMuted);
+              if (isPlaying) {
+                handleStop();
+              }
+            }}
+            className="border-2 border-purple-300 hover:border-purple-400 px-4 py-3"
+          >
+            {isMuted ? (
+              <VolumeX className="h-5 w-5 text-purple-600" />
+            ) : (
+              <Volume2 className="h-5 w-5 text-purple-600" />
             )}
           </Button>
         </div>
@@ -245,7 +277,7 @@ export const VoicePlayer = ({
                 variant="default"
                 size="lg"
                 onClick={handlePlay}
-                disabled={isLoading}
+                disabled={isLoading || isMuted}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 sm:px-6 py-3 flex-1 sm:flex-none text-sm sm:text-base font-semibold shadow-lg"
               >
                 {isLoading ? (
@@ -263,6 +295,24 @@ export const VoicePlayer = ({
                     <Play className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
                     <span>Play</span>
                   </>
+                )}
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setIsMuted(!isMuted);
+                  if (isPlaying) {
+                    handleStop();
+                  }
+                }}
+                className="border-2 border-blue-300 hover:border-blue-400 px-3 py-3"
+              >
+                {isMuted ? (
+                  <VolumeX className="h-4 w-4 text-blue-600" />
+                ) : (
+                  <Volume2 className="h-4 w-4 text-blue-600" />
                 )}
               </Button>
             </div>
