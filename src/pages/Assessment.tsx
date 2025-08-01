@@ -207,13 +207,6 @@ const Assessment = () => {
           />
         ) : currentQuestionIndex < assessment.questions.length ? (
           <div className="space-y-6 sm:space-y-8">
-            <VoicePlayer
-              text={currentQuestion?.voiceScript || `Question ${currentQuestionIndex + 1}: Let's continue with your assessment.`}
-              autoPlay={true}
-              className="mb-6 sm:mb-8"
-              questionId={currentQuestionIndex + 1}
-            />
-            
             <div className="max-w-5xl mx-auto">
               <div className="bg-gray-200 rounded-full h-2 sm:h-3 mb-4 sm:mb-6 shadow-inner">
                 <div

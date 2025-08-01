@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Question } from '@/types/assessment';
 import { Check } from 'lucide-react';
+import { VoicePlayer } from '@/components/VoicePlayer';
 
 interface QuestionRendererProps {
   question: Question;
@@ -207,19 +208,24 @@ export const QuestionRenderer = ({
           </Badge>
         </div>
         
+        {/* Voice Player positioned near question */}
+        {question.voiceScript && (
+          <div className="mb-8">
+            <VoicePlayer
+              text={question.voiceScript}
+              autoPlay={true}
+              questionId={questionIndex + 1}
+            />
+          </div>
+        )}
+        
         {/* Voice transcript - enhanced visual treatment */}
         {question.voiceScript && (
           <div className="bg-gradient-to-r from-blue-100 via-purple-50 to-blue-100 border-l-8 border-blue-500 p-8 mb-8 rounded-r-2xl shadow-lg">
             <div className="flex items-start space-x-4">
-              <div className="bg-blue-500 p-3 rounded-full flex-shrink-0">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.816L4.318 14H2a1 1 0 01-1-1V7a1 1 0 011-1h2.318l4.065-2.816z" clipRule="evenodd" />
-                  <path fillRule="evenodd" d="M12.146 6.146a.5.5 0 01.708 0L15 8.293l2.146-2.147a.5.5 0 01.708.708L15.707 9l2.147 2.146a.5.5 0 01-.708.708L15 9.707l-2.146 2.147a.5.5 0 01-.708-.708L14.293 9l-2.147-2.146a.5.5 0 010-.708z" clipRule="evenodd" />
-                </svg>
-              </div>
               <div className="flex-1">
                 <h3 className="text-sm font-bold text-blue-700 mb-2 uppercase tracking-wide">Voice Guide</h3>
-                <p className="text-blue-900 text-base sm:text-lg md:text-xl leading-relaxed font-medium break-words">
+                <p className="text-blue-900 text-sm sm:text-base md:text-lg leading-relaxed font-medium break-words">
                   {question.voiceScript}
                 </p>
               </div>

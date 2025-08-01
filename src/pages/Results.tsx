@@ -60,7 +60,10 @@ const Results = () => {
   const handleCelebrationComplete = () => {
     console.log('Celebration completed, showing voice player');
     setShowCelebration(false);
-    setShowVoicePlayer(true);
+    // Add delay before showing voice player and auto-play
+    setTimeout(() => {
+      setShowVoicePlayer(true);
+    }, 500);
   };
 
   const handleScheduleCall = () => {
@@ -108,7 +111,7 @@ const Results = () => {
           {showVoicePlayer && (
             <VoicePlayer
               text={voiceScript}
-              autoPlay={false}
+              autoPlay={true}
               isResultsPage={true}
               className="mb-8 sm:mb-10"
             />
