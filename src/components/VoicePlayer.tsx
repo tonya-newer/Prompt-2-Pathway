@@ -100,8 +100,8 @@ export const VoicePlayer = ({
           console.log('[VoicePlayer] Playing custom congratulations voice...');
           const voiceExists = await customVoiceService.checkVoiceExists('congratulations');
           if (!voiceExists) {
-            console.warn('[VoicePlayer] Custom congratulations voice file missing, falling back to native speech');
-            await playDefaultVoice();
+            console.warn('[VoicePlayer] Custom congratulations voice file missing, no fallback on results page');
+            throw new Error('No custom congratulations voice available');
           } else {
             await customVoiceService.playVoice('congratulations');
           }
@@ -119,19 +119,30 @@ export const VoicePlayer = ({
           throw new Error('No custom voice available');
         }
       } else {
-        // Only play native speech if custom voice is not available and user manually clicked
-        console.log('[VoicePlayer] Using native speech (no custom voice available)');
-        await playDefaultVoice();
+        // For results page, don't play native voice as fallback
+        if (isResultsPage) {
+          console.log('[VoicePlayer] Results page - no custom voice available, skipping playback');
+          throw new Error('No custom voice available for results page');
+        } else {
+          // Only play native speech if custom voice is not available and user manually clicked
+          console.log('[VoicePlayer] Using native speech (no custom voice available)');
+          await playDefaultVoice();
+        }
       }
       
       setIsPlaying(false);
     } catch (error) {
       console.error('[VoicePlayer] Error playing voice:', error);
-      console.log('[VoicePlayer] Attempting fallback to native speech due to error...');
-      try {
-        await playDefaultVoice();
-      } catch (fallbackError) {
-        console.error('[VoicePlayer] Fallback to native speech also failed:', fallbackError);
+      // For results page, don't attempt native voice fallback
+      if (isResultsPage) {
+        console.log('[VoicePlayer] Results page - custom voice failed, no fallback attempted');
+      } else {
+        console.log('[VoicePlayer] Attempting fallback to native speech due to error...');
+        try {
+          await playDefaultVoice();
+        } catch (fallbackError) {
+          console.error('[VoicePlayer] Fallback to native speech also failed:', fallbackError);
+        }
       }
       setIsPlaying(false);
     } finally {
