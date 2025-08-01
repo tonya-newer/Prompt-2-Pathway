@@ -35,9 +35,9 @@ export const VoicePlayer = ({
     // CRITICAL: Stop any native speech immediately to prevent interference
     nativeSpeech.stop();
     
-    // Check if custom voice file exists
-    const checkCustomVoice = async () => {
-      console.log('[VoicePlayer] Checking custom voice - isResultsPage:', isResultsPage, 'questionId:', questionId);
+    // Check if custom voice file exists and handle auto-play
+    const initializeVoice = async () => {
+      console.log('[VoicePlayer] Initializing voice - isResultsPage:', isResultsPage, 'questionId:', questionId);
       
       if (isResultsPage) {
         console.log('[VoicePlayer] Checking congratulations voice...');
@@ -45,12 +45,10 @@ export const VoicePlayer = ({
         console.log('[VoicePlayer] Congratulations voice exists:', exists);
         setUseCustomVoice(exists);
         
-        // Auto-play if enabled and custom voice exists
+        // FIXED: Auto-play immediately with voice availability known
         if (autoPlay && exists && !isMuted && text && text.trim().length > 0) {
-          setTimeout(() => {
-            console.log('[VoicePlayer] Auto-playing congratulations voice...');
-            playVoice();
-          }, 100); // Immediate auto-play for congratulations
+          console.log('[VoicePlayer] Auto-playing congratulations voice...');
+          await playVoiceWithType('congratulations', exists);
         } else {
           console.log('[VoicePlayer] Congratulations auto-play conditions not met:', { autoPlay, exists, isMuted, hasText: text && text.trim().length > 0 });
         }
@@ -67,12 +65,10 @@ export const VoicePlayer = ({
         console.log('[VoicePlayer] Question voice exists:', exists);
         setUseCustomVoice(exists);
         
-        // Only auto-play if custom voice exists (no native fallback for auto-play)
+        // FIXED: Auto-play immediately with voice availability known
         if (autoPlay && exists && !isMuted && text && text.trim().length > 0) {
-          setTimeout(() => {
-            console.log(`[VoicePlayer] Auto-playing custom question voice for Q${questionId}...`);
-            playVoice();
-          }, questionId === 1 ? 50 : 200); // Ultra-fast for Question 1
+          console.log(`[VoicePlayer] Auto-playing custom question voice for Q${questionId}...`);
+          await playVoiceWithType('question', exists, questionId);
         } else {
           console.log(`[VoicePlayer] Question ${questionId} auto-play conditions not met:`, { autoPlay, exists, isMuted, hasText: text && text.trim().length > 0, questionId });
           
@@ -88,7 +84,7 @@ export const VoicePlayer = ({
       }
     };
 
-    checkCustomVoice();
+    initializeVoice();
   }, [isResultsPage, questionId, autoPlay, isMuted, text]);
 
   const playDefaultVoice = async () => {
@@ -101,13 +97,57 @@ export const VoicePlayer = ({
     });
   };
 
+  // FIXED: New function that takes voice availability as parameter to avoid race conditions
+  const playVoiceWithType = async (type: 'question' | 'congratulations', hasCustomVoice: boolean, questionId?: number) => {
+    if (isMuted) {
+      console.log('[VoicePlayer] Playback muted, skipping...');
+      return;
+    }
+    
+    console.log('[VoicePlayer] Starting voice playback with known availability...');
+    console.log('[VoicePlayer] hasCustomVoice:', hasCustomVoice, 'type:', type, 'questionId:', questionId);
+    setIsLoading(true);
+
+    try {
+      setIsPlaying(true);
+      
+      if (hasCustomVoice) {
+        // Use custom voice - we already confirmed it exists
+        if (type === 'congratulations') {
+          console.log('[VoicePlayer] Playing custom congratulations voice...');
+          await customVoiceService.playVoice('congratulations');
+        } else if (type === 'question' && questionId) {
+          console.log('[VoicePlayer] Playing custom question voice for question:', questionId);
+          await customVoiceService.playVoice('question', questionId);
+        }
+      } else {
+        // No custom voice available
+        if (type === 'congratulations') {
+          console.log('[VoicePlayer] Results page - no custom voice available, skipping playback');
+          throw new Error('No custom voice available for results page');
+        } else {
+          // CRITICAL: Never play native speech when autoPlay is true
+          console.log('[VoicePlayer] AutoPlay enabled but no custom voice - skipping playback');
+          throw new Error('No custom voice available for auto-play');
+        }
+      }
+      
+      setIsPlaying(false);
+    } catch (error) {
+      console.error('[VoicePlayer] Error playing voice:', error);
+      setIsPlaying(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const playVoice = async () => {
     if (isMuted) {
       console.log('[VoicePlayer] Playback muted, skipping...');
       return;
     }
     
-    console.log('[VoicePlayer] Starting voice playback...');
+    console.log('[VoicePlayer] Manual play triggered...');
     console.log('[VoicePlayer] useCustomVoice:', useCustomVoice, 'isResultsPage:', isResultsPage, 'questionId:', questionId);
     setIsLoading(true);
 
@@ -115,43 +155,22 @@ export const VoicePlayer = ({
       setIsPlaying(true);
       
       if (useCustomVoice) {
-        // Use custom ElevenLabs voice
+        // Use custom voice
         if (isResultsPage) {
           console.log('[VoicePlayer] Playing custom congratulations voice...');
-          const voiceExists = await customVoiceService.checkVoiceExists('congratulations');
-          if (!voiceExists) {
-            console.warn('[VoicePlayer] Custom congratulations voice file missing, no fallback on results page');
-            throw new Error('No custom congratulations voice available');
-          } else {
-            await customVoiceService.playVoice('congratulations');
-          }
+          await customVoiceService.playVoice('congratulations');
         } else if (questionId) {
           console.log('[VoicePlayer] Playing custom question voice for question:', questionId);
-          const voiceExists = await customVoiceService.checkVoiceExists('question', questionId);
-          if (!voiceExists) {
-            console.warn(`[VoicePlayer] Custom voice file missing for: type=question, questionId=${questionId}, falling back to native speech`);
-            await playDefaultVoice();
-          } else {
-            await customVoiceService.playVoice('question', questionId);
-          }
-        } else {
-          console.warn('[VoicePlayer] Missing questionId for question voice, cannot play custom voice');
-          throw new Error('No custom voice available');
+          await customVoiceService.playVoice('question', questionId);
         }
       } else {
-        // For results page, don't play native voice as fallback
+        // Fallback for manual clicks only
         if (isResultsPage) {
           console.log('[VoicePlayer] Results page - no custom voice available, skipping playback');
           throw new Error('No custom voice available for results page');
         } else {
-          // CRITICAL: Never play native speech when autoPlay is true - only manual clicks
-          if (autoPlay) {
-            console.log('[VoicePlayer] AutoPlay enabled but no custom voice - skipping playback');
-            throw new Error('No custom voice available for auto-play');
-          } else {
-            console.log('[VoicePlayer] Manual play - using native speech fallback');
-            await playDefaultVoice();
-          }
+          console.log('[VoicePlayer] Manual play - using native speech fallback');
+          await playDefaultVoice();
         }
       }
       
@@ -207,16 +226,27 @@ export const VoicePlayer = ({
     }
   };
 
-  // Cleanup
+  // FIXED: Enhanced cleanup for voice overlap prevention
   useEffect(() => {
     return () => {
-      if (useCustomVoice) {
-        customVoiceService.stopVoice();
-      } else {
-        nativeSpeech.stop();
-      }
+      console.log('[VoicePlayer] Component unmounting - stopping all audio');
+      customVoiceService.stopVoice();
+      nativeSpeech.stop();
+      setIsPlaying(false);
     };
   }, []);
+
+  // FIXED: Stop audio when navigating between questions
+  useEffect(() => {
+    return () => {
+      if (isPlaying) {
+        console.log('[VoicePlayer] Question changed - stopping current audio');
+        customVoiceService.stopVoice();
+        nativeSpeech.stop();
+        setIsPlaying(false);
+      }
+    };
+  }, [questionId]);
 
   // For results page, use the enhanced layout
   if (isResultsPage) {
