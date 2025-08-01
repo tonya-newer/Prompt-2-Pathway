@@ -62,7 +62,9 @@ export const VoicePlayer = ({
           setTimeout(() => {
             console.log('[VoicePlayer] Auto-playing custom question voice...');
             playVoice();
-          }, 1000);
+          }, 500); // Reduced delay to match results page timing
+        } else {
+          console.log('[VoicePlayer] Question auto-play conditions not met:', { autoPlay, exists, isMuted, hasText: text && text.trim().length > 0 });
         }
       } else {
         console.log('[VoicePlayer] No questionId or isResultsPage - no auto-play');
