@@ -60,11 +60,11 @@ const Results = () => {
   const handleCelebrationComplete = () => {
     console.log('Celebration completed, showing voice player');
     setShowCelebration(false);
-    // Add delay before showing voice player and ensure auto-play
+    // Immediate voice player display for auto-play
     setTimeout(() => {
       console.log('Setting showVoicePlayer to true for auto-play');
       setShowVoicePlayer(true);
-    }, 500); // Reduced delay for faster response
+    }, 100); // Much faster response
   };
 
   const handleScheduleCall = () => {

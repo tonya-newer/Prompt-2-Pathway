@@ -62,9 +62,15 @@ export const VoicePlayer = ({
           setTimeout(() => {
             console.log(`[VoicePlayer] Auto-playing custom question voice for Q${questionId}...`);
             playVoice();
-          }, 300); // Further reduced delay for Question 1
+          }, questionId === 1 ? 100 : 300); // Extra fast for Question 1 to prevent race conditions
         } else {
           console.log(`[VoicePlayer] Question ${questionId} auto-play conditions not met:`, { autoPlay, exists, isMuted, hasText: text && text.trim().length > 0, questionId });
+          
+          // CRITICAL: Stop any native speech that might be auto-starting
+          if (questionId === 1 && autoPlay) {
+            console.log('[VoicePlayer] Question 1 - stopping any native speech interference');
+            nativeSpeech.stop();
+          }
         }
       } else {
         console.log('[VoicePlayer] No questionId or isResultsPage - no auto-play');
