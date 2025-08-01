@@ -47,7 +47,9 @@ export const VoicePlayer = ({
           setTimeout(() => {
             console.log('[VoicePlayer] Auto-playing congratulations voice...');
             playVoice();
-          }, 1000);
+          }, 500); // Reduced delay for faster response
+        } else {
+          console.log('[VoicePlayer] Auto-play conditions not met:', { autoPlay, exists, isMuted, hasText: text && text.trim().length > 0 });
         }
       } else if (questionId) {
         console.log('[VoicePlayer] Checking question voice for question:', questionId);

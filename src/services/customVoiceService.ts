@@ -19,9 +19,9 @@ export class CustomVoiceService {
           return '/custom-voices/welcome-message.mp3';
         case 'question':
           if (questionId) {
-            return `/custom-voices/question-${questionId}.mp3`;
+            return `/custom-voices/question-${questionId}.wav`;
           }
-          return '/custom-voices/question-1.mp3';
+          return '/custom-voices/question-1.wav';
         case 'congratulations':
           return '/custom-voices/congratulations-message.mp3';
         default:
@@ -44,11 +44,10 @@ export class CustomVoiceService {
       return;
     }
 
-    // Try multiple formats: WAV first (most compatible), then MP3
-    const formats = [
-      { url: baseUrl.replace('.mp3', '.wav'), type: 'audio/wav' },
-      { url: baseUrl, type: 'audio/mpeg' }
-    ];
+    // Try multiple formats: WAV first for questions, MP3 for others
+    const formats = type === 'question' 
+      ? [{ url: baseUrl, type: 'audio/wav' }]  // Questions use WAV only
+      : [{ url: baseUrl, type: 'audio/mpeg' }]; // Welcome/congratulations use MP3
 
     for (const format of formats) {
       try {

@@ -64,7 +64,7 @@ const Results = () => {
     setTimeout(() => {
       console.log('Setting showVoicePlayer to true for auto-play');
       setShowVoicePlayer(true);
-    }, 1000); // Increased delay to ensure proper audio sequence
+    }, 500); // Reduced delay for faster response
   };
 
   const handleScheduleCall = () => {
