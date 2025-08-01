@@ -47,9 +47,9 @@ export const VoicePlayer = ({
           setTimeout(() => {
             console.log('[VoicePlayer] Auto-playing congratulations voice...');
             playVoice();
-          }, 500); // Reduced delay for faster response
+          }, 300); // Further reduced delay for faster response
         } else {
-          console.log('[VoicePlayer] Auto-play conditions not met:', { autoPlay, exists, isMuted, hasText: text && text.trim().length > 0 });
+          console.log('[VoicePlayer] Congratulations auto-play conditions not met:', { autoPlay, exists, isMuted, hasText: text && text.trim().length > 0 });
         }
       } else if (questionId) {
         console.log('[VoicePlayer] Checking question voice for question:', questionId);
@@ -60,11 +60,11 @@ export const VoicePlayer = ({
         // Only auto-play if custom voice exists (no native fallback for auto-play)
         if (autoPlay && exists && !isMuted && text && text.trim().length > 0) {
           setTimeout(() => {
-            console.log('[VoicePlayer] Auto-playing custom question voice...');
+            console.log(`[VoicePlayer] Auto-playing custom question voice for Q${questionId}...`);
             playVoice();
-          }, 500); // Reduced delay to match results page timing
+          }, 300); // Further reduced delay for Question 1
         } else {
-          console.log('[VoicePlayer] Question auto-play conditions not met:', { autoPlay, exists, isMuted, hasText: text && text.trim().length > 0 });
+          console.log(`[VoicePlayer] Question ${questionId} auto-play conditions not met:`, { autoPlay, exists, isMuted, hasText: text && text.trim().length > 0, questionId });
         }
       } else {
         console.log('[VoicePlayer] No questionId or isResultsPage - no auto-play');
