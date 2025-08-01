@@ -212,11 +212,11 @@ export const LeadCaptureForm = ({ onSubmit, audience }: LeadCaptureFormProps) =>
 
         <Button 
           type="submit" 
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3"
+          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 text-sm sm:text-base"
           size="lg"
         >
-          <UserCheck className="h-5 w-5 mr-2" />
-          Begin My VoiceCard Assessment
+          <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+          <span className="break-words">Begin My VoiceCard Assessment</span>
         </Button>
       </form>
     </div>

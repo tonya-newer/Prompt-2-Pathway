@@ -41,27 +41,35 @@ export const VoicePlayer = ({
         const exists = await customVoiceService.checkVoiceExists('congratulations');
         console.log('[VoicePlayer] Congratulations voice exists:', exists);
         setUseCustomVoice(exists);
+        
+        // Auto-play if enabled and custom voice exists
+        if (autoPlay && exists && !isMuted && text && text.trim().length > 0) {
+          setTimeout(() => {
+            console.log('[VoicePlayer] Auto-playing congratulations voice...');
+            playVoice();
+          }, 1000);
+        }
       } else if (questionId) {
         console.log('[VoicePlayer] Checking question voice for question:', questionId);
         const exists = await customVoiceService.checkVoiceExists('question', questionId);
         console.log('[VoicePlayer] Question voice exists:', exists);
         setUseCustomVoice(exists);
         
-        // Auto-play if enabled and not muted
-        if (autoPlay && !isMuted && text && text.trim().length > 0) {
+        // Only auto-play if custom voice exists (no native fallback for auto-play)
+        if (autoPlay && exists && !isMuted && text && text.trim().length > 0) {
           setTimeout(() => {
-            console.log('[VoicePlayer] Auto-playing voice...');
+            console.log('[VoicePlayer] Auto-playing custom question voice...');
             playVoice();
           }, 1000);
         }
       } else {
-        console.log('[VoicePlayer] No questionId or isResultsPage - using native speech');
+        console.log('[VoicePlayer] No questionId or isResultsPage - no auto-play');
         setUseCustomVoice(false);
       }
     };
 
     checkCustomVoice();
-  }, [isResultsPage, questionId, autoPlay, isMuted]);
+  }, [isResultsPage, questionId, autoPlay, isMuted, text]);
 
   const playDefaultVoice = async () => {
     console.log('[VoicePlayer] Playing fallback native speech...');
@@ -107,11 +115,11 @@ export const VoicePlayer = ({
             await customVoiceService.playVoice('question', questionId);
           }
         } else {
-          console.warn('[VoicePlayer] Missing questionId for question voice, falling back to native speech');
-          await playDefaultVoice();
+          console.warn('[VoicePlayer] Missing questionId for question voice, cannot play custom voice');
+          throw new Error('No custom voice available');
         }
       } else {
-        // Direct fallback to native speech
+        // Only play native speech if custom voice is not available and user manually clicked
         console.log('[VoicePlayer] Using native speech (no custom voice available)');
         await playDefaultVoice();
       }
