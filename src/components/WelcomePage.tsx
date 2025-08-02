@@ -74,14 +74,14 @@ export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePage
             </Card>
           </div>
 
-          {/* Lead Capture Form */}
+          {/* Start Assessment Section */}
           <Card className="p-6 sm:p-8 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 border-2 border-purple-200 shadow-xl rounded-2xl">
             <div className="text-center mb-6 sm:mb-8">
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">
                 Let's Get Started! 🚀
               </h2>
               <p className="text-base sm:text-lg text-gray-600 px-2">
-                Please share a few details so we can personalize your experience
+                Ready to discover your personalized insights? Your VoiceCard assessment awaits.
               </p>
             </div>
             

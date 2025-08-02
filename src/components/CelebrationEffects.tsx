@@ -19,9 +19,9 @@ export const CelebrationEffects = ({ onComplete }: CelebrationEffectsProps) => {
           
           // Try to play the celebration audio from multiple possible locations
           const audioPaths = [
-            '/celebration-audio.mp3',
-            '/assets/celebration-audio.mp3',
             '/src/assets/celebration-audio.mp3',
+            '/assets/celebration-audio.mp3',
+            '/celebration-audio.mp3',
             '/public/celebration-audio.mp3'
           ];
           

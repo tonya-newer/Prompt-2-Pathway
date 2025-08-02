@@ -89,7 +89,8 @@ const Assessment = () => {
       if (currentQuestionIndex < (assessment?.questions.length || 0) - 1) {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
       } else {
-        calculateResults();
+        // Navigate to contact form instead of directly to results
+        navigate('/contact-form');
       }
     }, 1500);
   };
@@ -98,7 +99,8 @@ const Assessment = () => {
     if (currentQuestionIndex < (assessment?.questions.length || 0) - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      calculateResults();
+      // Navigate to contact form instead of directly to results
+      navigate('/contact-form');
     }
   };
 
@@ -150,10 +152,12 @@ const Assessment = () => {
       interpretation: interpretation,
     };
 
+    // Store results and assessment data for the contact form to access
     localStorage.setItem('assessment-results', JSON.stringify(results));
     localStorage.setItem('assessment-title', assessment.title);
     localStorage.setItem('assessment-audience', assessment.audience);
     localStorage.setItem('user-info', JSON.stringify(userInfo));
+    localStorage.setItem('assessment-answers', JSON.stringify(answers));
 
     const leadData = {
       firstName: userInfo?.firstName || 'Anonymous',

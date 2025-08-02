@@ -247,8 +247,8 @@ export const assessmentTemplates: AssessmentTemplate[] = [
       {
         id: 1,
         type: "yes-no",
-        question: "Do you currently use any AI tools like ChatGPT, Claude, or Gemini in your daily work or personal life?",
-        voiceScript: "Let's dive right in. Do you currently use any AI tools like ChatGPT, Claude, or Gemini in your daily work or personal life?"
+        question: "Are you already using tools like ChatGPT, Gemini, or Claude in your daily routine?",
+        voiceScript: "Let's start simple. Are you already using tools like ChatGPT, Gemini, or Claude in your daily routine?"
       },
       {
         id: 2,
