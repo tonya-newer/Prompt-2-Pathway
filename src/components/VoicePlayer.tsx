@@ -99,24 +99,25 @@ export const VoicePlayer = ({
   // Auto-play logic - ONLY use custom voice, no fallback to native speech
   useEffect(() => {
     if (autoPlay && useCustomVoice && text && text.trim().length > 0) {
-      console.log('Auto-playing custom voice...');
+      console.log('[VoicePlayer] Auto-playing custom voice for results page:', isResultsPage);
       
       // Stop any existing audio first with enhanced cleanup
       customVoiceService.stopVoice();
       nativeSpeech.stop();
       
-      // Extra pause to ensure complete audio cleanup
-      const delay = questionId === 1 ? 100 : 300;
+      // Longer delay for results page to prevent overlapping with celebration
+      const delay = isResultsPage ? 1000 : (questionId === 1 ? 100 : 300);
       setTimeout(() => {
+        console.log('[VoicePlayer] Actually starting auto-play...');
         setIsPlaying(true);
         playCustomVoice().finally(() => {
           setIsPlaying(false);
         });
       }, delay);
     } else if (autoPlay && !useCustomVoice) {
-      console.log('No custom voice available - skipping auto-play (no fallback to native speech)');
+      console.log('[VoicePlayer] No custom voice available - skipping auto-play (no fallback to native speech)');
     }
-  }, [autoPlay, useCustomVoice, text, questionId, playCustomVoice]);
+  }, [autoPlay, useCustomVoice, text, questionId, playCustomVoice, isResultsPage]);
 
   const handlePlay = async () => {
     if (isPlaying) {
