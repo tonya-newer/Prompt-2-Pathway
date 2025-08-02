@@ -73,8 +73,8 @@ export class CustomVoiceService {
   // Check if file exists with better error handling and cache busting
   private async checkFileExists(url: string): Promise<boolean> {
     try {
-      // Add cache busting parameter to ensure fresh file check
-      const cacheBustUrl = `${url}?t=${Date.now()}`;
+      // Add aggressive cache busting parameter to ensure fresh file check
+      const cacheBustUrl = `${url}?v=${Date.now()}&cb=${Math.random().toString(36).substr(2, 9)}`;
       const response = await fetch(cacheBustUrl, { 
         method: 'HEAD',
         cache: 'no-cache',
@@ -98,8 +98,8 @@ export class CustomVoiceService {
       audio.preload = 'auto';
       audio.crossOrigin = null; // Remove CORS for local files
       
-      // Add cache busting to prevent old file playback
-      const cacheBustUrl = `${url}?t=${Date.now()}`;
+      // Add aggressive cache busting to prevent old file playback
+      const cacheBustUrl = `${url}?v=${Date.now()}&cb=${Math.random().toString(36).substr(2, 9)}`;
       audio.src = cacheBustUrl;
       if (mimeType) {
         audio.setAttribute('type', mimeType);
