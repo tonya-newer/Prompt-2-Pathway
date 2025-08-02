@@ -16,7 +16,7 @@ export class CustomVoiceService {
     try {
       switch (type) {
         case 'welcome':
-          return '/custom-voices/welcome-message.wav';
+          return `/custom-voices/welcome-message.wav?v=${Date.now()}&bust=${Math.random()}`;
         case 'question':
           if (questionId) {
             return `/custom-voices/question-${questionId}.wav`;
@@ -44,11 +44,13 @@ export class CustomVoiceService {
       return;
     }
 
-    // Determine audio format based on file type
-    const isMP3 = baseUrl.includes('.mp3');
-    const formats = isMP3 
-      ? [{ url: baseUrl, type: 'audio/mpeg' }]
-      : [{ url: baseUrl, type: 'audio/wav' }];
+    // Force WAV format for welcome message with aggressive cache busting
+    const isWelcomeMessage = type === 'welcome';
+    const formats = isWelcomeMessage 
+      ? [{ url: baseUrl, type: 'audio/wav' }]
+      : baseUrl.includes('.mp3')
+        ? [{ url: baseUrl, type: 'audio/mpeg' }]
+        : [{ url: baseUrl, type: 'audio/wav' }];
 
     for (const format of formats) {
       try {
