@@ -70,10 +70,19 @@ export class CustomVoiceService {
     throw new Error(`[CustomVoice] All audio formats failed for ${baseUrl}`);
   }
 
-  // Check if file exists with better error handling
+  // Check if file exists with better error handling and cache busting
   private async checkFileExists(url: string): Promise<boolean> {
     try {
-      const response = await fetch(url, { method: 'HEAD' });
+      // Add cache busting parameter to ensure fresh file check
+      const cacheBustUrl = `${url}?t=${Date.now()}`;
+      const response = await fetch(cacheBustUrl, { 
+        method: 'HEAD',
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       return response.ok;
     } catch {
       return false;
@@ -89,8 +98,9 @@ export class CustomVoiceService {
       audio.preload = 'auto';
       audio.crossOrigin = null; // Remove CORS for local files
       
-      // Set source and MIME type
-      audio.src = url;
+      // Add cache busting to prevent old file playback
+      const cacheBustUrl = `${url}?t=${Date.now()}`;
+      audio.src = cacheBustUrl;
       if (mimeType) {
         audio.setAttribute('type', mimeType);
       }
@@ -162,13 +172,14 @@ export class CustomVoiceService {
         reject(new Error(`Audio playback failed: ${url} (Error code: ${audio.error?.code})`));
       });
       
-      // Set a timeout for loading
+      // Set a timeout for loading (reduced from 10s to 5s to fail faster)
       const loadTimeout = setTimeout(() => {
         if (audio.readyState === 0) {
           console.error(`[CustomVoice] Load timeout: ${url}`);
+          audio.src = ''; // Clear source on timeout
           reject(new Error(`Audio load timeout: ${url}`));
         }
-      }, 10000);
+      }, 5000);
       
       // Clear timeout when loading starts progressing
       audio.addEventListener('loadstart', () => {
@@ -192,7 +203,22 @@ export class CustomVoiceService {
     }
 
     try {
-      const response = await fetch(voiceUrl, { method: 'HEAD' });
+      // Add cache busting and timeout for file existence check
+      const cacheBustUrl = `${voiceUrl}?t=${Date.now()}`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+      
+      const response = await fetch(cacheBustUrl, { 
+        method: 'HEAD',
+        signal: controller.signal,
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      
+      clearTimeout(timeoutId);
       console.log(`[CustomVoice] Check result for ${voiceUrl}: ${response.ok} (status: ${response.status})`);
       return response.ok;
     } catch (error) {
