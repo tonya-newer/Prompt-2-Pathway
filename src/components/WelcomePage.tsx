@@ -1,7 +1,6 @@
 
 import { Card } from '@/components/ui/card';
 import { WelcomeVoicePlayer } from './WelcomeVoicePlayer';
-import { LeadCaptureForm } from './LeadCaptureForm';
 import { Sparkles, Heart, Target } from 'lucide-react';
 
 interface WelcomePageProps {
@@ -76,19 +75,23 @@ export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePage
 
           {/* Start Assessment Section */}
           <Card className="p-6 sm:p-8 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 border-2 border-purple-200 shadow-xl rounded-2xl">
-            <div className="text-center mb-6 sm:mb-8">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">
-                Let's Get Started! 🚀
-              </h2>
-              <p className="text-base sm:text-lg text-gray-600 px-2">
-                Ready to discover your personalized insights? Your VoiceCard assessment awaits.
-              </p>
+            <div className="text-center">
+              <div className="mb-6">
+                <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4">
+                  ✨ This is your time to reflect, realign, and rise.
+                </h2>
+                <p className="text-lg text-gray-600 mb-8">
+                  Your personalized VoiceCard experience is just one click away.
+                </p>
+              </div>
+              
+              <button
+                onClick={() => onSubmit({})}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-4 px-8 rounded-full text-lg shadow-lg transform hover:scale-105 transition-all duration-200"
+              >
+                Begin My VoiceCard Assessment
+              </button>
             </div>
-            
-            <LeadCaptureForm
-              audience={audience}
-              onSubmit={onSubmit}
-            />
           </Card>
         </div>
       </div>

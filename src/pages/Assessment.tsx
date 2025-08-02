@@ -10,6 +10,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { AssessmentTemplate } from '@/types/assessment';
 import { leadStorageService } from '@/services/leadStorage';
 import { assessmentStorageService } from '@/services/assessmentStorage';
+import { customVoiceService } from '@/services/customVoiceService';
+import { nativeSpeech } from '@/services/nativeSpeech';
 
 interface AssessmentResult {
   overallScore: number;
@@ -86,6 +88,10 @@ const Assessment = () => {
     
     // Auto-advance to next question after 1.5 seconds
     setTimeout(() => {
+      // Stop any playing audio before advancing
+      customVoiceService.stopVoice();
+      nativeSpeech.stop();
+      
       if (currentQuestionIndex < (assessment?.questions.length || 0) - 1) {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
       } else {
@@ -96,6 +102,10 @@ const Assessment = () => {
   };
 
   const handleNextQuestion = () => {
+    // Stop any playing audio before advancing
+    customVoiceService.stopVoice();
+    nativeSpeech.stop();
+    
     if (currentQuestionIndex < (assessment?.questions.length || 0) - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
@@ -235,7 +245,12 @@ const Assessment = () => {
             <div className="flex flex-col sm:flex-row justify-between items-center max-w-5xl mx-auto pt-6 sm:pt-8 space-y-4 sm:space-y-0">
               <Button
                 variant="outline"
-                onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
+                onClick={() => {
+                  // Stop any playing audio before going back
+                  customVoiceService.stopVoice();
+                  nativeSpeech.stop();
+                  setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1));
+                }}
                 disabled={currentQuestionIndex === 0}
                 className="flex items-center px-4 sm:px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-gray-300 hover:border-blue-400 w-full sm:w-auto"
               >

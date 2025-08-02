@@ -96,30 +96,28 @@ export const VoicePlayer = ({
     }
   }, [isResultsPage, questionId, customVoiceType, text]);
 
-  // Auto-play logic with faster response
+  // Auto-play logic - ONLY use custom voice, no fallback to native speech
   useEffect(() => {
     if (autoPlay && useCustomVoice && text && text.trim().length > 0) {
-      console.log('Auto-playing voice...');
+      console.log('Auto-playing custom voice...');
+      
+      // Stop any existing audio first
+      customVoiceService.stopVoice();
+      nativeSpeech.stop();
       
       if (questionId === 1) {
         // Extra fast auto-play for Question 1 to prevent native speech interference
         setTimeout(() => {
           playCustomVoice();
-        }, 100);
+        }, 50);
       } else {
         // Standard auto-play for other questions/pages
         setTimeout(() => {
           playCustomVoice();
-        }, 500);
+        }, 200);
       }
     } else if (autoPlay && !useCustomVoice) {
-      console.log('Error: No custom voice available for auto-play');
-      if (questionId) {
-        console.log('Attempting fallback to native speech');
-        nativeSpeech.speak({ text });
-      } else {
-        console.log('Results page - no custom voice available, skipping playback');
-      }
+      console.log('No custom voice available - skipping auto-play (no fallback to native speech)');
     }
   }, [autoPlay, useCustomVoice, text, questionId, playCustomVoice]);
 
@@ -131,6 +129,10 @@ export const VoicePlayer = ({
       return;
     }
 
+    // Stop any existing audio before starting new playback
+    customVoiceService.stopVoice();
+    nativeSpeech.stop();
+
     setIsLoading(true);
     setIsPlaying(true);
 
@@ -138,6 +140,8 @@ export const VoicePlayer = ({
       if (useCustomVoice) {
         await playCustomVoice();
       } else {
+        // Only use native speech as manual fallback, never automatically
+        console.log('Playing native speech as manual fallback');
         await nativeSpeech.speak({ text });
       }
     } catch (error) {
