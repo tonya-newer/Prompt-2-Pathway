@@ -48,22 +48,7 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
       if (useCustomVoice) {
         // Use custom ElevenLabs voice
         console.log('[WelcomeVoicePlayer] Playing custom welcome voice...');
-        const voiceExists = await customVoiceService.checkVoiceExists('welcome');
-        if (!voiceExists) {
-          console.warn('[WelcomeVoicePlayer] Custom welcome voice file missing, falling back to native speech');
-          await nativeSpeech.speak({
-            text: welcomeText,
-            rate: 0.85,
-            pitch: 1.0,
-            volume: 1.0
-          });
-        } else {
-          await customVoiceService.playVoice('welcome');
-        }
-      } else {
-        // NO fallback to native speech - only play if explicitly requested
-        console.log('[WelcomeVoicePlayer] No custom voice available - skipping playback (no auto-fallback)');
-        throw new Error('No custom voice available');
+        await customVoiceService.playVoice('welcome');
       }
       
       setIsPlaying(false);

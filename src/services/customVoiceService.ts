@@ -16,7 +16,7 @@ export class CustomVoiceService {
     try {
       switch (type) {
         case 'welcome':
-          return '/custom-voices/welcome-message.wav';
+          return '/custom-voices/welcome-message.mp3';
         case 'question':
           if (questionId) {
             return `/custom-voices/question-${questionId}.wav`;
