@@ -101,21 +101,18 @@ export const VoicePlayer = ({
     if (autoPlay && useCustomVoice && text && text.trim().length > 0) {
       console.log('Auto-playing custom voice...');
       
-      // Stop any existing audio first
+      // Stop any existing audio first with enhanced cleanup
       customVoiceService.stopVoice();
       nativeSpeech.stop();
       
-      if (questionId === 1) {
-        // Extra fast auto-play for Question 1 to prevent native speech interference
-        setTimeout(() => {
-          playCustomVoice();
-        }, 50);
-      } else {
-        // Standard auto-play for other questions/pages
-        setTimeout(() => {
-          playCustomVoice();
-        }, 200);
-      }
+      // Extra pause to ensure complete audio cleanup
+      const delay = questionId === 1 ? 100 : 300;
+      setTimeout(() => {
+        setIsPlaying(true);
+        playCustomVoice().finally(() => {
+          setIsPlaying(false);
+        });
+      }, delay);
     } else if (autoPlay && !useCustomVoice) {
       console.log('No custom voice available - skipping auto-play (no fallback to native speech)');
     }

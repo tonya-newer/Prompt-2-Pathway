@@ -16,7 +16,7 @@ export class CustomVoiceService {
     try {
       switch (type) {
         case 'welcome':
-          return '/custom-voices/welcome-message.mp3';
+          return '/custom-voices/welcome-message.wav';
         case 'question':
           if (questionId) {
             return `/custom-voices/question-${questionId}.wav`;
@@ -44,10 +44,8 @@ export class CustomVoiceService {
       return;
     }
 
-    // Try multiple formats: WAV for questions and congratulations, MP3 for welcome
-    const formats = type === 'welcome' 
-      ? [{ url: baseUrl, type: 'audio/mpeg' }]  // Welcome uses MP3
-      : [{ url: baseUrl, type: 'audio/wav' }];  // Questions and congratulations use WAV
+    // All files are now WAV format
+    const formats = [{ url: baseUrl, type: 'audio/wav' }];
 
     for (const format of formats) {
       try {
@@ -208,8 +206,11 @@ export class CustomVoiceService {
     // Stop any currently playing audio elements
     const audioElements = document.querySelectorAll('audio');
     audioElements.forEach(audio => {
-      audio.pause();
-      audio.currentTime = 0;
+      if (!audio.paused) {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.src = ''; // Clear source to fully stop
+      }
     });
   }
 
