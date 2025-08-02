@@ -23,8 +23,15 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
   useEffect(() => {
     // Check if custom welcome voice exists
     const checkCustomVoice = async () => {
-      const exists = await customVoiceService.checkVoiceExists('welcome');
-      setUseCustomVoice(exists);
+      try {
+        console.log('[WelcomeVoicePlayer] Checking for custom welcome voice...');
+        const exists = await customVoiceService.checkVoiceExists('welcome');
+        console.log('[WelcomeVoicePlayer] Custom voice exists:', exists);
+        setUseCustomVoice(exists);
+      } catch (error) {
+        console.error('[WelcomeVoicePlayer] Error checking custom voice:', error);
+        setUseCustomVoice(false);
+      }
     };
 
     checkCustomVoice();
@@ -106,11 +113,15 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
   const handleInteractionGateStart = () => {
     setShowInteractionGate(false);
     setHasInteracted(true);
-    // Auto-play after user interaction
-    setTimeout(() => {
+    // Auto-play after user interaction with longer delay to ensure state is set
+    setTimeout(async () => {
       console.log('Auto-playing welcome message after user interaction...');
+      // Re-check voice existence before playing to ensure state is current
+      const voiceExists = await customVoiceService.checkVoiceExists('welcome');
+      console.log('[WelcomeVoicePlayer] Re-checked voice exists before auto-play:', voiceExists);
+      setUseCustomVoice(voiceExists);
       playWelcomeVoice();
-    }, 500);
+    }, 800); // Increased delay to ensure state is properly set
   };
 
   // Cleanup
