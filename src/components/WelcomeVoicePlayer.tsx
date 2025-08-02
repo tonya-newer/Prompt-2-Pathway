@@ -61,30 +61,14 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
           await customVoiceService.playVoice('welcome');
         }
       } else {
-        // Fallback to native speech
-        console.log('[WelcomeVoicePlayer] Using native speech (no custom voice available)');
-        await nativeSpeech.speak({
-          text: welcomeText,
-          rate: 0.85,
-          pitch: 1.0,
-          volume: 1.0
-        });
+        // NO fallback to native speech - only play if explicitly requested
+        console.log('[WelcomeVoicePlayer] No custom voice available - skipping playback (no auto-fallback)');
+        throw new Error('No custom voice available');
       }
       
       setIsPlaying(false);
     } catch (error) {
       console.error('[WelcomeVoicePlayer] Error playing welcome voice:', error);
-      console.log('[WelcomeVoicePlayer] Attempting fallback to native speech due to error...');
-      try {
-        await nativeSpeech.speak({
-          text: welcomeText,
-          rate: 0.85,
-          pitch: 1.0,
-          volume: 1.0
-        });
-      } catch (fallbackError) {
-        console.error('[WelcomeVoicePlayer] Fallback to native speech also failed:', fallbackError);
-      }
       setIsPlaying(false);
     } finally {
       setIsLoading(false);
