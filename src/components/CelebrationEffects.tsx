@@ -25,6 +25,7 @@ export const CelebrationEffects = ({ onComplete }: CelebrationEffectsProps) => {
           audio.autoplay = true;
           audio.muted = false;
           audio.setAttribute('playsinline', 'true');
+          audio.preload = 'auto';
           
           try {
             await audio.play();
