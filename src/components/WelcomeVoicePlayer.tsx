@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { customVoiceService } from '@/services/customVoiceService';
 import { nativeSpeech } from '@/services/nativeSpeech';
 import { InteractionGate } from './InteractionGate';
+import { testAudioFile } from '@/utils/audioTest';
 
 interface WelcomeVoicePlayerProps {
   className?: string;
@@ -25,9 +26,17 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
     const checkCustomVoice = async () => {
       try {
         console.log('[WelcomeVoicePlayer] Checking for custom welcome voice...');
+        
+        // First test the direct MP3 file
+        console.log('[WelcomeVoicePlayer] Testing MP3 file directly...');
+        const mp3Works = await testAudioFile('/custom-voices/welcome-message.mp3');
+        console.log('[WelcomeVoicePlayer] Direct MP3 test result:', mp3Works);
+        
+        // Then check via service
         const exists = await customVoiceService.checkVoiceExists('welcome');
-        console.log('[WelcomeVoicePlayer] Custom voice exists:', exists);
-        setUseCustomVoice(exists);
+        console.log('[WelcomeVoicePlayer] Service voice check:', exists);
+        
+        setUseCustomVoice(mp3Works && exists);
       } catch (error) {
         console.error('[WelcomeVoicePlayer] Error checking custom voice:', error);
         setUseCustomVoice(false);
