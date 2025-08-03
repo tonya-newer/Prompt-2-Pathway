@@ -11,6 +11,7 @@ export const CelebrationEffects = ({ onComplete }: CelebrationEffectsProps) => {
   const [audioPlayed, setAudioPlayed] = useState(false);
 
   useEffect(() => {
+    console.log('CelebrationEffects component mounted');
     // Play the celebration sound effect immediately (not voice message)
     if (!audioPlayed) {
       const playCelebrationAudio = async () => {
@@ -19,6 +20,7 @@ export const CelebrationEffects = ({ onComplete }: CelebrationEffectsProps) => {
           
           // Only play the celebration music/sound effect, not voice
           const audio = new Audio('/assets/celebration-audio.mp3');
+          console.log('Created audio element for celebration-audio.mp3');
           audio.volume = 0.7;
           audio.autoplay = true;
           audio.muted = false;
