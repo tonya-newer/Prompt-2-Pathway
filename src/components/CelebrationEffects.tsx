@@ -44,13 +44,13 @@ export const CelebrationEffects = ({ onComplete }: CelebrationEffectsProps) => {
       playCelebrationAudio();
     }
 
-    // Show effects for 3 seconds, then hide and call onComplete
+    // Show effects for 2.5 seconds, then hide and call onComplete immediately
     const timer = setTimeout(() => {
       setShowEffects(false);
       if (onComplete) {
-        setTimeout(onComplete, 500); // Short pause before callback
+        setTimeout(onComplete, 100); // Very short pause before voice message
       }
-    }, 3000); // 3 seconds of effects
+    }, 2500); // 2.5 seconds of effects
 
     return () => clearTimeout(timer);
   }, [audioPlayed, onComplete]);

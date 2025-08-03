@@ -23,7 +23,7 @@ const ContentManager = () => {
     {
       id: 'hero-title',
       title: 'Hero Title',
-      content: 'Welcome to VoiceCard',
+      content: 'Welcome to Prompt 2 Pathway',
       type: 'header'
     },
     {
@@ -45,14 +45,14 @@ const ContentManager = () => {
       type: 'button'
     },
     {
-      id: 'why-voicecard-title',
-      title: 'Why VoiceCard Section Title',
-      content: 'Why VoiceCard?',
+      id: 'why-prompt2pathway-title',
+      title: 'Why Prompt 2 Pathway Section Title',
+      content: 'Why Prompt 2 Pathway?',
       type: 'header'
     },
     {
-      id: 'why-voicecard-subtitle',
-      title: 'Why VoiceCard Subtitle',
+      id: 'why-prompt2pathway-subtitle',
+      title: 'Why Prompt 2 Pathway Subtitle',
       content: 'Our voice-guided assessments provide deeper insights through human connection and personalized experiences',
       type: 'text'
     }
@@ -62,7 +62,7 @@ const ContentManager = () => {
     {
       id: 'footer-title',
       title: 'Footer Title',
-      content: 'VoiceCard',
+      content: 'Prompt 2 Pathway',
       type: 'header'
     },
     {
@@ -77,7 +77,7 @@ const ContentManager = () => {
     {
       id: 'results-title',
       title: 'Results Page Title',
-      content: 'Your VoiceCard Clarity Snapshot',
+      content: 'Your Prompt 2 Pathway Clarity Snapshot',
       type: 'header'
     },
     {
@@ -127,7 +127,7 @@ const ContentManager = () => {
       {
         id: 'hero-title',
         title: 'Hero Title',
-        content: 'Welcome to VoiceCard',
+        content: 'Welcome to Prompt 2 Pathway',
         type: 'header'
       },
       {
@@ -149,14 +149,14 @@ const ContentManager = () => {
         type: 'button'
       },
       {
-        id: 'why-voicecard-title',
-        title: 'Why VoiceCard Section Title',
-        content: 'Why VoiceCard?',
+        id: 'why-prompt2pathway-title',
+        title: 'Why Prompt 2 Pathway Section Title',
+        content: 'Why Prompt 2 Pathway?',
         type: 'header'
       },
       {
-        id: 'why-voicecard-subtitle',
-        title: 'Why VoiceCard Subtitle',
+        id: 'why-prompt2pathway-subtitle',
+        title: 'Why Prompt 2 Pathway Subtitle',
         content: 'Our voice-guided assessments provide deeper insights through human connection and personalized experiences',
         type: 'text'
       }
@@ -165,7 +165,7 @@ const ContentManager = () => {
       {
         id: 'footer-title',
         title: 'Footer Title',
-        content: 'VoiceCard',
+        content: 'Prompt 2 Pathway',
         type: 'header'
       },
       {
@@ -179,7 +179,7 @@ const ContentManager = () => {
       {
         id: 'results-title',
         title: 'Results Page Title',
-        content: 'Your VoiceCard Clarity Snapshot',
+        content: 'Your Prompt 2 Pathway Clarity Snapshot',
         type: 'header'
       },
       {
@@ -290,7 +290,7 @@ const ContentManager = () => {
       <Card className="p-4 bg-blue-50 border-blue-200">
         <h4 className="font-medium text-blue-900 mb-2">💡 Pro Tip</h4>
         <p className="text-sm text-blue-800">
-          Changes made here will update the live content across your VoiceCard platform. 
+          Changes made here will update the live content across your Prompt 2 Pathway platform. 
           Remember to save your changes before navigating away from this page.
         </p>
       </Card>

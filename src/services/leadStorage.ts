@@ -37,7 +37,7 @@ export const leadStorageService = {
     };
 
     leads.push(newLead);
-    localStorage.setItem('voicecard_leads', JSON.stringify(leads));
+    localStorage.setItem('prompt2pathway_leads', JSON.stringify(leads));
     
     console.log('Lead stored successfully:', newLead);
     return newLead;
@@ -46,7 +46,7 @@ export const leadStorageService = {
   // Get all leads
   getLeads: (): StoredLead[] => {
     try {
-      const stored = localStorage.getItem('voicecard_leads');
+      const stored = localStorage.getItem('prompt2pathway_leads');
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
       console.error('Error retrieving leads:', error);
@@ -56,7 +56,7 @@ export const leadStorageService = {
 
   // Clear all leads (for testing)
   clearLeads: () => {
-    localStorage.removeItem('voicecard_leads');
+    localStorage.removeItem('prompt2pathway_leads');
   },
 
   // Get lead by ID

@@ -19,7 +19,7 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
   const [useCustomVoice, setUseCustomVoice] = useState(false);
   const [showInteractionGate, setShowInteractionGate] = useState(true);
 
-  const welcomeText = "Welcome to your VoiceCard assessment! This personalized assessment will help you gain valuable insights about yourself. Please fill out your information below, and then we'll begin your journey of discovery together. Take your time and answer honestly for the best results.";
+  const welcomeText = "Welcome to your Prompt 2 Pathway assessment! This personalized assessment will help you gain valuable insights about yourself. Please fill out your information below, and then we'll begin your journey of discovery together. Take your time and answer honestly for the best results.";
 
   useEffect(() => {
     // Check if custom welcome voice exists

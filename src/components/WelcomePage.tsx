@@ -22,7 +22,7 @@ export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePage
               </div>
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-6 px-2">
-              Welcome to Your VoiceCard
+              Welcome to Your Prompt 2 Pathway
             </h1>
             <div className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-4 px-2">
               <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent break-words">
@@ -81,7 +81,7 @@ export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePage
                   ✨ This is your time to reflect, realign, and rise.
                 </h2>
                 <p className="text-lg text-gray-600 mb-8">
-                  Your personalized VoiceCard experience is just one click away.
+                  Your personalized Prompt 2 Pathway experience is just one click away.
                 </p>
               </div>
               
@@ -89,7 +89,7 @@ export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePage
                 onClick={() => onSubmit({})}
                 className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-4 px-8 rounded-full text-lg shadow-lg transform hover:scale-105 transition-all duration-200"
               >
-                Begin My VoiceCard Assessment
+                Begin My Prompt 2 Pathway Assessment
               </button>
             </div>
           </Card>

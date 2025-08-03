@@ -83,7 +83,7 @@ const Results = () => {
     );
   }
 
-  const voiceScript = `Hello ${userInfo?.firstName || 'there'}, and congratulations on completing your VoiceCard assessment! This is truly an accomplishment worth celebrating. Taking the time for this kind of self-reflection shows real commitment to your growth. Your overall clarity score of ${results.overallScore} out of 100 is a meaningful indicator of your current understanding and readiness in this area.`;
+  const voiceScript = `Hello ${userInfo?.firstName || 'there'}, and congratulations on completing your Prompt 2 Pathway assessment! This is truly an accomplishment worth celebrating. Taking the time for this kind of self-reflection shows real commitment to your growth. Your overall clarity score of ${results.overallScore} out of 100 is a meaningful indicator of your current understanding and readiness in this area.`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/50">

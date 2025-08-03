@@ -41,8 +41,8 @@ const Admin = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">VoiceCard Admin Dashboard</h1>
-          <p className="text-gray-600">Manage your assessments, leads, and VoiceCard settings</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Prompt 2 Pathway Admin Dashboard</h1>
+          <p className="text-gray-600">Manage your assessments, leads, and Prompt 2 Pathway settings</p>
         </div>
 
         <Tabs defaultValue="assessments" className="space-y-6">
@@ -79,11 +79,11 @@ const Admin = () => {
 
           <TabsContent value="settings">
             <div className="grid gap-6">
-              {/* VoiceCard Settings */}
+              {/* Prompt 2 Pathway Settings */}
               <Card className="p-6">
                 <div className="flex items-center mb-4">
                   <Key className="h-5 w-5 mr-2 text-blue-600" />
-                  <h3 className="text-lg font-semibold">VoiceCard Settings</h3>
+                  <h3 className="text-lg font-semibold">Prompt 2 Pathway Settings</h3>
                 </div>
                 <div className="space-y-4">
                   <div>
@@ -91,7 +91,7 @@ const Admin = () => {
                       ElevenLabs API Key
                     </Label>
                     <p className="text-xs text-gray-500 mb-2">
-                      Enter your ElevenLabs API key to enable premium voice features across all VoiceCard assessments
+                      Enter your ElevenLabs API key to enable premium voice features across all Prompt 2 Pathway assessments
                     </p>
                     <div className="flex space-x-2">
                       <Input

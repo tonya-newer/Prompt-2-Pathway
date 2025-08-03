@@ -24,32 +24,32 @@ export const QuestionRenderer = ({
   onAnswer 
 }: QuestionRendererProps) => {
   const renderYesNo = () => (
-    <div className="grid grid-cols-2 gap-6 mt-8">
+    <div className="grid grid-cols-2 gap-3 sm:gap-6 mt-6 sm:mt-8">
       <Button
         variant={answer === 'yes' ? 'default' : 'outline'}
         onClick={() => onAnswer('yes')}
-        className={`h-20 text-xl font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 relative ${
+        className={`h-16 sm:h-20 text-lg sm:text-xl font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 relative ${
           answer === 'yes' 
             ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 ring-4 ring-green-200' 
             : 'bg-gradient-to-r from-green-100 to-emerald-100 hover:from-green-200 hover:to-emerald-200 text-green-700 border-2 border-green-300'
         }`}
       >
         {answer === 'yes' && (
-          <Check className="absolute top-2 right-2 h-6 w-6 text-white" />
+          <Check className="absolute top-2 right-2 h-5 w-5 sm:h-6 sm:w-6 text-white" />
         )}
         ✓ Yes
       </Button>
       <Button
         variant={answer === 'no' ? 'default' : 'outline'}
         onClick={() => onAnswer('no')}
-        className={`h-20 text-xl font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 relative ${
+        className={`h-16 sm:h-20 text-lg sm:text-xl font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 relative ${
           answer === 'no' 
             ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white border-0 ring-4 ring-red-200' 
             : 'bg-gradient-to-r from-red-100 to-pink-100 hover:from-red-200 hover:to-pink-200 text-red-700 border-2 border-red-300'
         }`}
       >
         {answer === 'no' && (
-          <Check className="absolute top-2 right-2 h-6 w-6 text-white" />
+          <Check className="absolute top-2 right-2 h-5 w-5 sm:h-6 sm:w-6 text-white" />
         )}
         ✗ No
       </Button>
@@ -101,18 +101,18 @@ export const QuestionRenderer = ({
   );
 
   const renderRating = () => (
-    <div className="mt-8">
-      <div className="flex justify-between items-center mb-6">
-        <span className="text-sm font-medium text-red-500">Strongly Disagree</span>
-        <span className="text-sm font-medium text-green-500">Strongly Agree</span>
+    <div className="mt-6 sm:mt-8">
+      <div className="flex justify-between items-center mb-4 sm:mb-6 px-2">
+        <span className="text-xs sm:text-sm font-medium text-red-500">Strongly Disagree</span>
+        <span className="text-xs sm:text-sm font-medium text-green-500">Strongly Agree</span>
       </div>
-      <div className="flex justify-center space-x-3 flex-wrap">
+      <div className="flex justify-center space-x-1 sm:space-x-3 flex-wrap gap-y-2">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
           <Button
             key={rating}
             variant={answer === rating ? 'default' : 'outline'}
             onClick={() => onAnswer(rating)}
-            className={`w-14 h-14 p-0 rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 relative ${
+            className={`w-12 h-12 sm:w-14 sm:h-14 p-0 rounded-full font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300 relative ${
               answer === rating 
                 ? 'ring-4 ring-blue-200' 
                 : ''
@@ -124,7 +124,7 @@ export const QuestionRenderer = ({
             }}
           >
             {answer === rating && (
-              <Check className="absolute -top-1 -right-1 h-4 w-4 text-white bg-blue-600 rounded-full p-0.5" />
+              <Check className="absolute -top-1 -right-1 h-3 w-3 sm:h-4 sm:w-4 text-white bg-blue-600 rounded-full p-0.5" />
             )}
             {rating}
           </Button>
@@ -197,20 +197,20 @@ export const QuestionRenderer = ({
   };
 
   return (
-    <Card className="p-10 max-w-5xl mx-auto bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 border-2 border-blue-100 shadow-2xl rounded-2xl">
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <Badge variant="secondary" className="px-4 py-2 text-lg font-semibold bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full">
+    <Card className="p-4 sm:p-6 lg:p-10 max-w-5xl mx-auto bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 border-2 border-blue-100 shadow-2xl rounded-2xl">
+      <div className="mb-4 sm:mb-6 lg:mb-8">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <Badge variant="secondary" className="px-3 py-1 sm:px-4 sm:py-2 text-sm sm:text-lg font-semibold bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full">
             {getQuestionTypeLabel()}
           </Badge>
-          <Badge variant="outline" className="px-4 py-2 text-sm font-medium border-2 border-gray-300 rounded-full">
+          <Badge variant="outline" className="px-3 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium border-2 border-gray-300 rounded-full">
             {questionIndex + 1} of {totalQuestions}
           </Badge>
         </div>
         
         {/* Voice Player positioned near question */}
         {question.voiceScript && (
-          <div className="mb-8">
+          <div className="mb-4 sm:mb-6 lg:mb-8">
             <VoicePlayer
               text={question.voiceScript}
               autoPlay={true}
@@ -221,11 +221,11 @@ export const QuestionRenderer = ({
         
         {/* Voice transcript - enhanced visual treatment */}
         {question.voiceScript && (
-          <div className="bg-gradient-to-r from-blue-100 via-purple-50 to-blue-100 border-l-8 border-blue-500 p-8 mb-8 rounded-r-2xl shadow-lg">
-            <div className="flex items-start space-x-4">
+          <div className="bg-gradient-to-r from-blue-100 via-purple-50 to-blue-100 border-l-4 sm:border-l-8 border-blue-500 p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 lg:mb-8 rounded-r-2xl shadow-lg">
+            <div className="flex items-start space-x-2 sm:space-x-4">
               <div className="flex-1">
-                <h3 className="text-sm font-bold text-blue-700 mb-2 uppercase tracking-wide">Voice Guide</h3>
-                <p className="text-blue-900 text-sm sm:text-base md:text-lg leading-relaxed font-medium break-words">
+                <h3 className="text-xs sm:text-sm font-bold text-blue-700 mb-2 uppercase tracking-wide">Voice Guide</h3>
+                <p className="text-blue-900 text-sm sm:text-base lg:text-lg leading-relaxed font-medium break-words">
                   {question.voiceScript}
                 </p>
               </div>

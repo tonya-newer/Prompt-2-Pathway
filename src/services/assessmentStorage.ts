@@ -15,13 +15,13 @@ class AssessmentStorageService {
 
   constructor() {
     // Clear localStorage to force refresh of assessment data
-    localStorage.removeItem('voicecard-assessments');
+    localStorage.removeItem('prompt2pathway-assessments');
     this.loadAssessments();
   }
 
   private loadAssessments(): void {
     try {
-      const stored = localStorage.getItem('voicecard-assessments');
+      const stored = localStorage.getItem('prompt2pathway-assessments');
       if (stored) {
         const storedAssessments = JSON.parse(stored);
         
@@ -55,7 +55,7 @@ class AssessmentStorageService {
 
   private saveAssessments(): void {
     try {
-      localStorage.setItem('voicecard-assessments', JSON.stringify(this.assessments));
+      localStorage.setItem('prompt2pathway-assessments', JSON.stringify(this.assessments));
     } catch (error) {
       console.error('Error saving assessments:', error);
     }

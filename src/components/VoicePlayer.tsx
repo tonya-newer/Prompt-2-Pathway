@@ -105,8 +105,8 @@ export const VoicePlayer = ({
       customVoiceService.stopVoice();
       nativeSpeech.stop();
       
-      // Much longer delay for results page to prevent overlapping with celebration
-      const delay = isResultsPage ? 2000 : (questionId === 1 ? 100 : 300);
+      // Shorter delay for results page to start voice message immediately after celebration
+      const delay = isResultsPage ? 200 : (questionId === 1 ? 100 : 300);
       setTimeout(() => {
         console.log('[VoicePlayer] Actually starting auto-play...');
         setIsPlaying(true);
@@ -122,8 +122,10 @@ export const VoicePlayer = ({
   const handlePlay = async () => {
     if (isPlaying) {
       setIsPlaying(false);
+      // Properly stop all audio sources
       customVoiceService.stopVoice();
       nativeSpeech.stop();
+      console.log('Voice playback paused');
       return;
     }
 

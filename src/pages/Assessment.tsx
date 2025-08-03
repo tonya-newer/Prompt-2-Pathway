@@ -174,7 +174,7 @@ const Assessment = () => {
       lastName: userInfo?.lastName || 'User',
       email: userInfo?.email || 'anonymous@example.com',
       ageRange: userInfo?.ageRange || '25-34',
-      source: 'voicecard-assessment',
+      source: 'prompt2pathway-assessment',
       audience: assessment.audience,
       submissionDate: new Date().toISOString(),
     };
@@ -220,29 +220,34 @@ const Assessment = () => {
             onSubmit={handleLeadSubmit}
           />
         ) : currentQuestionIndex < assessment.questions.length ? (
-          <div className="space-y-6 sm:space-y-8">
+          <div className="space-y-4 sm:space-y-6">
+            {/* Progress Bar - Compact Mobile Design */}
             <div className="max-w-5xl mx-auto">
-              <div className="bg-gray-200 rounded-full h-2 sm:h-3 mb-4 sm:mb-6 shadow-inner">
+              <div className="bg-gray-200 rounded-full h-2 mb-2 sm:mb-4 shadow-inner">
                 <div
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 sm:h-3 rounded-full transition-all duration-500 shadow-lg"
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500 shadow-lg"
                   style={{ width: `${((currentQuestionIndex + 1) / assessment.questions.length) * 100}%` }}
                 ></div>
               </div>
-              <div className="flex justify-between items-center text-xs sm:text-sm text-gray-600 px-2">
-                <span className="font-medium">Progress: {currentQuestionIndex + 1} of {assessment.questions.length}</span>
-                <span className="font-medium">{Math.round(((currentQuestionIndex + 1) / assessment.questions.length) * 100)}% Complete</span>
+              <div className="flex justify-between items-center text-xs text-gray-600 px-1">
+                <span className="font-medium">Question {currentQuestionIndex + 1} of {assessment.questions.length}</span>
+                <span className="font-medium">{Math.round(((currentQuestionIndex + 1) / assessment.questions.length) * 100)}%</span>
               </div>
             </div>
 
-            <QuestionRenderer
-              question={currentQuestion!}
-              questionIndex={currentQuestionIndex}
-              totalQuestions={assessment.questions.length}
-              answer={answers[currentQuestionIndex]}
-              onAnswer={handleAnswer}
-            />
+            {/* Question Content - Mobile Optimized */}
+            <div className="px-2 sm:px-0">
+              <QuestionRenderer
+                question={currentQuestion!}
+                questionIndex={currentQuestionIndex}
+                totalQuestions={assessment.questions.length}
+                answer={answers[currentQuestionIndex]}
+                onAnswer={handleAnswer}
+              />
+            </div>
 
-            <div className="flex flex-col sm:flex-row justify-between items-center max-w-5xl mx-auto pt-6 sm:pt-8 space-y-4 sm:space-y-0">
+            {/* Navigation Buttons - Mobile Optimized */}
+            <div className="flex flex-col sm:flex-row justify-between items-stretch max-w-5xl mx-auto pt-4 sm:pt-6 space-y-3 sm:space-y-0 px-2 sm:px-0">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -252,19 +257,19 @@ const Assessment = () => {
                   setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1));
                 }}
                 disabled={currentQuestionIndex === 0}
-                className="flex items-center px-4 sm:px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-gray-300 hover:border-blue-400 w-full sm:w-auto"
+                className="flex items-center justify-center px-4 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-gray-300 hover:border-blue-400 w-full sm:w-auto order-2 sm:order-1"
               >
-                <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                <ChevronLeft className="h-4 w-4 mr-2" />
                 Previous
               </Button>
               
               <Button
                 onClick={handleNextQuestion}
                 disabled={!isAnswered}
-                className="flex items-center px-6 sm:px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold w-full sm:w-auto"
+                className="flex items-center justify-center px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold w-full sm:w-auto order-1 sm:order-2"
               >
                 {currentQuestionIndex === assessment.questions.length - 1 ? 'Complete Assessment' : 'Next Question'}
-                <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
+                <ChevronRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
           </div>

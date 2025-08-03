@@ -103,7 +103,7 @@ const ContactForm = () => {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Tell us where to send your personalized VoiceCard results 👇
+              Tell us where to send your personalized Prompt 2 Pathway results 👇
             </h1>
             <p className="text-lg text-gray-600 mb-2">
               This helps us deliver your custom results + bonus tips straight to your inbox.
@@ -247,45 +247,20 @@ const ContactForm = () => {
                 </Select>
               </div>
 
-              {/* Bonus Tools Checkbox */}
+              {/* Single Checkbox for Both Consent and Bonus Tools */}
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  id="bonusTools"
-                  checked={formData.bonusTools}
-                  onCheckedChange={(checked) => handleInputChange('bonusTools', checked as boolean)}
+                  id="agreedToTerms"
+                  checked={formData.agreedToTerms}
+                  onCheckedChange={(checked) => handleInputChange('agreedToTerms', checked as boolean)}
                 />
-                <Label htmlFor="bonusTools" className="text-base text-gray-700">
+                <Label htmlFor="agreedToTerms" className="text-base text-gray-700">
                   ✅ Yes! I want bonus tools to help me take action on my results.
                 </Label>
               </div>
-
-              {/* Privacy Notice */}
-              <Card className="p-4 bg-blue-50 border-2 border-blue-200">
-                <div className="space-y-3">
-                  <h3 className="text-lg font-semibold text-blue-900">Privacy Notice</h3>
-                  <p className="text-sm text-blue-800">
-                    By continuing, you agree that your information will be stored in our system for 
-                    personalized insights and optional follow-up purposes.{' '}
-                    <a href="#" className="underline hover:text-blue-600">
-                      You may opt out at any time here.
-                    </a>
-                  </p>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="agreedToTerms"
-                      checked={formData.agreedToTerms}
-                      onCheckedChange={(checked) => handleInputChange('agreedToTerms', checked as boolean)}
-                    />
-                    <Label htmlFor="agreedToTerms" className="text-sm text-blue-900">
-                      I understand and agree to continue
-                    </Label>
-                  </div>
-                  {errors.agreedToTerms && (
-                    <p className="text-red-500 text-sm">{errors.agreedToTerms}</p>
-                  )}
-                </div>
-              </Card>
+              {errors.agreedToTerms && (
+                <p className="text-red-500 text-sm mt-1">{errors.agreedToTerms}</p>
+              )}
 
               {/* Submit Button */}
               <Button

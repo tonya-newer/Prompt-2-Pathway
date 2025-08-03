@@ -18,7 +18,7 @@ export const AssessmentManager = () => {
   const [editMode, setEditMode] = useState(false);
   const [templates, setTemplates] = useState<AssessmentTemplate[]>([]);
   const [voiceScripts, setVoiceScripts] = useState({
-    intro: "Welcome to your VoiceCard assessment. I'm here to guide you through a personalized experience that will help you gain clarity on your path forward. Let's begin this journey together.",
+    intro: "Welcome to your Prompt 2 Pathway assessment. I'm here to guide you through a personalized experience that will help you gain clarity on your path forward. Let's begin this journey together.",
     mid: "You're doing great! These insights are helping us understand your unique situation. Let's continue with the next set of questions.",
     outro: "Congratulations on completing your assessment. Your personalized results are ready, and I'm excited to share the insights we've discovered about your journey."
   });

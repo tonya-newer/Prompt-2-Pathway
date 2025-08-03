@@ -190,7 +190,7 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome to VoiceCard</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome to Prompt 2 Pathway</h1>
           <p className="text-xl text-gray-600 mb-8">
             Discover your path through personalized voice-guided assessments
           </p>
@@ -440,7 +440,7 @@ const Index = () => {
 
           <TabsContent value="settings">
             <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">VoiceCard Settings</h3>
+              <h3 className="text-lg font-semibold mb-4">Prompt 2 Pathway Settings</h3>
               <div className="space-y-4">
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <h4 className="font-medium text-blue-900 mb-2">Voice Configuration</h4>

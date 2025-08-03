@@ -216,7 +216,7 @@ export const LeadCaptureForm = ({ onSubmit, audience }: LeadCaptureFormProps) =>
           size="lg"
         >
           <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-          <span className="break-words">Begin My VoiceCard Assessment</span>
+          <span className="break-words">Begin My Prompt 2 Pathway Assessment</span>
         </Button>
       </form>
     </div>
