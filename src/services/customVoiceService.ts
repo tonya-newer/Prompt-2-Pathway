@@ -16,7 +16,7 @@ export class CustomVoiceService {
     try {
       switch (type) {
         case 'welcome':
-          return `/custom-voices/welcome-message.wav?v=${Date.now()}&bust=${Math.random()}`;
+          return `/custom-voices/welcome-message.mp3?v=${Date.now()}&bust=${Math.random()}`;
         case 'question':
           if (questionId) {
             return `/custom-voices/question-${questionId}.wav`;
@@ -44,10 +44,10 @@ export class CustomVoiceService {
       return;
     }
 
-    // Force WAV format for welcome message with aggressive cache busting
+    // Force MP3 format for welcome message with aggressive cache busting
     const isWelcomeMessage = type === 'welcome';
     const formats = isWelcomeMessage 
-      ? [{ url: baseUrl, type: 'audio/wav' }]
+      ? [{ url: baseUrl, type: 'audio/mpeg' }]
       : baseUrl.includes('.mp3')
         ? [{ url: baseUrl, type: 'audio/mpeg' }]
         : [{ url: baseUrl, type: 'audio/wav' }];
