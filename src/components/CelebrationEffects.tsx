@@ -18,7 +18,7 @@ export const CelebrationEffects = ({ onComplete }: CelebrationEffectsProps) => {
           console.log('Attempting to play celebration sound effect...');
           
           // Only play the celebration music/sound effect, not voice
-          const audio = new Audio('/src/assets/celebration-audio.mp3');
+          const audio = new Audio('/assets/celebration-audio.mp3');
           audio.volume = 0.7;
           
           try {
