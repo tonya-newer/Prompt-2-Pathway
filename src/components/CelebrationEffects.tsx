@@ -20,6 +20,9 @@ export const CelebrationEffects = ({ onComplete }: CelebrationEffectsProps) => {
           // Only play the celebration music/sound effect, not voice
           const audio = new Audio('/assets/celebration-audio.mp3');
           audio.volume = 0.7;
+          audio.autoplay = true;
+          audio.muted = false;
+          audio.setAttribute('playsinline', 'true');
           
           try {
             await audio.play();
