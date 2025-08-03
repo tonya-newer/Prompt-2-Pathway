@@ -16,7 +16,7 @@ export class CustomVoiceService {
     try {
       switch (type) {
         case 'welcome':
-          return `/custom-voices/welcome-message.mp3?v=${Date.now()}&bust=${Math.random()}`;
+          return `/custom-voices/welcome-message.mp3`;
         case 'question':
           if (questionId) {
             return `/custom-voices/question-${questionId}.wav`;
@@ -44,13 +44,10 @@ export class CustomVoiceService {
       return;
     }
 
-    // Force MP3 format for welcome message with aggressive cache busting
-    const isWelcomeMessage = type === 'welcome';
-    const formats = isWelcomeMessage 
+    // Determine format based on file extension
+    const formats = baseUrl.includes('.mp3')
       ? [{ url: baseUrl, type: 'audio/mpeg' }]
-      : baseUrl.includes('.mp3')
-        ? [{ url: baseUrl, type: 'audio/mpeg' }]
-        : [{ url: baseUrl, type: 'audio/wav' }];
+      : [{ url: baseUrl, type: 'audio/wav' }];
 
     for (const format of formats) {
       try {
@@ -75,18 +72,12 @@ export class CustomVoiceService {
     throw new Error(`[CustomVoice] All audio formats failed for ${baseUrl}`);
   }
 
-  // Check if file exists with better error handling and cache busting
+  // Check if file exists with simple HEAD request
   private async checkFileExists(url: string): Promise<boolean> {
     try {
-      // Add aggressive cache busting parameter to ensure fresh file check
-      const cacheBustUrl = `${url}?v=${Date.now()}&cb=${Math.random().toString(36).substr(2, 9)}`;
-      const response = await fetch(cacheBustUrl, { 
+      const response = await fetch(url, { 
         method: 'HEAD',
-        cache: 'no-cache',
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
+        cache: 'no-cache'
       });
       return response.ok;
     } catch {
@@ -103,12 +94,14 @@ export class CustomVoiceService {
       audio.preload = 'auto';
       audio.crossOrigin = null; // Remove CORS for local files
       
-      // Add aggressive cache busting to prevent old file playback
-      const cacheBustUrl = `${url}?v=${Date.now()}&cb=${Math.random().toString(36).substr(2, 9)}`;
-      audio.src = cacheBustUrl;
-      if (mimeType) {
-        audio.setAttribute('type', mimeType);
-      }
+      // Set source directly without cache busting to avoid MIME issues
+      audio.src = url;
+      
+      // Create a proper source element with correct MIME type
+      const source = document.createElement('source');
+      source.src = url;
+      source.type = mimeType;
+      audio.appendChild(source);
       
       // Add detailed logging
       audio.addEventListener('loadstart', () => {
@@ -208,22 +201,11 @@ export class CustomVoiceService {
     }
 
     try {
-      // Add cache busting and timeout for file existence check
-      const cacheBustUrl = `${voiceUrl}?t=${Date.now()}`;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
-      
-      const response = await fetch(cacheBustUrl, { 
+      const response = await fetch(voiceUrl, { 
         method: 'HEAD',
-        signal: controller.signal,
-        cache: 'no-cache',
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
+        cache: 'no-cache'
       });
       
-      clearTimeout(timeoutId);
       console.log(`[CustomVoice] Check result for ${voiceUrl}: ${response.ok} (status: ${response.status})`);
       return response.ok;
     } catch (error) {
