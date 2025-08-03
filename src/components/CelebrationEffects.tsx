@@ -11,59 +11,21 @@ export const CelebrationEffects = ({ onComplete }: CelebrationEffectsProps) => {
   const [audioPlayed, setAudioPlayed] = useState(false);
 
   useEffect(() => {
-    // Play the celebration audio file immediately
+    // Play the celebration sound effect immediately (not voice message)
     if (!audioPlayed) {
       const playCelebrationAudio = async () => {
         try {
-          console.log('Attempting to play celebration audio...');
+          console.log('Attempting to play celebration sound effect...');
           
-          // Try to play the celebration audio from multiple possible locations
-          const audioPaths = [
-            '/custom-voices/congratulations-message.wav',
-            '/src/assets/celebration-audio.mp3',
-            '/assets/celebration-audio.mp3'
-          ];
+          // Only play the celebration music/sound effect, not voice
+          const audio = new Audio('/src/assets/celebration-audio.mp3');
+          audio.volume = 0.7;
           
-          let audioPlayed = false;
-          
-          for (const path of audioPaths) {
-            if (audioPlayed) break;
-            
-            try {
-              const audio = new Audio(path);
-              audio.volume = 0.7;
-              
-              // Create a promise to handle audio loading and playing
-              const playAudio = new Promise<void>((resolve, reject) => {
-                audio.oncanplaythrough = () => {
-                  console.log(`Celebration audio loaded from ${path}`);
-                  audio.play()
-                    .then(() => {
-                      console.log(`Celebration audio playing from ${path}`);
-                      audioPlayed = true;
-                      resolve();
-                    })
-                    .catch(reject);
-                };
-                
-                audio.onerror = () => {
-                  console.log(`Failed to load celebration audio from ${path}`);
-                  reject(new Error(`Failed to load from ${path}`));
-                };
-                
-                audio.load();
-              });
-              
-              await playAudio;
-              break; // Exit loop if successful
-            } catch (error) {
-              console.log(`Could not play celebration audio from ${path}:`, error);
-              continue; // Try next path
-            }
-          }
-          
-          if (!audioPlayed) {
-            console.log('No celebration audio files could be loaded');
+          try {
+            await audio.play();
+            console.log('Celebration sound effect playing');
+          } catch (error) {
+            console.log('Could not play celebration sound effect:', error);
           }
           
           setAudioPlayed(true);
