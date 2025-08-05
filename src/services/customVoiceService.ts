@@ -12,7 +12,7 @@ export class CustomVoiceService {
   }
 
   // Get the appropriate voice file URL based on context
-  getVoiceUrl(type: 'welcome' | 'question' | 'congratulations', questionId?: number): string | null {
+  getVoiceUrl(type: 'welcome' | 'question' | 'congratulations' | 'contact-form', questionId?: number): string | null {
     try {
       switch (type) {
         case 'welcome':
@@ -24,6 +24,8 @@ export class CustomVoiceService {
           return '/custom-voices/question-1.wav';
         case 'congratulations':
           return '/custom-voices/congratulations-message.wav';
+        case 'contact-form':
+          return '/custom-voices/contact-form.wav';
         default:
           return null;
       }
@@ -34,7 +36,7 @@ export class CustomVoiceService {
   }
 
   // Play custom voice file with multi-format support
-  async playVoice(type: 'welcome' | 'question' | 'congratulations', questionId?: number): Promise<void> {
+  async playVoice(type: 'welcome' | 'question' | 'congratulations' | 'contact-form', questionId?: number): Promise<void> {
     const baseUrl = this.getVoiceUrl(type, questionId);
     
     console.log(`[CustomVoice] Attempting to play ${type} voice (questionId: ${questionId})`);
@@ -144,7 +146,7 @@ export class CustomVoiceService {
   }
 
   // Check if a voice file exists
-  async checkVoiceExists(type: 'welcome' | 'question' | 'congratulations', questionId?: number): Promise<boolean> {
+  async checkVoiceExists(type: 'welcome' | 'question' | 'congratulations' | 'contact-form', questionId?: number): Promise<boolean> {
     const voiceUrl = this.getVoiceUrl(type, questionId);
     
     console.log(`[CustomVoice] Checking ${type} voice file: ${voiceUrl} (questionId: ${questionId})`);

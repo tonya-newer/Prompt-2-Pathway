@@ -53,7 +53,7 @@ const ContactForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
@@ -65,18 +65,48 @@ const ContactForm = () => {
       return;
     }
 
-    // Store contact information
-    localStorage.setItem('contact-info', JSON.stringify(formData));
-    
-    toast({
-      title: "Thank you!",
-      description: "Your information has been saved. Redirecting to your results...",
-    });
+    try {
+      // Store contact information in multiple places for reliability
+      localStorage.setItem('contact-info', JSON.stringify(formData));
+      localStorage.setItem('user-info', JSON.stringify(formData));
+      
+      // Get assessment results for lead storage
+      const assessmentResults = localStorage.getItem('assessment-results');
+      const assessmentTitle = localStorage.getItem('assessment-title');
+      
+      if (assessmentResults && assessmentTitle) {
+        const leadData = {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone || '',
+          ageRange: formData.ageRange || '',
+          gender: formData.gender || '',
+          source: formData.source || 'direct',
+          audience: 'individual'
+        };
+        
+        const results = JSON.parse(assessmentResults);
+        await leadStorageService.storeLead(leadData, results, assessmentTitle);
+      }
 
-    // Navigate to results page
-    setTimeout(() => {
-      navigate('/results');
-    }, 1000);
+      toast({
+        title: "Thank you!",
+        description: "Your information has been saved. Redirecting to your results...",
+      });
+
+      // Navigate to results page with a shorter delay for better mobile experience
+      setTimeout(() => {
+        navigate('/results', { replace: true });
+      }, 500);
+    } catch (error) {
+      console.error('Error saving contact information:', error);
+      toast({
+        title: "Error",
+        description: "There was an issue saving your information. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleInputChange = (field: string, value: string | boolean) => {
@@ -103,7 +133,7 @@ const ContactForm = () => {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Tell us where to send your personalized Prompt 2 Pathway results 👇
+              Tell Us Where to Send Your Personalized Results 👇
             </h1>
             <p className="text-lg text-gray-600 mb-2">
               This helps us deliver your custom results + bonus tips straight to your inbox.
