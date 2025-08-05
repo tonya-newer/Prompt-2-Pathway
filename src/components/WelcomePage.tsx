@@ -22,13 +22,8 @@ export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePage
               </div>
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-6 px-2">
-              Welcome to Your Prompt 2 Pathway
+              Welcome to Your Are You AI-Ready Assessment!
             </h1>
-            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-4 px-2">
-              <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent break-words">
-                {assessmentTitle}
-              </span>
-            </div>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed px-4">
               Discover powerful insights about yourself through this personalized assessment experience. 
               Your journey to clarity begins here.
@@ -89,7 +84,7 @@ export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePage
                 onClick={() => onSubmit({})}
                 className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-4 px-8 rounded-full text-lg shadow-lg transform hover:scale-105 transition-all duration-200"
               >
-                Begin My Prompt 2 Pathway Assessment
+                Begin My Assessment
               </button>
             </div>
           </Card>

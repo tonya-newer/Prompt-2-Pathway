@@ -170,15 +170,21 @@ export class CustomVoiceService {
 
   // Stop current playback
   stopVoice(): void {
+    console.log('[CustomVoice] Stopping all audio playback');
     // Stop any currently playing audio elements
     const audioElements = document.querySelectorAll('audio');
     audioElements.forEach(audio => {
       if (!audio.paused) {
+        console.log('[CustomVoice] Stopping audio element:', audio.src);
         audio.pause();
         audio.currentTime = 0;
-        audio.src = ''; // Clear source to fully stop
       }
+      // Remove the audio element to fully stop playback
+      audio.remove();
     });
+    
+    // Clear any pending timeouts or intervals that might be creating new audio
+    this.voiceCache.clear();
   }
 
   // Get all available question voice files (1-15 based on your upload)

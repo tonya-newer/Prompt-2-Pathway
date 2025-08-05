@@ -120,15 +120,19 @@ export const VoicePlayer = ({
   }, [autoPlay, useCustomVoice, text, questionId, playCustomVoice, isResultsPage]);
 
   const handlePlay = async () => {
+    console.log('[VoicePlayer] Handle play clicked, isPlaying:', isPlaying);
+    
     if (isPlaying) {
+      console.log('[VoicePlayer] Pausing current playback');
       setIsPlaying(false);
       // Properly stop all audio sources
       customVoiceService.stopVoice();
       nativeSpeech.stop();
-      console.log('Voice playback paused');
+      console.log('[VoicePlayer] Voice playback paused');
       return;
     }
 
+    console.log('[VoicePlayer] Starting new playback');
     // Stop any existing audio before starting new playback
     customVoiceService.stopVoice();
     nativeSpeech.stop();
@@ -138,15 +142,17 @@ export const VoicePlayer = ({
 
     try {
       if (useCustomVoice) {
+        console.log('[VoicePlayer] Playing custom voice');
         await playCustomVoice();
       } else {
         // Only use native speech as manual fallback, never automatically
-        console.log('Playing native speech as manual fallback');
+        console.log('[VoicePlayer] Playing native speech as manual fallback');
         await nativeSpeech.speak({ text });
       }
     } catch (error) {
-      console.error('Error playing voice:', error);
+      console.error('[VoicePlayer] Error playing voice:', error);
     } finally {
+      console.log('[VoicePlayer] Playback finished');
       setIsLoading(false);
       setIsPlaying(false);
     }

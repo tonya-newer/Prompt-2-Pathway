@@ -248,14 +248,15 @@ const ContactForm = () => {
               </div>
 
               {/* Single Checkbox for Both Consent and Bonus Tools */}
-              <div className="flex items-center space-x-2">
+              <div className="flex items-start space-x-3">
                 <Checkbox
                   id="agreedToTerms"
                   checked={formData.agreedToTerms}
                   onCheckedChange={(checked) => handleInputChange('agreedToTerms', checked as boolean)}
+                  className="mt-0.5 flex-shrink-0"
                 />
-                <Label htmlFor="agreedToTerms" className="text-base text-gray-700">
-                  ✅ Yes! I want bonus tools to help me take action on my results.
+                <Label htmlFor="agreedToTerms" className="text-base text-gray-700 leading-relaxed cursor-pointer">
+                  Yes! I want bonus tools to help me take action on my results.
                 </Label>
               </div>
               {errors.agreedToTerms && (
