@@ -54,7 +54,12 @@ export class AudioManager {
       audio.preload = 'auto';
       audio.volume = 1.0;
       audio.muted = false;
-      audio.crossOrigin = 'anonymous';
+      
+      // Only set crossOrigin for external URLs, not local files
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        audio.crossOrigin = 'anonymous';
+      }
+      
       audio.src = url;
 
       let resolved = false;
