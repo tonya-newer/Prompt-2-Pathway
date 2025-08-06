@@ -16,7 +16,8 @@ export class CustomVoiceService {
     try {
       switch (type) {
         case 'welcome':
-          return `/custom-voices/welcome-message.mp3`;
+          // Use the new welcome message file
+          return `/custom-voices/welcome-message-new.mp3`;
         case 'question':
           if (questionId) {
             return `/custom-voices/question-${questionId}.wav`;
@@ -39,10 +40,12 @@ export class CustomVoiceService {
   async playVoice(type: 'welcome' | 'question' | 'congratulations' | 'contact-form', questionId?: number): Promise<void> {
     const baseUrl = this.getVoiceUrl(type, questionId);
     
-    console.log(`[CustomVoice] Attempting to play ${type} voice (questionId: ${questionId})`);
+    console.log(`[CustomVoice] 🎵 PLAY REQUEST: ${type} voice (questionId: ${questionId})`);
+    console.log(`[CustomVoice] 🎵 Base URL: ${baseUrl}`);
+    console.log(`[CustomVoice] 🎵 Current audio elements on page:`, document.querySelectorAll('audio').length);
     
     if (!baseUrl) {
-      console.warn(`[CustomVoice] No voice file found for type: ${type}${questionId ? `, question: ${questionId}` : ''}`);
+      console.warn(`[CustomVoice] ❌ No voice file found for type: ${type}${questionId ? `, question: ${questionId}` : ''}`);
       return;
     }
 
@@ -155,7 +158,8 @@ export class CustomVoiceService {
       };
       
       const onEnded = () => {
-        console.log(`[CustomVoice] Playback completed: ${url}`);
+        console.log(`[CustomVoice] 🏁 AUDIO ENDED: ${url}`);
+        console.log(`[CustomVoice] 🏁 Audio duration was: ${audio.duration}s, played to: ${audio.currentTime}s`);
         cleanup();
         resolve();
       };
@@ -227,20 +231,24 @@ export class CustomVoiceService {
 
   // Stop current playback
   stopVoice(): void {
-    console.log('[CustomVoice] Stopping all audio playback');
-    // Stop any currently playing audio elements
+    console.log('[CustomVoice] 🛑 STOPPING all audio playback');
     const audioElements = document.querySelectorAll('audio');
-    audioElements.forEach(audio => {
+    console.log(`[CustomVoice] 🛑 Found ${audioElements.length} audio elements to stop`);
+    
+    audioElements.forEach((audio, index) => {
+      console.log(`[CustomVoice] 🛑 Audio ${index}: src=${audio.src}, paused=${audio.paused}, currentTime=${audio.currentTime}`);
       if (!audio.paused) {
-        console.log('[CustomVoice] Stopping audio element:', audio.src);
+        console.log(`[CustomVoice] 🛑 Stopping audio element ${index}:`, audio.src);
         audio.pause();
         audio.currentTime = 0;
       }
-      // Don't remove audio elements that are actively playing - let them complete naturally
+      // Remove the audio element to prevent any further playback
+      audio.remove();
     });
     
     // Clear any pending timeouts or intervals that might be creating new audio
     this.voiceCache.clear();
+    console.log('[CustomVoice] 🛑 All audio stopped and cache cleared');
   }
 
   // Get all available question voice files (1-15 based on your upload)
