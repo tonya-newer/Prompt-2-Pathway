@@ -52,11 +52,27 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
         // Use custom ElevenLabs voice
         console.log('[WelcomeVoicePlayer] Playing custom welcome voice...');
         await customVoiceService.playVoice('welcome');
+        console.log('[WelcomeVoicePlayer] Custom voice playback completed');
+      } else {
+        // Fallback to native speech if no custom voice
+        console.log('[WelcomeVoicePlayer] Using native speech fallback...');
+        await nativeSpeech.speak({ text: welcomeText });
+        console.log('[WelcomeVoicePlayer] Native speech playback completed');
       }
       
       setIsPlaying(false);
     } catch (error) {
       console.error('[WelcomeVoicePlayer] Error playing welcome voice:', error);
+      // Try fallback if custom voice fails
+      if (useCustomVoice) {
+        console.log('[WelcomeVoicePlayer] Custom voice failed, trying native speech...');
+        try {
+          await nativeSpeech.speak({ text: welcomeText });
+          console.log('[WelcomeVoicePlayer] Fallback native speech completed');
+        } catch (fallbackError) {
+          console.error('[WelcomeVoicePlayer] Fallback speech also failed:', fallbackError);
+        }
+      }
       setIsPlaying(false);
     } finally {
       setIsLoading(false);
