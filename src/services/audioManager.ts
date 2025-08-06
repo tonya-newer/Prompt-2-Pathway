@@ -90,20 +90,41 @@ export class AudioManager {
 
       const onCanPlayThrough = async () => {
         console.log(`[AudioManager] ✅ Can play through - Starting playback: ${url}`);
+        console.log(`[AudioManager] 🔧 Audio element stats:`, {
+          duration: audio.duration,
+          readyState: audio.readyState,
+          networkState: audio.networkState,
+          canPlayType: audio.canPlayType('audio/mpeg'),
+          volume: audio.volume,
+          muted: audio.muted,
+          paused: audio.paused
+        });
         
         try {
           // Ensure settings are correct
           audio.muted = false;
           audio.volume = 1.0;
           
+          console.log(`[AudioManager] 🎵 Attempting to play...`);
           const playPromise = audio.play();
           
           if (playPromise !== undefined) {
             await playPromise;
             console.log(`[AudioManager] 🔊 Playback started successfully: ${url}`);
+          } else {
+            console.log(`[AudioManager] 🔊 Play() returned undefined, assuming success: ${url}`);
           }
         } catch (playError) {
-          console.error(`[AudioManager] ❌ Play failed: ${url}`, playError);
+          console.error(`[AudioManager] ❌ Play failed: ${url}`, {
+            error: playError,
+            name: playError.name,
+            message: playError.message,
+            audioState: {
+              readyState: audio.readyState,
+              networkState: audio.networkState,
+              error: audio.error
+            }
+          });
           cleanup();
           reject(playError);
         }
@@ -123,10 +144,17 @@ export class AudioManager {
           message: error?.message,
           networkState: audio.networkState,
           readyState: audio.readyState,
-          currentSrc: audio.currentSrc
+          currentSrc: audio.currentSrc,
+          errorType: error?.code === 1 ? 'MEDIA_ERR_ABORTED' :
+                    error?.code === 2 ? 'MEDIA_ERR_NETWORK' :
+                    error?.code === 3 ? 'MEDIA_ERR_DECODE' :
+                    error?.code === 4 ? 'MEDIA_ERR_SRC_NOT_SUPPORTED' : 'UNKNOWN',
+          canPlayType: audio.canPlayType('audio/mpeg'),
+          volume: audio.volume,
+          muted: audio.muted
         });
         cleanup();
-        reject(new Error(`Audio playback failed: ${url}`));
+        reject(new Error(`Audio playback failed: ${url} (Error code: ${error?.code})`));
       };
 
       // Add event listeners
