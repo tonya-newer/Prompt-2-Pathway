@@ -87,7 +87,8 @@ const ContactForm = () => {
         };
         
         const results = JSON.parse(assessmentResults);
-        await leadStorageService.storeLead(leadData, results, assessmentTitle);
+        leadStorageService.storeLead(leadData, results, assessmentTitle);
+        console.log('Lead data stored successfully');
       }
 
       toast({
@@ -95,10 +96,9 @@ const ContactForm = () => {
         description: "Your information has been saved. Redirecting to your results...",
       });
 
-      // Navigate to results page with a shorter delay for better mobile experience
-      setTimeout(() => {
-        navigate('/results', { replace: true });
-      }, 500);
+      // Navigate to results page immediately for better mobile experience
+      console.log('Navigating to results page...');
+      navigate('/results', { replace: true });
     } catch (error) {
       console.error('Error saving contact information:', error);
       toast({
