@@ -6,7 +6,6 @@ import { Card } from '@/components/ui/card';
 import { customVoiceService } from '@/services/customVoiceService';
 import { nativeSpeech } from '@/services/nativeSpeech';
 import { InteractionGate } from './InteractionGate';
-import { testAudioFile } from '@/utils/audioTest';
 
 interface WelcomeVoicePlayerProps {
   className?: string;
@@ -22,21 +21,16 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
   const welcomeText = "Welcome to your Prompt 2 Pathway assessment! This personalized assessment will help you gain valuable insights about yourself. Please fill out your information below, and then we'll begin your journey of discovery together. Take your time and answer honestly for the best results.";
 
   useEffect(() => {
-    // Check if custom welcome voice exists
+    // Check if custom welcome voice exists - NO TESTING, just check
     const checkCustomVoice = async () => {
       try {
-        console.log('[WelcomeVoicePlayer] Checking for custom welcome voice...');
+        console.log('[WelcomeVoicePlayer] Checking for custom welcome voice (no test playback)...');
         
-        // First test the direct MP3 file
-        console.log('[WelcomeVoicePlayer] Testing MP3 file directly...');
-        const mp3Works = await testAudioFile('/custom-voices/welcome-message.mp3');
-        console.log('[WelcomeVoicePlayer] Direct MP3 test result:', mp3Works);
-        
-        // Then check via service
+        // Only check if file exists, do NOT test play it
         const exists = await customVoiceService.checkVoiceExists('welcome');
-        console.log('[WelcomeVoicePlayer] Service voice check:', exists);
+        console.log('[WelcomeVoicePlayer] Voice exists check result:', exists);
         
-        setUseCustomVoice(mp3Works && exists);
+        setUseCustomVoice(exists);
       } catch (error) {
         console.error('[WelcomeVoicePlayer] Error checking custom voice:', error);
         setUseCustomVoice(false);
@@ -91,17 +85,8 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
   const handleInteractionGateStart = () => {
     setShowInteractionGate(false);
     setHasInteracted(true);
-    // Auto-play after user interaction with minimal delay
-    setTimeout(async () => {
-      console.log('Auto-playing welcome message after user interaction...');
-      // Re-check voice existence before playing to ensure state is current
-      const voiceExists = await customVoiceService.checkVoiceExists('welcome');
-      console.log('[WelcomeVoicePlayer] Re-checked voice exists before auto-play:', voiceExists);
-      setUseCustomVoice(voiceExists);
-      if (voiceExists) {
-        await playWelcomeVoice();
-      }
-    }, 100); // Minimal delay for better user experience
+    // NO AUTO-PLAY - let user manually click play to avoid any looping issues
+    console.log('[WelcomeVoicePlayer] User interaction completed - no autoplay');
   };
 
   // Cleanup
