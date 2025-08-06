@@ -1,8 +1,9 @@
 
 // Custom voice service for handling uploaded ElevenLabs voice recordings
+import { audioManager } from './audioManager';
+
 export class CustomVoiceService {
   private static instance: CustomVoiceService;
-  private voiceCache: Map<string, string> = new Map();
 
   static getInstance(): CustomVoiceService {
     if (!CustomVoiceService.instance) {
@@ -16,17 +17,17 @@ export class CustomVoiceService {
     try {
       switch (type) {
         case 'welcome':
-          // Use the new welcome message file
-          return `/custom-voices/welcome-message-new.mp3`;
+          // Use the fresh welcome message file with cache busting
+          return `/custom-voices/welcome-fresh.mp3?v=${Date.now()}`;
         case 'question':
           if (questionId) {
-            return `/custom-voices/question-${questionId}.wav`;
+            return `/custom-voices/question-${questionId}.wav?v=${Date.now()}`;
           }
-          return '/custom-voices/question-1.wav';
+          return `/custom-voices/question-1.wav?v=${Date.now()}`;
         case 'congratulations':
-          return '/custom-voices/congratulations-message.wav';
+          return `/custom-voices/congratulations-message.wav?v=${Date.now()}`;
         case 'contact-form':
-          return '/custom-voices/contact-form.wav';
+          return `/custom-voices/contact-form.wav?v=${Date.now()}`;
         default:
           return null;
       }
@@ -36,45 +37,35 @@ export class CustomVoiceService {
     }
   }
 
-  // Play custom voice file with multi-format support
+  // Play custom voice file using the single-instance audio manager
   async playVoice(type: 'welcome' | 'question' | 'congratulations' | 'contact-form', questionId?: number): Promise<void> {
-    const baseUrl = this.getVoiceUrl(type, questionId);
+    const voiceUrl = this.getVoiceUrl(type, questionId);
     
     console.log(`[CustomVoice] 🎵 PLAY REQUEST: ${type} voice (questionId: ${questionId})`);
-    console.log(`[CustomVoice] 🎵 Base URL: ${baseUrl}`);
-    console.log(`[CustomVoice] 🎵 Current audio elements on page:`, document.querySelectorAll('audio').length);
+    console.log(`[CustomVoice] 🎵 Voice URL: ${voiceUrl}`);
     
-    if (!baseUrl) {
+    if (!voiceUrl) {
       console.warn(`[CustomVoice] ❌ No voice file found for type: ${type}${questionId ? `, question: ${questionId}` : ''}`);
       return;
     }
 
-    // Determine format based on file extension
-    const formats = baseUrl.includes('.mp3')
-      ? [{ url: baseUrl, type: 'audio/mpeg' }]
-      : [{ url: baseUrl, type: 'audio/wav' }];
-
-    for (const format of formats) {
-      try {
-        console.log(`[CustomVoice] Trying format: ${format.url}`);
-        
-        // First check if file exists
-        const exists = await this.checkFileExists(format.url);
-        if (!exists) {
-          console.log(`[CustomVoice] File not found: ${format.url}`);
-          continue;
-        }
-
-        // Try to play this format
-        await this.playAudioFile(format.url, format.type);
-        return; // Success, exit
-      } catch (error) {
-        console.warn(`[CustomVoice] Failed to play ${format.url}:`, error);
-        continue; // Try next format
+    try {
+      // First check if file exists
+      const exists = await this.checkFileExists(voiceUrl);
+      if (!exists) {
+        console.error(`[CustomVoice] ❌ File not found: ${voiceUrl}`);
+        throw new Error(`Voice file not found: ${voiceUrl}`);
       }
-    }
 
-    throw new Error(`[CustomVoice] All audio formats failed for ${baseUrl}`);
+      // Use the audio manager to play (ensures only one audio plays at a time)
+      console.log(`[CustomVoice] 🎵 Playing via AudioManager: ${voiceUrl}`);
+      await audioManager.playAudio(voiceUrl);
+      console.log(`[CustomVoice] ✅ Playback completed successfully: ${voiceUrl}`);
+      
+    } catch (error) {
+      console.error(`[CustomVoice] ❌ Failed to play ${voiceUrl}:`, error);
+      throw error;
+    }
   }
 
   // Check if file exists with simple HEAD request
@@ -88,120 +79,6 @@ export class CustomVoiceService {
     } catch {
       return false;
     }
-  }
-
-  // Play a specific audio file with proper MIME type handling
-  private async playAudioFile(url: string, mimeType: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      console.log(`[CustomVoice] Creating audio element for: ${url} (MIME: ${mimeType})`);
-      
-      const audio = new Audio();
-      
-      // Essential settings for audio playback
-      audio.preload = 'auto';
-      audio.crossOrigin = 'anonymous';
-      audio.volume = 1.0;
-      audio.muted = false;
-      
-      // Set source directly
-      audio.src = url;
-      
-      // Set up event listeners before loading
-      const cleanup = () => {
-        audio.removeEventListener('canplaythrough', onCanPlay);
-        audio.removeEventListener('ended', onEnded);
-        audio.removeEventListener('error', onError);
-        audio.removeEventListener('loadeddata', onLoadedData);
-        audio.removeEventListener('loadstart', onLoadStart);
-        // Don't pause or remove during normal playback - only on actual cleanup
-        if (audio.readyState === 0 || audio.error) {
-          audio.pause();
-          audio.currentTime = 0;
-          audio.remove();
-        }
-      };
-
-      const onLoadedData = () => {
-        console.log(`[CustomVoice] Audio data loaded: ${url}, duration: ${audio.duration}s`);
-      };
-
-      const onCanPlay = async () => {
-        console.log(`[CustomVoice] Audio ready to play: ${url}, readyState: ${audio.readyState}`);
-        
-        try {
-          // Ensure audio is not muted and volume is set
-          audio.muted = false;
-          audio.volume = 1.0;
-          
-          // Force play with user gesture context
-          const playPromise = audio.play();
-          
-          if (playPromise !== undefined) {
-            await playPromise;
-            console.log(`[CustomVoice] Playback started successfully: ${url}`);
-          } else {
-            console.log(`[CustomVoice] Play() returned undefined for: ${url}`);
-          }
-        } catch (playError) {
-          console.error(`[CustomVoice] Play() failed: ${url}`, playError);
-          
-          // Try to handle autoplay restrictions
-          if (playError.name === 'NotAllowedError') {
-            console.log(`[CustomVoice] Autoplay blocked for: ${url}. User interaction required.`);
-            // Don't reject immediately, let the user try manually
-            return;
-          }
-          
-          cleanup();
-          reject(playError);
-        }
-      };
-      
-      const onEnded = () => {
-        console.log(`[CustomVoice] 🏁 AUDIO ENDED: ${url}`);
-        console.log(`[CustomVoice] 🏁 Audio duration was: ${audio.duration}s, played to: ${audio.currentTime}s`);
-        cleanup();
-        resolve();
-      };
-      
-      const onError = (e: Event) => {
-        const error = audio.error;
-        console.error(`[CustomVoice] Audio error for ${url}:`, {
-          message: error?.message || 'Unknown error',
-          code: error?.code || 'No code',
-          networkState: audio.networkState,
-          readyState: audio.readyState,
-          currentSrc: audio.currentSrc
-        });
-        cleanup();
-        reject(new Error(`Audio playback failed: ${url} (Error code: ${error?.code}, Message: ${error?.message})`));
-      };
-      
-      // Add event listeners
-      audio.addEventListener('loadeddata', onLoadedData);
-      audio.addEventListener('canplaythrough', onCanPlay);
-      audio.addEventListener('ended', onEnded);
-      audio.addEventListener('error', onError);
-      
-      // Set timeout for loading
-      const timeout = setTimeout(() => {
-        console.error(`[CustomVoice] Load timeout for: ${url}`);
-        cleanup();
-        reject(new Error(`Audio load timeout: ${url}`));
-      }, 15000); // Increased timeout to 15 seconds
-      
-      // Clear timeout when audio starts loading
-      const onLoadStart = () => {
-        console.log(`[CustomVoice] Started loading: ${url}`);
-        clearTimeout(timeout);
-      };
-      
-      audio.addEventListener('loadstart', onLoadStart);
-      
-      // Start loading
-      console.log(`[CustomVoice] Loading audio: ${url}`);
-      audio.load();
-    });
   }
 
   // Check if a voice file exists
@@ -229,26 +106,10 @@ export class CustomVoiceService {
     }
   }
 
-  // Stop current playback
+  // Stop current playback using the audio manager
   stopVoice(): void {
-    console.log('[CustomVoice] 🛑 STOPPING all audio playback');
-    const audioElements = document.querySelectorAll('audio');
-    console.log(`[CustomVoice] 🛑 Found ${audioElements.length} audio elements to stop`);
-    
-    audioElements.forEach((audio, index) => {
-      console.log(`[CustomVoice] 🛑 Audio ${index}: src=${audio.src}, paused=${audio.paused}, currentTime=${audio.currentTime}`);
-      if (!audio.paused) {
-        console.log(`[CustomVoice] 🛑 Stopping audio element ${index}:`, audio.src);
-        audio.pause();
-        audio.currentTime = 0;
-      }
-      // Remove the audio element to prevent any further playback
-      audio.remove();
-    });
-    
-    // Clear any pending timeouts or intervals that might be creating new audio
-    this.voiceCache.clear();
-    console.log('[CustomVoice] 🛑 All audio stopped and cache cleared');
+    console.log('[CustomVoice] 🛑 Requesting stop from AudioManager');
+    audioManager.stopAll();
   }
 
   // Get all available question voice files (1-15 based on your upload)
