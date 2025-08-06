@@ -31,22 +31,8 @@ export const VoicePlayer = ({
       let voiceExists = false;
       
       if (customVoiceType) {
-        if (customVoiceType === 'contact-form') {
-          // Check if contact form voice exists by trying to fetch it
-          try {
-            const response = await fetch('/custom-voices/contact-form.wav', { method: 'HEAD' });
-            voiceExists = response.ok;
-          } catch {
-            voiceExists = false;
-          }
-          console.log('Contact form voice check:', voiceExists);
-        } else if (customVoiceType === 'question' && questionId) {
-          voiceExists = await customVoiceService.checkVoiceExists('question', questionId);
-          console.log(`Question ${questionId} voice check:`, voiceExists);
-        } else {
-          voiceExists = await customVoiceService.checkVoiceExists(customVoiceType);
-          console.log(`${customVoiceType} voice check:`, voiceExists);
-        }
+        voiceExists = await customVoiceService.checkVoiceExists(customVoiceType, questionId);
+        console.log(`${customVoiceType} voice check:`, voiceExists);
       } else if (isResultsPage) {
         voiceExists = await customVoiceService.checkVoiceExists('congratulations');
         console.log('Results page voice check:', voiceExists);
@@ -70,18 +56,8 @@ export const VoicePlayer = ({
   const playCustomVoice = useCallback(async () => {
     try {
       if (customVoiceType) {
-        if (customVoiceType === 'contact-form') {
-          // Play contact form voice
-          const audio = new Audio('/custom-voices/contact-form.wav');
-          await audio.play();
-          console.log('Playing contact form custom voice');
-        } else if (customVoiceType === 'question' && questionId) {
-          await customVoiceService.playVoice('question', questionId);
-          console.log(`Playing question ${questionId} custom voice`);
-        } else {
-          await customVoiceService.playVoice(customVoiceType);
-          console.log(`Playing ${customVoiceType} custom voice`);
-        }
+        await customVoiceService.playVoice(customVoiceType, questionId);
+        console.log(`Playing ${customVoiceType} custom voice`);
       } else if (isResultsPage) {
         await customVoiceService.playVoice('congratulations');
         console.log('Playing results page custom voice');

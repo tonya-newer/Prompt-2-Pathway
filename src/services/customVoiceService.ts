@@ -95,29 +95,38 @@ export class CustomVoiceService {
       const audio = new Audio();
       
       // Configure for maximum browser compatibility
-      audio.preload = 'auto';
+      audio.preload = 'metadata';
       audio.crossOrigin = null;
       
-      // Set source directly - NO cache busting to avoid MIME detection issues
+      // Set source directly
       audio.src = url;
       
-      // Success handlers
-      audio.addEventListener('canplaythrough', () => {
+      // Set up event listeners before loading
+      const cleanup = () => {
+        audio.removeEventListener('canplay', onCanPlay);
+        audio.removeEventListener('ended', onEnded);
+        audio.removeEventListener('error', onError);
+        audio.removeEventListener('loadstart', onLoadStart);
+      };
+
+      const onCanPlay = () => {
         console.log(`[CustomVoice] Audio ready to play: ${url}`);
         audio.play().then(() => {
           console.log(`[CustomVoice] Playback started successfully: ${url}`);
         }).catch((playError) => {
           console.error(`[CustomVoice] Play() failed: ${url}`, playError);
+          cleanup();
           reject(playError);
         });
-      });
+      };
       
-      audio.addEventListener('ended', () => {
+      const onEnded = () => {
         console.log(`[CustomVoice] Playback completed: ${url}`);
+        cleanup();
         resolve();
-      });
+      };
       
-      audio.addEventListener('error', (e) => {
+      const onError = (e: Event) => {
         const error = audio.error;
         console.error(`[CustomVoice] Audio error for ${url}:`, {
           message: error?.message || 'Unknown error',
@@ -125,19 +134,30 @@ export class CustomVoiceService {
           networkState: audio.networkState,
           readyState: audio.readyState
         });
-        
+        cleanup();
         reject(new Error(`Audio playback failed: ${url} (Error: ${error?.code})`));
-      });
+      };
+
+      const onLoadStart = () => {
+        console.log(`[CustomVoice] Started loading: ${url}`);
+      };
+      
+      // Add event listeners
+      audio.addEventListener('canplay', onCanPlay);
+      audio.addEventListener('ended', onEnded);
+      audio.addEventListener('error', onError);
+      audio.addEventListener('loadstart', onLoadStart);
       
       // Set timeout for loading
       const timeout = setTimeout(() => {
         console.error(`[CustomVoice] Load timeout for: ${url}`);
+        cleanup();
         reject(new Error(`Audio load timeout: ${url}`));
-      }, 5000);
+      }, 10000); // Increased timeout to 10 seconds
       
+      // Clear timeout when audio starts loading
       audio.addEventListener('loadstart', () => {
         clearTimeout(timeout);
-        console.log(`[CustomVoice] Started loading: ${url}`);
       });
       
       // Start loading
