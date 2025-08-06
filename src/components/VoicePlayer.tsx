@@ -81,15 +81,23 @@ export const VoicePlayer = ({
       customVoiceService.stopVoice();
       nativeSpeech.stop();
       
+      // Create user interaction context for autoplay
+      const attemptAutoPlay = async () => {
+        try {
+          console.log('[VoicePlayer] Actually starting auto-play...');
+          setIsPlaying(true);
+          await playCustomVoice();
+        } catch (error) {
+          console.warn('[VoicePlayer] Auto-play failed (likely due to browser policy):', error);
+          // Don't show error to user, they can manually play
+        } finally {
+          setIsPlaying(false);
+        }
+      };
+      
       // Shorter delay for results page to start voice message immediately after celebration
       const delay = isResultsPage ? 200 : (questionId === 1 ? 100 : 300);
-      setTimeout(() => {
-        console.log('[VoicePlayer] Actually starting auto-play...');
-        setIsPlaying(true);
-        playCustomVoice().finally(() => {
-          setIsPlaying(false);
-        });
-      }, delay);
+      setTimeout(attemptAutoPlay, delay);
     } else if (autoPlay && !useCustomVoice) {
       console.log('[VoicePlayer] No custom voice available - skipping auto-play (no fallback to native speech)');
     }

@@ -94,30 +94,60 @@ export class CustomVoiceService {
       
       const audio = new Audio();
       
-      // Configure for maximum browser compatibility
-      audio.preload = 'metadata';
-      audio.crossOrigin = null;
+      // Essential settings for audio playback
+      audio.preload = 'auto';
+      audio.crossOrigin = 'anonymous';
+      audio.volume = 1.0;
+      audio.muted = false;
       
       // Set source directly
       audio.src = url;
       
       // Set up event listeners before loading
       const cleanup = () => {
-        audio.removeEventListener('canplay', onCanPlay);
+        audio.removeEventListener('canplaythrough', onCanPlay);
         audio.removeEventListener('ended', onEnded);
         audio.removeEventListener('error', onError);
-        audio.removeEventListener('loadstart', onLoadStart);
+        audio.removeEventListener('loadeddata', onLoadedData);
+        audio.pause();
+        audio.currentTime = 0;
+        audio.remove();
       };
 
-      const onCanPlay = () => {
-        console.log(`[CustomVoice] Audio ready to play: ${url}`);
-        audio.play().then(() => {
-          console.log(`[CustomVoice] Playback started successfully: ${url}`);
-        }).catch((playError) => {
+      const onLoadedData = () => {
+        console.log(`[CustomVoice] Audio data loaded: ${url}, duration: ${audio.duration}s`);
+      };
+
+      const onCanPlay = async () => {
+        console.log(`[CustomVoice] Audio ready to play: ${url}, readyState: ${audio.readyState}`);
+        
+        try {
+          // Ensure audio is not muted and volume is set
+          audio.muted = false;
+          audio.volume = 1.0;
+          
+          // Force play with user gesture context
+          const playPromise = audio.play();
+          
+          if (playPromise !== undefined) {
+            await playPromise;
+            console.log(`[CustomVoice] Playback started successfully: ${url}`);
+          } else {
+            console.log(`[CustomVoice] Play() returned undefined for: ${url}`);
+          }
+        } catch (playError) {
           console.error(`[CustomVoice] Play() failed: ${url}`, playError);
+          
+          // Try to handle autoplay restrictions
+          if (playError.name === 'NotAllowedError') {
+            console.log(`[CustomVoice] Autoplay blocked for: ${url}. User interaction required.`);
+            // Don't reject immediately, let the user try manually
+            return;
+          }
+          
           cleanup();
           reject(playError);
-        });
+        }
       };
       
       const onEnded = () => {
@@ -132,35 +162,34 @@ export class CustomVoiceService {
           message: error?.message || 'Unknown error',
           code: error?.code || 'No code',
           networkState: audio.networkState,
-          readyState: audio.readyState
+          readyState: audio.readyState,
+          currentSrc: audio.currentSrc
         });
         cleanup();
-        reject(new Error(`Audio playback failed: ${url} (Error: ${error?.code})`));
-      };
-
-      const onLoadStart = () => {
-        console.log(`[CustomVoice] Started loading: ${url}`);
+        reject(new Error(`Audio playback failed: ${url} (Error code: ${error?.code}, Message: ${error?.message})`));
       };
       
       // Add event listeners
-      audio.addEventListener('canplay', onCanPlay);
+      audio.addEventListener('loadeddata', onLoadedData);
+      audio.addEventListener('canplaythrough', onCanPlay);
       audio.addEventListener('ended', onEnded);
       audio.addEventListener('error', onError);
-      audio.addEventListener('loadstart', onLoadStart);
       
       // Set timeout for loading
       const timeout = setTimeout(() => {
         console.error(`[CustomVoice] Load timeout for: ${url}`);
         cleanup();
         reject(new Error(`Audio load timeout: ${url}`));
-      }, 10000); // Increased timeout to 10 seconds
+      }, 15000); // Increased timeout to 15 seconds
       
       // Clear timeout when audio starts loading
       audio.addEventListener('loadstart', () => {
+        console.log(`[CustomVoice] Started loading: ${url}`);
         clearTimeout(timeout);
       });
       
       // Start loading
+      console.log(`[CustomVoice] Loading audio: ${url}`);
       audio.load();
     });
   }
