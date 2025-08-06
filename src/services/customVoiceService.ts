@@ -109,9 +109,13 @@ export class CustomVoiceService {
         audio.removeEventListener('ended', onEnded);
         audio.removeEventListener('error', onError);
         audio.removeEventListener('loadeddata', onLoadedData);
-        audio.pause();
-        audio.currentTime = 0;
-        audio.remove();
+        audio.removeEventListener('loadstart', onLoadStart);
+        // Don't pause or remove during normal playback - only on actual cleanup
+        if (audio.readyState === 0 || audio.error) {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.remove();
+        }
       };
 
       const onLoadedData = () => {
@@ -183,10 +187,12 @@ export class CustomVoiceService {
       }, 15000); // Increased timeout to 15 seconds
       
       // Clear timeout when audio starts loading
-      audio.addEventListener('loadstart', () => {
+      const onLoadStart = () => {
         console.log(`[CustomVoice] Started loading: ${url}`);
         clearTimeout(timeout);
-      });
+      };
+      
+      audio.addEventListener('loadstart', onLoadStart);
       
       // Start loading
       console.log(`[CustomVoice] Loading audio: ${url}`);
@@ -230,8 +236,7 @@ export class CustomVoiceService {
         audio.pause();
         audio.currentTime = 0;
       }
-      // Remove the audio element to fully stop playback
-      audio.remove();
+      // Don't remove audio elements that are actively playing - let them complete naturally
     });
     
     // Clear any pending timeouts or intervals that might be creating new audio

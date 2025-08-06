@@ -91,15 +91,17 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
   const handleInteractionGateStart = () => {
     setShowInteractionGate(false);
     setHasInteracted(true);
-    // Auto-play after user interaction with longer delay to ensure state is set
+    // Auto-play after user interaction with minimal delay
     setTimeout(async () => {
       console.log('Auto-playing welcome message after user interaction...');
       // Re-check voice existence before playing to ensure state is current
       const voiceExists = await customVoiceService.checkVoiceExists('welcome');
       console.log('[WelcomeVoicePlayer] Re-checked voice exists before auto-play:', voiceExists);
       setUseCustomVoice(voiceExists);
-      playWelcomeVoice();
-    }, 800); // Increased delay to ensure state is properly set
+      if (voiceExists) {
+        await playWelcomeVoice();
+      }
+    }, 100); // Minimal delay for better user experience
   };
 
   // Cleanup
