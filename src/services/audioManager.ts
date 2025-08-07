@@ -178,6 +178,15 @@ export class AudioManager {
 
       // Start loading
       console.log(`[AudioManager] 🔄 Loading audio: ${url}`);
+      
+      // Add immediate error logging to track the source of failures
+      console.log(`[AudioManager] 🔍 Audio element initial state:`, {
+        src: audio.src,
+        readyState: audio.readyState,
+        networkState: audio.networkState,
+        error: audio.error
+      });
+      
       audio.load();
     });
   }
