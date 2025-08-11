@@ -1,5 +1,6 @@
 
 import { Card } from '@/components/ui/card';
+import { useEffect, useRef, useState } from 'react';
 
 
 interface WelcomePageProps {
@@ -9,11 +10,72 @@ interface WelcomePageProps {
 }
 
 export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePageProps) => {
-  const handleStart = () => {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [status, setStatus] = useState('');
+  const [isStarting, setIsStarting] = useState(false);
+  const [showManualPlay, setShowManualPlay] = useState(false);
+  const endedAttachedRef = useRef(false);
+
+  // Preload on first user interaction for smoother playback on mobile
+  useEffect(() => {
+    const prime = () => {
+      try { audioRef.current?.load(); } catch {}
+    };
+    window.addEventListener('click', prime, { once: true });
+    return () => {
+      // Cleanup audio if user navigates away early
+      const a = audioRef.current;
+      if (a) {
+        try { a.pause(); } catch {}
+        a.currentTime = 0;
+      }
+    };
+  }, []);
+
+  const handleStart = async () => {
     try {
       localStorage.setItem('audio-enabled', 'true');
     } catch {}
-    onSubmit({});
+
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    // Navigate to Q1 only after the welcome message ends
+    const onEnded = () => {
+      setStatus('');
+      setIsStarting(false);
+      endedAttachedRef.current = false;
+      audio.currentTime = 0;
+      onSubmit({});
+    };
+
+    if (!endedAttachedRef.current) {
+      audio.addEventListener('ended', onEnded, { once: true });
+      endedAttachedRef.current = true;
+    }
+
+    setIsStarting(true);
+    setStatus('Playing welcome message…');
+
+    try {
+      await audio.play();
+    } catch (err) {
+      // Autoplay blocked — show manual play fallback
+      setIsStarting(false);
+      setShowManualPlay(true);
+      setStatus('Tap to play the welcome message, then we’ll begin.');
+    }
+  };
+
+  const handleManualPlay = async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    setShowManualPlay(false);
+    setIsStarting(true);
+    setStatus('Playing welcome message…');
+    try {
+      await audio.play();
+    } catch {}
   };
 
   return (
@@ -43,15 +105,43 @@ export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePage
               Your personalized assessment uses short voice prompts. Tap Start to begin and listen as we guide you through each step.
             </p>
             <button
+              id="startAssessment"
               onClick={handleStart}
-              className="inline-block w-full max-w-[360px] rounded-[12px] bg-[hsl(var(--brand-accent-gold))] px-[18px] py-[14px] font-bold uppercase tracking-[0.06em] text-[hsl(var(--brand-text))] shadow-[0_8px_18px_hsl(var(--brand-accent-gold)/0.35)] transition hover:brightness-110 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--brand-accent-gold))] focus-visible:ring-offset-2"
+              disabled={isStarting}
+              aria-busy={isStarting}
+              className="inline-block w-full max-w-[360px] rounded-[12px] bg-[hsl(var(--brand-accent-gold))] px-[18px] py-[14px] font-bold uppercase tracking-[0.06em] text-[hsl(var(--brand-text))] shadow-[0_8px_18px_hsl(var(--brand-accent-gold)/0.35)] transition hover:brightness-110 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--brand-accent-gold))] focus-visible:ring-offset-2 disabled:opacity-60 disabled:pointer-events-none"
               aria-label="Start Assessment"
             >
-              Start Assessment
+              {isStarting ? 'Playing…' : 'Start Assessment'}
             </button>
+
+            {/* Status + manual fallback */}
+            <div id="welcomeStatus" className="mt-2 text-[14px] text-[hsl(var(--brand-muted))] text-center md:text-left" aria-live="polite">
+              {status}
+            </div>
+            {showManualPlay && (
+              <button
+                onClick={handleManualPlay}
+                className="mt-2 inline-flex items-center justify-center rounded-[10px] border border-[hsl(var(--brand-accent-gold))] bg-transparent px-3 py-2 font-medium text-[hsl(var(--brand-text))] shadow-[0_0_0_0] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--brand-accent-gold))] focus-visible:ring-offset-2"
+                aria-label="Play Welcome Message"
+              >
+                🔊 Tap to play
+              </button>
+            )}
+
+            {/* Helper text */}
             <div className="mt-3 text-[14px] text-[hsl(var(--brand-muted))]">
               For the best experience, use headphones or speakers.
             </div>
+
+            {/* Welcome audio element */}
+            <audio
+              id="welcomeAudio"
+              preload="metadata"
+              crossOrigin="anonymous"
+              src="/lovable-uploads/welcome-message_lovable.mp3"
+              ref={audioRef}
+            />
           </div>
         </article>
       </Card>
