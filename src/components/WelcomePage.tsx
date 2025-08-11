@@ -18,6 +18,9 @@ export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePage
 
   // Preload on first user interaction for smoother playback on mobile
   useEffect(() => {
+    // Suppress native TTS while on the Welcome screen
+    try { (window as any).__P2P_SUPPRESS_TTS__ = true; } catch {}
+
     const prime = () => {
       try { audioRef.current?.load(); } catch {}
     };
@@ -29,6 +32,8 @@ export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePage
         try { a.pause(); } catch {}
         a.currentTime = 0;
       }
+      // Re-enable native TTS when leaving Welcome (safety)
+      try { (window as any).__P2P_SUPPRESS_TTS__ = false; } catch {}
     };
   }, []);
 
@@ -46,6 +51,8 @@ export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePage
       setIsStarting(false);
       endedAttachedRef.current = false;
       audio.currentTime = 0;
+      // Re-enable native TTS now that we're moving to Q1
+      try { (window as any).__P2P_SUPPRESS_TTS__ = false; } catch {}
       onSubmit({});
     };
 
