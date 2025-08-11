@@ -1,5 +1,6 @@
 
 import { Card } from '@/components/ui/card';
+import heroImage from '@/assets/welcome-hero.jpg';
 
 interface WelcomePageProps {
   assessmentTitle: string;
@@ -17,32 +18,28 @@ export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePage
 
   return (
     <div className="min-h-screen grid place-items-center bg-[linear-gradient(145deg,hsl(var(--brand-bg-primary)),hsl(var(--brand-bg-secondary)))] p-6">
-      <Card className="w-[min(92vw,720px)] overflow-hidden rounded-[20px] bg-[hsl(var(--brand-card))] shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
-        <article>
-          <div className="relative h-[150px] bg-[hsl(var(--brand-bg-secondary))]">
-            <svg viewBox="0 0 1200 200" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
-              <defs>
-                <linearGradient id="welcome-grad" x1="0" x2="1">
-                  <stop offset="0%" stopColor="hsl(var(--brand-accent-secondary))" />
-                  <stop offset="100%" stopColor="hsl(var(--brand-accent-gold))" />
-                </linearGradient>
-              </defs>
-              <path fill="url(#welcome-grad)" d="M0,120 C240,40 360,200 600,120 C840,40 960,200 1200,120 L1200,0 L0,0 Z" />
-            </svg>
+      <Card className="w-[min(92vw,860px)] overflow-hidden rounded-[20px] bg-[hsl(var(--brand-card))] shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
+        <article className="grid grid-cols-1 md:grid-cols-[1.1fr_1fr]">
+          <div
+            className="relative min-h-[280px] md:min-h-full bg-cover bg-center"
+            style={{ backgroundImage: `url(${heroImage})` }}
+            role="img"
+            aria-label="Abstract navy gradient background"
+          >
             <div
-              className="absolute right-5 bottom-[18px] rounded-full px-[14px] py-[10px] text-[32px] shadow-[0_6px_14px_rgba(0,0,0,0.2)]"
-              style={{ backgroundColor: 'hsl(var(--card) / 0.85)', color: 'hsl(var(--brand-text))' }}
+              className="absolute inset-0 bg-[linear-gradient(180deg,hsl(var(--brand-bg-primary)/0),hsl(var(--brand-bg-primary)/0.35))]"
               aria-hidden="true"
-            >
-              🎧
-            </div>
+            />
           </div>
 
-          <div className="p-7 text-center">
-            <h1 className="mb-3 text-[hsl(var(--brand-text))] text-[26px] sm:text-[32px] md:text-[36px] font-extrabold leading-[1.15]">
+          <div className="p-7 flex flex-col justify-center text-center md:text-left">
+            <div className="self-center md:self-start inline-flex items-center rounded-full bg-[hsl(var(--brand-accent-gold))] text-[hsl(var(--brand-text))] font-bold px-[10px] py-[6px] tracking-[0.06em] mb-2">
+              Voice Guided
+            </div>
+            <h1 className="mb-2 text-[hsl(var(--brand-text))] text-[26px] sm:text-[30px] md:text-[32px] font-extrabold leading-[1.15]">
               Welcome to Your Voice Experience
             </h1>
-            <p className="mx-auto mb-4 max-w-[56ch] text-[hsl(var(--brand-muted))] text-[16px] sm:text-[18px] leading-[1.6]">
+            <p className="mx-auto md:mx-0 mb-4 max-w-[56ch] text-[hsl(var(--brand-muted))] text-[16px] sm:text-[17px] leading-[1.6]">
               Your personalized assessment uses short voice prompts. Tap Start to begin and listen as we guide you through each step.
             </p>
             <button
