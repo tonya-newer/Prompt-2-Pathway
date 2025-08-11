@@ -1,6 +1,6 @@
 
 import { Card } from '@/components/ui/card';
-import heroImage from '@/assets/welcome-hero.jpg';
+
 
 interface WelcomePageProps {
   assessmentTitle: string;
@@ -22,7 +22,7 @@ export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePage
         <article className="grid grid-cols-1 md:grid-cols-[1.1fr_1fr]">
           <div
             className="relative min-h-[280px] md:min-h-full bg-cover bg-center"
-            style={{ backgroundImage: `url(${heroImage})` }}
+            style={{ backgroundImage: "url('/lovable-uploads/c7d080b4-8b6e-4094-9ca7-9416122a439f.png')" }}
             role="img"
             aria-label="Abstract navy gradient background"
           >
