@@ -7,7 +7,7 @@ All colors MUST be HSL.
 */
 
 @layer base {
-  :root {
+:root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
@@ -53,6 +53,15 @@ All colors MUST be HSL.
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Brand palette tokens (HSL) */
+    --brand-bg-primary: 211 53% 11%; /* #0D1B2A */
+    --brand-bg-secondary: 211 59% 15%; /* #10263E */
+    --brand-card: 220 20% 98%; /* #F7F8FA */
+    --brand-text: 0 0% 12%; /* #1E1E1E */
+    --brand-muted: 220 9% 46%; /* #6B7280 */
+    --brand-accent-gold: 46 62% 52%; /* #D4AF37 */
+    --brand-accent-secondary: 213 30% 32%; /* #3A506B */
   }
 
   .dark {

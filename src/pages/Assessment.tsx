@@ -12,6 +12,8 @@ import { leadStorageService } from '@/services/leadStorage';
 import { assessmentStorageService } from '@/services/assessmentStorage';
 import { customVoiceService } from '@/services/customVoiceService';
 import { nativeSpeech } from '@/services/nativeSpeech';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { audioManager } from '@/services/audioManager';
 
 interface AssessmentResult {
   overallScore: number;
@@ -26,9 +28,41 @@ const Assessment = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showLeadCapture, setShowLeadCapture] = useState(true);
+const [showLeadCapture, setShowLeadCapture] = useState(true);
   const [userInfo, setUserInfo] = useState<any>(null);
   const { toast } = useToast();
+
+  // Halfway encouragement state
+  const [showHalfway, setShowHalfway] = useState(false);
+  const halfwayUrl = 'https://drive.google.com/uc?export=download&id=1NChuSTeMNVRnMR9jPELnzFkruo63gizr&v=2025-08-11';
+
+  // Preload metadata for halfway audio
+  useEffect(() => {
+    const a = new Audio();
+    a.preload = 'metadata';
+    a.src = halfwayUrl;
+    a.load();
+    return () => {
+      try { a.pause(); a.src = ''; } catch {}
+    };
+  }, []);
+
+  // When halfway modal opens, play encouragement audio once
+  useEffect(() => {
+    if (showHalfway) {
+      (async () => {
+        try {
+          audioManager.stopAll();
+          await audioManager.playAudio(halfwayUrl);
+        } catch (e) {
+          console.warn('[HalfwayAudio] Playback failed or blocked:', e);
+        }
+      })();
+    } else {
+      // Ensure audio is stopped when modal closes
+      audioManager.stopAll();
+    }
+  }, [showHalfway]);
 
   useEffect(() => {
     if (id) {
@@ -91,6 +125,12 @@ const Assessment = () => {
       // Stop any playing audio before advancing
       customVoiceService.stopVoice();
       nativeSpeech.stop();
+
+      // After Q7 (index 6), show encouragement modal before moving to Q8
+      if (currentQuestionIndex === 6) {
+        setShowHalfway(true);
+        return;
+      }
       
       if (currentQuestionIndex < (assessment?.questions.length || 0) - 1) {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
@@ -272,6 +312,39 @@ const Assessment = () => {
                 <ChevronRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
+
+            {/* Halfway encouragement modal */}
+            <Dialog
+              open={showHalfway}
+              onOpenChange={(open) => {
+                if (!open) {
+                  audioManager.stopAll();
+                  setShowHalfway(false);
+                  setCurrentQuestionIndex((prev) => Math.min(prev + 1, (assessment?.questions.length || 1) - 1));
+                }
+              }}
+            >
+              <DialogContent className="sm:rounded-[16px] bg-[hsl(var(--brand-card))]">
+                <DialogHeader>
+                  <DialogTitle className="text-[hsl(var(--brand-text))] text-xl font-bold">You’re halfway there!</DialogTitle>
+                  <DialogDescription className="text-[hsl(var(--brand-muted))]">
+                    Great progress—keep going. Your personalized results are close.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="pt-2">
+                  <Button
+                    onClick={() => {
+                      audioManager.stopAll();
+                      setShowHalfway(false);
+                      setCurrentQuestionIndex((prev) => Math.min(prev + 1, (assessment?.questions.length || 1) - 1));
+                    }}
+                    className="w-full rounded-[12px] bg-[hsl(var(--brand-accent-gold))] text-[hsl(var(--brand-text))] hover:brightness-110 focus-visible:ring-2 focus-visible:ring-[hsl(var(--brand-accent-gold))] focus-visible:ring-offset-2"
+                  >
+                    Continue
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         ) : (
           <div className="text-center py-12">
