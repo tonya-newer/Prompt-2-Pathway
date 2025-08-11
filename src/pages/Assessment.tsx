@@ -32,35 +32,50 @@ const [showLeadCapture, setShowLeadCapture] = useState(true);
   const [userInfo, setUserInfo] = useState<any>(null);
   const { toast } = useToast();
 
-  // Halfway encouragement state
+  // Halfway encouragement state + audio element hookup
   const [showHalfway, setShowHalfway] = useState(false);
-  const halfwayUrl = 'https://drive.google.com/uc?export=download&id=1NChuSTeMNVRnMR9jPELnzFkruo63gizr&v=2025-08-11';
+  const [needsManualPlay, setNeedsManualPlay] = useState(false);
+  const KEEP_GOING_URL = '/lovable-uploads/keep-going-message.mp3';
+  const KEEP_GOING_FALLBACK = 'https://drive.google.com/uc?export=download&id=1NChuSTeMNVRnMR9jPELnzFkruo63gizr&v=2025-08-11';
+  const getKeepAudio = () => document.getElementById('keepGoingAudio') as HTMLAudioElement | null;
 
-  // Preload metadata for halfway audio
+  // Configure global audio element once
   useEffect(() => {
-    const a = new Audio();
-    a.preload = 'metadata';
-    a.src = halfwayUrl;
-    a.load();
-    return () => {
-      try { a.pause(); a.src = ''; } catch {}
-    };
+    const el = getKeepAudio();
+    if (el) {
+      // Prefer first-party URL; set fallback if needed at play time
+      el.preload = 'metadata';
+      if (!el.src) el.src = KEEP_GOING_URL;
+      const primeOnFirstGesture = () => {
+        try { el.load(); } catch {}
+      };
+      window.addEventListener('click', primeOnFirstGesture, { once: true });
+      return () => window.removeEventListener('click', primeOnFirstGesture);
+    }
   }, []);
 
-  // When halfway modal opens, play encouragement audio once
+  // When halfway modal toggles, control playback
   useEffect(() => {
+    const el = getKeepAudio();
+    if (!el) return;
     if (showHalfway) {
-      (async () => {
+      // Ensure source is set
+      if (!el.src) el.src = KEEP_GOING_URL;
+      el.currentTime = 0;
+      el.play().then(() => setNeedsManualPlay(false)).catch(async () => {
+        // Try fallback source once
         try {
-          audioManager.stopAll();
-          await audioManager.playAudio(halfwayUrl);
-        } catch (e) {
-          console.warn('[HalfwayAudio] Playback failed or blocked:', e);
+          el.pause();
+          el.src = KEEP_GOING_FALLBACK;
+          el.currentTime = 0;
+          await el.play();
+          setNeedsManualPlay(false);
+        } catch {
+          setNeedsManualPlay(true);
         }
-      })();
+      });
     } else {
-      // Ensure audio is stopped when modal closes
-      audioManager.stopAll();
+      try { el.pause(); el.currentTime = 0; } catch {}
     }
   }, [showHalfway]);
 
@@ -318,8 +333,11 @@ const [showLeadCapture, setShowLeadCapture] = useState(true);
               open={showHalfway}
               onOpenChange={(open) => {
                 if (!open) {
+                  const el = getKeepAudio();
+                  try { el?.pause(); if (el) el.currentTime = 0; } catch {}
                   audioManager.stopAll();
                   setShowHalfway(false);
+                  setNeedsManualPlay(false);
                   setCurrentQuestionIndex((prev) => Math.min(prev + 1, (assessment?.questions.length || 1) - 1));
                 }
               }}
@@ -331,11 +349,27 @@ const [showLeadCapture, setShowLeadCapture] = useState(true);
                     Great progress—keep going. Your personalized results are close.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="pt-2">
+                <div className="pt-2 space-y-2">
+                  {needsManualPlay && (
+                    <Button
+                      variant="ghost"
+                      onClick={async () => {
+                        const el = getKeepAudio();
+                        if (!el) return;
+                        try { await el.play(); setNeedsManualPlay(false); } catch {}
+                      }}
+                      className="w-full"
+                    >
+                      🔊 Tap to play message
+                    </Button>
+                  )}
                   <Button
                     onClick={() => {
+                      const el = getKeepAudio();
+                      try { el?.pause(); if (el) el.currentTime = 0; } catch {}
                       audioManager.stopAll();
                       setShowHalfway(false);
+                      setNeedsManualPlay(false);
                       setCurrentQuestionIndex((prev) => Math.min(prev + 1, (assessment?.questions.length || 1) - 1));
                     }}
                     className="w-full rounded-[12px] bg-[hsl(var(--brand-accent-gold))] text-[hsl(var(--brand-text))] hover:brightness-110 focus-visible:ring-2 focus-visible:ring-[hsl(var(--brand-accent-gold))] focus-visible:ring-offset-2"
