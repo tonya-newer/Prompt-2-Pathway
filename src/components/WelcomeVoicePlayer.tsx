@@ -6,7 +6,6 @@ import { Card } from '@/components/ui/card';
 import { customVoiceService } from '@/services/customVoiceService';
 import { nativeSpeech } from '@/services/nativeSpeech';
 import { InteractionGate } from './InteractionGate';
-import { testAudioFile } from '@/utils/audioTest';
 
 interface WelcomeVoicePlayerProps {
   className?: string;
@@ -50,17 +49,6 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
       setIsPlaying(true);
       
       if (useCustomVoice) {
-        // First run diagnostic test to understand the failure
-        const voiceUrl = customVoiceService.getVoiceUrl('welcome');
-        console.log('[WelcomeVoicePlayer] Testing voice file first:', voiceUrl);
-        
-        try {
-          await testAudioFile(voiceUrl!);
-          console.log('[WelcomeVoicePlayer] Audio test successful, now playing via service...');
-        } catch (testError) {
-          console.error('[WelcomeVoicePlayer] Audio test failed:', testError);
-        }
-        
         // Use custom voice ONLY - no fallbacks
         console.log('[WelcomeVoicePlayer] Playing custom welcome voice...');
         await customVoiceService.playVoice('welcome');

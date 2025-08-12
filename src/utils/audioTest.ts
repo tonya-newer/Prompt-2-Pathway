@@ -69,7 +69,7 @@ export const testAllCustomVoices = async (): Promise<void> => {
   console.log('🎵 [AudioTest] Testing all custom voice files...');
   
   const testFiles = [
-    '/custom-voices/welcome-fresh.mp3',
+    '/custom-voices/welcome-message.mp3',
     '/custom-voices/contact-form.wav', 
     '/custom-voices/congratulations-message.wav',
     '/custom-voices/question-1.wav'

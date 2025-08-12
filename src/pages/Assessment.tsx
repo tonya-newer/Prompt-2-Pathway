@@ -12,8 +12,6 @@ import { leadStorageService } from '@/services/leadStorage';
 import { assessmentStorageService } from '@/services/assessmentStorage';
 import { customVoiceService } from '@/services/customVoiceService';
 import { nativeSpeech } from '@/services/nativeSpeech';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { audioManager } from '@/services/audioManager';
 
 interface AssessmentResult {
   overallScore: number;
@@ -28,56 +26,9 @@ const Assessment = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-const [showLeadCapture, setShowLeadCapture] = useState(true);
+  const [showLeadCapture, setShowLeadCapture] = useState(true);
   const [userInfo, setUserInfo] = useState<any>(null);
   const { toast } = useToast();
-
-  // Halfway encouragement state + audio element hookup
-  const [showHalfway, setShowHalfway] = useState(false);
-  const [needsManualPlay, setNeedsManualPlay] = useState(false);
-  const KEEP_GOING_URL = '/lovable-uploads/keep-going-message.mp3';
-  const KEEP_GOING_FALLBACK = 'https://drive.google.com/uc?export=download&id=1NChuSTeMNVRnMR9jPELnzFkruo63gizr&v=2025-08-11';
-  const getKeepAudio = () => document.getElementById('keepGoingAudio') as HTMLAudioElement | null;
-
-  // Configure global audio element once
-  useEffect(() => {
-    const el = getKeepAudio();
-    if (el) {
-      // Prefer first-party URL; set fallback if needed at play time
-      el.preload = 'metadata';
-      if (!el.src) el.src = KEEP_GOING_URL;
-      const primeOnFirstGesture = () => {
-        try { el.load(); } catch {}
-      };
-      window.addEventListener('click', primeOnFirstGesture, { once: true });
-      return () => window.removeEventListener('click', primeOnFirstGesture);
-    }
-  }, []);
-
-  // When halfway modal toggles, control playback
-  useEffect(() => {
-    const el = getKeepAudio();
-    if (!el) return;
-    if (showHalfway) {
-      // Ensure source is set
-      if (!el.src) el.src = KEEP_GOING_URL;
-      el.currentTime = 0;
-      el.play().then(() => setNeedsManualPlay(false)).catch(async () => {
-        // Try fallback source once
-        try {
-          el.pause();
-          el.src = KEEP_GOING_FALLBACK;
-          el.currentTime = 0;
-          await el.play();
-          setNeedsManualPlay(false);
-        } catch {
-          setNeedsManualPlay(true);
-        }
-      });
-    } else {
-      try { el.pause(); el.currentTime = 0; } catch {}
-    }
-  }, [showHalfway]);
 
   useEffect(() => {
     if (id) {
@@ -140,12 +91,6 @@ const [showLeadCapture, setShowLeadCapture] = useState(true);
       // Stop any playing audio before advancing
       customVoiceService.stopVoice();
       nativeSpeech.stop();
-
-      // After Q7 (index 6), show encouragement modal before moving to Q8
-      if (currentQuestionIndex === 6) {
-        setShowHalfway(true);
-        return;
-      }
       
       if (currentQuestionIndex < (assessment?.questions.length || 0) - 1) {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
@@ -327,58 +272,6 @@ const [showLeadCapture, setShowLeadCapture] = useState(true);
                 <ChevronRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
-
-            {/* Halfway encouragement modal */}
-            <Dialog
-              open={showHalfway}
-              onOpenChange={(open) => {
-                if (!open) {
-                  const el = getKeepAudio();
-                  try { el?.pause(); if (el) el.currentTime = 0; } catch {}
-                  audioManager.stopAll();
-                  setShowHalfway(false);
-                  setNeedsManualPlay(false);
-                  setCurrentQuestionIndex((prev) => Math.min(prev + 1, (assessment?.questions.length || 1) - 1));
-                }
-              }}
-            >
-              <DialogContent className="sm:rounded-[16px] bg-[hsl(var(--brand-card))]">
-                <DialogHeader>
-                  <DialogTitle className="text-[hsl(var(--brand-text))] text-xl font-bold">You’re halfway there!</DialogTitle>
-                  <DialogDescription className="text-[hsl(var(--brand-muted))]">
-                    Great progress—keep going. Your personalized results are close.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="pt-2 space-y-2">
-                  {needsManualPlay && (
-                    <Button
-                      variant="ghost"
-                      onClick={async () => {
-                        const el = getKeepAudio();
-                        if (!el) return;
-                        try { await el.play(); setNeedsManualPlay(false); } catch {}
-                      }}
-                      className="w-full"
-                    >
-                      🔊 Tap to play message
-                    </Button>
-                  )}
-                  <Button
-                    onClick={() => {
-                      const el = getKeepAudio();
-                      try { el?.pause(); if (el) el.currentTime = 0; } catch {}
-                      audioManager.stopAll();
-                      setShowHalfway(false);
-                      setNeedsManualPlay(false);
-                      setCurrentQuestionIndex((prev) => Math.min(prev + 1, (assessment?.questions.length || 1) - 1));
-                    }}
-                    className="w-full rounded-[12px] bg-[hsl(var(--brand-accent-gold))] text-[hsl(var(--brand-text))] hover:brightness-110 focus-visible:ring-2 focus-visible:ring-[hsl(var(--brand-accent-gold))] focus-visible:ring-offset-2"
-                  >
-                    Continue
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
           </div>
         ) : (
           <div className="text-center py-12">

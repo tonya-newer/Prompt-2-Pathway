@@ -1,7 +1,7 @@
 
 import { Card } from '@/components/ui/card';
-import { useEffect, useRef, useState } from 'react';
-
+import { WelcomeVoicePlayer } from './WelcomeVoicePlayer';
+import { Sparkles, Heart, Target } from 'lucide-react';
 
 interface WelcomePageProps {
   assessmentTitle: string;
@@ -10,148 +10,86 @@ interface WelcomePageProps {
 }
 
 export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePageProps) => {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [status, setStatus] = useState('');
-  const [isStarting, setIsStarting] = useState(false);
-  const [showManualPlay, setShowManualPlay] = useState(false);
-  const endedAttachedRef = useRef(false);
-
-  // Preload on first user interaction for smoother playback on mobile
-  useEffect(() => {
-    // Suppress native TTS while on the Welcome screen
-    try { (window as any).__P2P_SUPPRESS_TTS__ = true; } catch {}
-
-    const prime = () => {
-      try { audioRef.current?.load(); } catch {}
-    };
-    window.addEventListener('click', prime, { once: true });
-    return () => {
-      // Cleanup audio if user navigates away early
-      const a = audioRef.current;
-      if (a) {
-        try { a.pause(); } catch {}
-        a.currentTime = 0;
-      }
-      // Re-enable native TTS when leaving Welcome (safety)
-      try { (window as any).__P2P_SUPPRESS_TTS__ = false; } catch {}
-    };
-  }, []);
-
-  const handleStart = async () => {
-    try {
-      localStorage.setItem('audio-enabled', 'true');
-    } catch {}
-
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    // Navigate to Q1 only after the welcome message ends
-    const onEnded = () => {
-      setStatus('');
-      setIsStarting(false);
-      endedAttachedRef.current = false;
-      audio.currentTime = 0;
-      // Re-enable native TTS now that we're moving to Q1
-      try { (window as any).__P2P_SUPPRESS_TTS__ = false; } catch {}
-      onSubmit({});
-    };
-
-    if (!endedAttachedRef.current) {
-      audio.addEventListener('ended', onEnded, { once: true });
-      endedAttachedRef.current = true;
-    }
-
-    setIsStarting(true);
-    setStatus('Playing welcome message…');
-
-    try {
-      await audio.play();
-    } catch (err) {
-      // Autoplay blocked — show manual play fallback
-      setIsStarting(false);
-      setShowManualPlay(true);
-      setStatus('Tap to play the welcome message, then we’ll begin.');
-    }
-  };
-
-  const handleManualPlay = async () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    setShowManualPlay(false);
-    setIsStarting(true);
-    setStatus('Playing welcome message…');
-    try {
-      await audio.play();
-    } catch {}
-  };
-
   return (
-    <div className="min-h-screen grid place-items-center bg-[linear-gradient(145deg,hsl(var(--brand-bg-primary)),hsl(var(--brand-bg-secondary)))] p-6">
-      <Card className="w-[min(92vw,860px)] overflow-hidden rounded-[20px] bg-[hsl(var(--brand-card))] shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
-        <article className="grid grid-cols-1 md:grid-cols-[1.1fr_1fr]">
-          <div
-            className="relative min-h-[280px] md:min-h-full bg-cover bg-center"
-            style={{ backgroundImage: "url('/lovable-uploads/c7d080b4-8b6e-4094-9ca7-9416122a439f.png')" }}
-            role="img"
-            aria-label="Abstract navy gradient background"
-          >
-            <div
-              className="absolute inset-0 bg-[linear-gradient(180deg,hsl(var(--brand-bg-primary)/0),hsl(var(--brand-bg-primary)/0.35))]"
-              aria-hidden="true"
-            />
-          </div>
-
-          <div className="p-7 flex flex-col justify-center text-center md:text-left">
-            <div className="self-center md:self-start inline-flex items-center rounded-full bg-[hsl(var(--brand-accent-gold))] text-[hsl(var(--brand-text))] font-bold px-[10px] py-[6px] tracking-[0.06em] mb-2">
-              Voice Guided
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-4xl mx-auto">
+          {/* Header Section */}
+          <div className="text-center mb-12">
+            <div className="flex justify-center mb-6">
+              <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 rounded-full shadow-2xl">
+                <Sparkles className="h-12 w-12 text-white" />
+              </div>
             </div>
-            <h1 className="mb-2 text-[hsl(var(--brand-text))] text-[26px] sm:text-[30px] md:text-[32px] font-extrabold leading-[1.15]">
-              Welcome to Your Voice Experience
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-6 px-2">
+              Welcome to Your Are You AI-Ready Assessment!
             </h1>
-            <p className="mx-auto md:mx-0 mb-4 max-w-[56ch] text-[hsl(var(--brand-muted))] text-[16px] sm:text-[17px] leading-[1.6]">
-              Your personalized assessment uses short voice prompts. Tap Start to begin and listen as we guide you through each step.
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed px-4">
+              Discover powerful insights about yourself through this personalized assessment experience. 
+              Your journey to clarity begins here.
             </p>
-            <button
-              id="startAssessment"
-              onClick={handleStart}
-              disabled={isStarting}
-              aria-busy={isStarting}
-              className="inline-block w-full max-w-[360px] rounded-[12px] bg-[hsl(var(--brand-accent-gold))] px-[18px] py-[14px] font-bold uppercase tracking-[0.06em] text-[hsl(var(--brand-text))] shadow-[0_8px_18px_hsl(var(--brand-accent-gold)/0.35)] transition hover:brightness-110 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--brand-accent-gold))] focus-visible:ring-offset-2 disabled:opacity-60 disabled:pointer-events-none"
-              aria-label="Start Assessment"
-            >
-              {isStarting ? 'Playing…' : 'Start Assessment'}
-            </button>
-
-            {/* Status + manual fallback */}
-            <div id="welcomeStatus" className="mt-2 text-[14px] text-[hsl(var(--brand-muted))] text-center md:text-left" aria-live="polite">
-              {status}
-            </div>
-            {showManualPlay && (
-              <button
-                onClick={handleManualPlay}
-                className="mt-2 inline-flex items-center justify-center rounded-[10px] border border-[hsl(var(--brand-accent-gold))] bg-transparent px-3 py-2 font-medium text-[hsl(var(--brand-text))] shadow-[0_0_0_0] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--brand-accent-gold))] focus-visible:ring-offset-2"
-                aria-label="Play Welcome Message"
-              >
-                🔊 Tap to play
-              </button>
-            )}
-
-            {/* Helper text */}
-            <div className="mt-3 text-[14px] text-[hsl(var(--brand-muted))]">
-              For the best experience, use headphones or speakers.
-            </div>
-
-            {/* Welcome audio element */}
-            <audio
-              id="welcomeAudio"
-              preload="metadata"
-              crossOrigin="anonymous"
-              src="/lovable-uploads/welcome-message_lovable.mp3"
-              ref={audioRef}
-            />
           </div>
-        </article>
-      </Card>
+
+          {/* Voice Player Section */}
+          <div className="mb-12">
+            <WelcomeVoicePlayer className="mb-8" />
+          </div>
+
+          {/* Features Section */}
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12">
+            <Card className="p-4 sm:p-6 bg-gradient-to-br from-white to-purple-50 border-2 border-purple-200 shadow-lg">
+              <div className="text-center">
+                <div className="bg-purple-100 p-3 sm:p-4 rounded-full w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <Target className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600" />
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2">Personalized Insights</h3>
+                <p className="text-sm sm:text-base text-gray-600">Get tailored results based on your unique responses</p>
+              </div>
+            </Card>
+            
+            <Card className="p-4 sm:p-6 bg-gradient-to-br from-white to-blue-50 border-2 border-blue-200 shadow-lg">
+              <div className="text-center">
+                <div className="bg-blue-100 p-3 sm:p-4 rounded-full w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2">Voice-Guided Experience</h3>
+                <p className="text-sm sm:text-base text-gray-600">Enjoy a personal touch with voice narration throughout</p>
+              </div>
+            </Card>
+            
+            <Card className="p-4 sm:p-6 bg-gradient-to-br from-white to-indigo-50 border-2 border-indigo-200 shadow-lg">
+              <div className="text-center">
+                <div className="bg-indigo-100 p-3 sm:p-4 rounded-full w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600" />
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2">Actionable Results</h3>
+                <p className="text-sm sm:text-base text-gray-600">Receive clear next steps to accelerate your progress</p>
+              </div>
+            </Card>
+          </div>
+
+          {/* Start Assessment Section */}
+          <Card className="p-6 sm:p-8 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 border-2 border-purple-200 shadow-xl rounded-2xl">
+            <div className="text-center">
+              <div className="mb-6">
+                <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4">
+                  ✨ This is your time to reflect, realign, and rise.
+                </h2>
+                <p className="text-lg text-gray-600 mb-8">
+                  Your personalized Prompt 2 Pathway experience is just one click away.
+                </p>
+              </div>
+              
+              <button
+                onClick={() => onSubmit({})}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-4 px-8 rounded-full text-lg shadow-lg transform hover:scale-105 transition-all duration-200"
+              >
+                Begin My Assessment
+              </button>
+            </div>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };
