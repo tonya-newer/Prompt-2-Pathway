@@ -64,7 +64,7 @@ const Results = () => {
     setTimeout(() => {
       console.log('Setting showVoicePlayer to true for auto-play');
       setShowVoicePlayer(true);
-    }, 500); // Ensure no overlap
+    }, 100); // Ensure no overlap
   };
 
   const handleScheduleCall = () => {

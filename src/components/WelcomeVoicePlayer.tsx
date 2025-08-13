@@ -13,23 +13,15 @@ interface WelcomeVoicePlayerProps {
 
 export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasInteracted, setHasInteracted] = useState(false);
   const [useCustomVoice, setUseCustomVoice] = useState(false);
   const [showInteractionGate, setShowInteractionGate] = useState(true);
 
-  const welcomeText = "Welcome to your Prompt 2 Pathway assessment! This personalized assessment will help you gain valuable insights about yourself. Please fill out your information below, and then we'll begin your journey of discovery together. Take your time and answer honestly for the best results.";
-
   useEffect(() => {
-    // Check if custom welcome voice exists - NO TESTING, just check
     const checkCustomVoice = async () => {
       try {
-        console.log('[WelcomeVoicePlayer] Checking for custom welcome voice (no test playback)...');
-        
-        // Only check if file exists, do NOT test play it
         const exists = await customVoiceService.checkVoiceExists('welcome');
-        console.log('[WelcomeVoicePlayer] Voice exists check result:', exists);
-        
         setUseCustomVoice(exists);
       } catch (error) {
         console.error('[WelcomeVoicePlayer] Error checking custom voice:', error);
@@ -41,57 +33,70 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
   }, []);
 
   const playWelcomeVoice = async () => {
-    console.log('[WelcomeVoicePlayer] Starting welcome voice playback...');
-    console.log('[WelcomeVoicePlayer] useCustomVoice:', useCustomVoice);
-    setIsLoading(true);
-
     try {
-      setIsPlaying(true);
-      
       if (useCustomVoice) {
-        // Use custom voice ONLY - no fallbacks
-        console.log('[WelcomeVoicePlayer] Playing custom welcome voice...');
-        await customVoiceService.playVoice('welcome');
-        console.log('[WelcomeVoicePlayer] Custom voice playback completed');
+        await customVoiceService.playVoice(
+          'welcome',
+          0,
+          () => {
+            setIsLoading(false);
+            setIsPlaying(true);
+          },
+          () => {
+            setIsPlaying(false);
+            setIsPaused(false);
+          });
       } else {
         console.log('[WelcomeVoicePlayer] No custom voice available - staying silent');
       }
-      
-      setIsPlaying(false);
     } catch (error) {
       console.error('[WelcomeVoicePlayer] Error playing welcome voice:', error);
-      // NO FALLBACK - stay silent if custom voice fails
-      console.log('[WelcomeVoicePlayer] Custom voice failed - staying silent (no fallback)');
+    }
+  };
+
+  const handlePlayPause = async () => {
+    if (isLoading) return;
+
+    if (isPlaying && !isPaused) {
+      if (useCustomVoice) {
+        await customVoiceService.pauseVoice();
+      } else {
+        nativeSpeech.stop();
+      }
+
       setIsPlaying(false);
-    } finally {
-      setIsLoading(false);
+      setIsPaused(true);
+      return;
     }
-  };
 
-  const handlePlay = async () => {
-    setHasInteracted(true);
+    if (isPaused) {
+      if (useCustomVoice) {
+        customVoiceService.resumeVoice();
+        setIsPaused(false);
+        setIsPlaying(true);
+        return;
+      }
+    }
     
-    if (isPlaying) {
-      handleStop();
-    } else {
-      await playWelcomeVoice();
+    customVoiceService.stopVoice();
+    nativeSpeech.stop();
+
+    setIsLoading(true);
+    setIsPaused(false);
+
+    try {
+      if (useCustomVoice) {
+        await playWelcomeVoice();
+      }
+    } catch (error) {
+      setIsLoading(false);
+      setIsPlaying(false);
     }
   };
 
-  const handleStop = () => {
-    if (useCustomVoice) {
-      customVoiceService.stopVoice();
-    } else {
-      nativeSpeech.stop();
-    }
-    setIsPlaying(false);
-  };
-
-  const handleInteractionGateStart = () => {
+  const handleInteractionGateStart = async () => {
     setShowInteractionGate(false);
-    setHasInteracted(true);
-    // NO AUTO-PLAY - let user manually click play to avoid any looping issues
-    console.log('[WelcomeVoicePlayer] User interaction completed - no autoplay');
+    await playWelcomeVoice();
   };
 
   // Cleanup
@@ -126,7 +131,7 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
             <Button
               variant="default"
               size="lg"
-              onClick={handlePlay}
+              onClick={handlePlayPause}
               disabled={isLoading}
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 sm:px-8 py-3 text-base sm:text-lg font-semibold shadow-lg w-full sm:w-auto"
             >

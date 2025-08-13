@@ -23,6 +23,7 @@ export const VoicePlayer = ({
   className = "" 
 }: VoicePlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [useCustomVoice, setUseCustomVoice] = useState(false);
 
@@ -56,14 +57,44 @@ export const VoicePlayer = ({
   const playCustomVoice = useCallback(async () => {
     try {
       if (customVoiceType) {
-        await customVoiceService.playVoice(customVoiceType, questionId);
-        console.log(`Playing ${customVoiceType} custom voice`);
+        await customVoiceService.playVoice(
+          customVoiceType,
+          questionId,
+          () => {
+            setIsLoading(false);
+            setIsPlaying(true);
+          }, 
+          () => {
+            setIsPlaying(false);
+            setIsPaused(false);
+          }
+        );
       } else if (isResultsPage) {
-        await customVoiceService.playVoice('congratulations');
-        console.log('Playing results page custom voice');
+        await customVoiceService.playVoice(
+          'congratulations',
+          questionId,
+          () => {
+            setIsLoading(false);
+            setIsPlaying(true);
+          },
+          () => {
+            setIsPlaying(false);
+            setIsPaused(false);
+          }
+        );
       } else if (questionId) {
-        await customVoiceService.playVoice('question', questionId);
-        console.log(`Playing question ${questionId} custom voice`);
+        await customVoiceService.playVoice(
+          'question',
+          questionId,
+          () => {
+            setIsLoading(false);
+            setIsPlaying(true);
+          },
+          () => {
+            setIsPlaying(false);
+            setIsPaused(false);
+          }
+        );
       }
     } catch (error) {
       console.error('Error playing custom voice:', error);
@@ -103,40 +134,54 @@ export const VoicePlayer = ({
     }
   }, [autoPlay, useCustomVoice, text, questionId, playCustomVoice, isResultsPage]);
 
-  const handlePlay = async () => {
-    console.log('[VoicePlayer] Handle play clicked, isPlaying:', isPlaying);
+  const handlePlayPause = async () => {
+    if (isLoading) return;
     
-    if (isPlaying) {
-      console.log('[VoicePlayer] Pausing current playback');
+    // Case 1: Currently playing → pause
+    if (isPlaying && !isPaused) {
+      if (useCustomVoice) {
+        await customVoiceService.pauseVoice();
+      } else {
+        nativeSpeech.stop();
+      }
+
       setIsPlaying(false);
-      // Properly stop all audio sources
-      customVoiceService.stopVoice();
-      nativeSpeech.stop();
-      console.log('[VoicePlayer] Voice playback paused');
+      setIsPaused(true);
       return;
     }
 
-    console.log('[VoicePlayer] Starting new playback');
+    // Case 2: Currently paused → resume
+    if (isPaused) {
+      if (useCustomVoice) {
+        customVoiceService.resumeVoice();
+      } else {
+        nativeSpeech.speak({ text });
+      }
+
+      setIsPaused(false);
+      setIsPlaying(true);
+      return;
+    }
+
+    // Case 3: Stopped → start fresh
+
     // Stop any existing audio before starting new playback
     customVoiceService.stopVoice();
     nativeSpeech.stop();
 
     setIsLoading(true);
-    setIsPlaying(true);
+    setIsPaused(false);
 
     try {
       if (useCustomVoice) {
-        console.log('[VoicePlayer] Playing custom voice');
         await playCustomVoice();
       } else {
-        // Only use native speech as manual fallback, never automatically
-        console.log('[VoicePlayer] Playing native speech as manual fallback');
+        setIsLoading(false);
+        setIsPlaying(true);
         await nativeSpeech.speak({ text });
       }
     } catch (error) {
       console.error('[VoicePlayer] Error playing voice:', error);
-    } finally {
-      console.log('[VoicePlayer] Playback finished');
       setIsLoading(false);
       setIsPlaying(false);
     }
@@ -160,7 +205,7 @@ export const VoicePlayer = ({
           <Button
             variant="default"
             size="lg"
-            onClick={handlePlay}
+            onClick={handlePlayPause}
             disabled={isLoading}
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 font-semibold shadow-lg"
           >
@@ -217,7 +262,7 @@ export const VoicePlayer = ({
             <Button
               variant="default"
               size="lg"
-              onClick={handlePlay}
+              onClick={handlePlayPause}
               disabled={isLoading}
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 sm:px-6 py-3 flex-1 sm:flex-none text-sm sm:text-base font-semibold shadow-lg"
             >

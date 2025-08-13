@@ -38,7 +38,7 @@ export class CustomVoiceService {
   }
 
   // Play custom voice file using the single-instance audio manager
-  async playVoice(type: 'welcome' | 'question' | 'congratulations' | 'contact-form', questionId?: number): Promise<void> {
+  async playVoice(type: 'welcome' | 'question' | 'congratulations' | 'contact-form', questionId?: number, onPlayStart?, onPlayEnded?): Promise<void> {
     const voiceUrl = this.getVoiceUrl(type, questionId);
     
     console.log(`[CustomVoice] 🎵 PLAY REQUEST: ${type} voice (questionId: ${questionId})`);
@@ -59,13 +59,25 @@ export class CustomVoiceService {
 
       // Use the audio manager to play (ensures only one audio plays at a time)
       console.log(`[CustomVoice] 🎵 Playing via AudioManager: ${voiceUrl}`);
-      await audioManager.playAudio(voiceUrl);
+      await audioManager.playAudio(voiceUrl, onPlayStart, onPlayEnded);
       console.log(`[CustomVoice] ✅ Playback completed successfully: ${voiceUrl}`);
       
     } catch (error) {
       console.error(`[CustomVoice] ❌ Failed to play ${voiceUrl}:`, error);
       throw error;
     }
+  }
+
+  // Pause current playback
+  pauseVoice(): void {
+    console.log('[CustomVoice] ⏸ Pausing playback via AudioManager');
+    audioManager.pauseAudio();
+  }
+
+  // Resume paused playback
+  resumeVoice(): void {
+    console.log('[CustomVoice] ▶️ Resuming playback via AudioManager');
+    audioManager.resumeAudio();
   }
 
   // Check if file exists with simple HEAD request
