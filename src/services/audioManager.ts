@@ -36,8 +36,28 @@ export class AudioManager {
     console.log('[AudioManager] 🛑 All audio stopped');
   }
 
+  // Pause without resetting position
+  pauseAudio(): void {
+    if (this.currentAudio && !this.currentAudio.paused) {
+      console.log('[AudioManager] ⏸ Pausing audio:', this.currentAudio.src);
+      this.currentAudio.pause();
+      this.isPlaying = false;
+    }
+  }
+
+  // Resume if paused
+  resumeAudio(): void {
+    if (this.currentAudio && this.currentAudio.paused) {
+      console.log('[AudioManager] ▶️ Resuming audio:', this.currentAudio.src);
+      this.currentAudio.play().catch(err => {
+        console.error('[AudioManager] ❌ Failed to resume audio', err);
+      });
+      this.isPlaying = true;
+    }
+  }
+
   // Play a single audio file - ensures only one can play at a time
-  async playAudio(url: string): Promise<void> {
+  async playAudio(url: string, onPlayStart?: () => void, onPlayEnded?: () => void): Promise<void> {
     console.log(`[AudioManager] 🎵 PLAY REQUEST: ${url}`);
     
     // Stop any existing audio first
@@ -110,8 +130,10 @@ export class AudioManager {
           
           if (playPromise !== undefined) {
             await playPromise;
+            if (onPlayStart) onPlayStart();
             console.log(`[AudioManager] 🔊 Playback started successfully: ${url}`);
           } else {
+            if (onPlayStart) onPlayStart();
             console.log(`[AudioManager] 🔊 Play() returned undefined, assuming success: ${url}`);
           }
         } catch (playError) {
@@ -125,6 +147,7 @@ export class AudioManager {
               error: audio.error
             }
           });
+
           cleanup();
           reject(playError);
         }
@@ -133,6 +156,9 @@ export class AudioManager {
       const onEnded = () => {
         console.log(`[AudioManager] 🏁 Playback completed: ${url}`);
         console.log(`[AudioManager] 🏁 Final stats - Duration: ${audio.duration}s, Played to: ${audio.currentTime}s`);
+
+        if (onPlayEnded) onPlayEnded();
+
         cleanup();
         resolve();
       };
