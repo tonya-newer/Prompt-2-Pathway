@@ -8,7 +8,6 @@ import { WelcomePage } from '@/components/WelcomePage';
 import { useToast } from "@/hooks/use-toast";
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { AssessmentTemplate } from '@/types/assessment';
-import { leadStorageService } from '@/services/leadStorage';
 import { assessmentStorageService } from '@/services/assessmentStorage';
 import { customVoiceService } from '@/services/customVoiceService';
 import { nativeSpeech } from '@/services/nativeSpeech';
@@ -95,8 +94,7 @@ const Assessment = () => {
       if (currentQuestionIndex < (assessment?.questions.length || 0) - 1) {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
       } else {
-        // Navigate to contact form instead of directly to results
-        navigate('/contact-form');
+        calculateResults();
       }
     }, 1500);
   };
@@ -109,8 +107,7 @@ const Assessment = () => {
     if (currentQuestionIndex < (assessment?.questions.length || 0) - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      // Navigate to contact form instead of directly to results
-      navigate('/contact-form');
+      calculateResults();
     }
   };
 
@@ -118,7 +115,6 @@ const Assessment = () => {
     if (!assessment) return;
 
     let overallScore = 0;
-    const categoryScores: { [key: string]: number } = {};
 
     assessment.questions.forEach((question, index) => {
       const answer = answers[index];
@@ -166,33 +162,9 @@ const Assessment = () => {
     localStorage.setItem('assessment-results', JSON.stringify(results));
     localStorage.setItem('assessment-title', assessment.title);
     localStorage.setItem('assessment-audience', assessment.audience);
-    localStorage.setItem('user-info', JSON.stringify(userInfo));
     localStorage.setItem('assessment-answers', JSON.stringify(answers));
 
-    const leadData = {
-      firstName: userInfo?.firstName || 'Anonymous',
-      lastName: userInfo?.lastName || 'User',
-      email: userInfo?.email || 'anonymous@example.com',
-      ageRange: userInfo?.ageRange || '25-34',
-      source: 'prompt2pathway-assessment',
-      audience: assessment.audience,
-      submissionDate: new Date().toISOString(),
-    };
-
-    const assessmentResults = {
-      overallScore: results.overallScore,
-      categoryScores: {
-        readiness: results.categories.readiness,
-        confidence: results.categories.confidence,
-        clarity: results.categories.clarity
-      },
-      completionRate: 100,
-      insights: ['Assessment completed successfully'],
-    };
-
-    leadStorageService.storeLead(leadData, assessmentResults, assessment.title);
-
-    navigate('/results', { state: { assessment } });
+    navigate('/contact-form');
   };
 
   return (
