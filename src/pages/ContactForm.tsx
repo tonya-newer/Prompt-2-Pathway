@@ -10,6 +10,8 @@ import { VoicePlayer } from '@/components/VoicePlayer';
 import { useToast } from "@/hooks/use-toast";
 import { leadStorageService } from '@/services/leadStorage';
 
+export let celebrationAudio: HTMLAudioElement | null = null;
+
 const ContactForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -66,8 +68,8 @@ const ContactForm = () => {
     }
 
     try {
-      // Store contact information in multiple places for reliability
-      localStorage.setItem('contact-info', JSON.stringify(formData));
+      // // Store contact information in multiple places for reliability
+      // localStorage.setItem('contact-info', JSON.stringify(formData));
       localStorage.setItem('user-info', JSON.stringify(formData));
       
       // Get assessment results for lead storage
@@ -95,6 +97,15 @@ const ContactForm = () => {
         title: "Thank you!",
         description: "Your information has been saved. Redirecting to your results...",
       });
+
+      // Create and preload the celebration audio
+      celebrationAudio = new Audio('/assets/celebration-audio.mp3');
+      celebrationAudio.volume = 0.7;
+      celebrationAudio.preload = 'auto';
+      celebrationAudio.setAttribute('playsinline', 'true');
+      celebrationAudio.autoplay = true;
+      celebrationAudio.muted = false;
+      celebrationAudio.preload = 'auto';
 
       // Navigate to results page immediately for better mobile experience
       console.log('Navigating to results page...');

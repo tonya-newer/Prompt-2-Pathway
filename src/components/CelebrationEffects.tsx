@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { Sparkles, Star, Heart } from 'lucide-react';
+import { celebrationAudio } from '@/pages/ContactForm';
 
 interface CelebrationEffectsProps {
   onComplete?: () => void;
@@ -12,47 +13,40 @@ export const CelebrationEffects = ({ onComplete }: CelebrationEffectsProps) => {
 
   useEffect(() => {
     console.log('CelebrationEffects component mounted');
+    const onEnded = () => {
+      console.log('Celebration sound ended');
+      setShowEffects(false);
+      if (onComplete) onComplete();
+    }
+
+    if (celebrationAudio) {
+      celebrationAudio.currentTime = 0;
+      celebrationAudio.addEventListener('ended', onEnded);
+    }
+
     // Play the celebration sound effect immediately (not voice message)
     if (!audioPlayed) {
       const playCelebrationAudio = async () => {
         try {
-          console.log('Attempting to play celebration sound effect...');
-          
-          // Only play the celebration music/sound effect, not voice
-          const audio = new Audio('/assets/celebration-audio.mp3');
-          console.log('Created audio element for celebration-audio.mp3');
-          audio.volume = 0.7;
-          audio.autoplay = true;
-          audio.muted = false;
-          audio.setAttribute('playsinline', 'true');
-          audio.preload = 'auto';
-          
-          try {
-            await audio.play();
-            console.log('Celebration sound effect playing');
-          } catch (error) {
-            console.log('Could not play celebration sound effect:', error);
-          }
-          
-          setAudioPlayed(true);
+          await celebrationAudio.play();
+          console.log('Celebration sound effect playing');
         } catch (error) {
-          console.log('Audio not supported or failed to play, continuing without celebration audio');
-          setAudioPlayed(true);
+          console.log('Could not play celebration sound effect:', error);
+          setShowEffects(false);
+          if (onComplete) onComplete();
         }
+
+        setAudioPlayed(true);
       };
 
       playCelebrationAudio();
     }
 
-    // Show effects for 2.5 seconds, then hide and call onComplete immediately
-    const timer = setTimeout(() => {
-      setShowEffects(false);
-      if (onComplete) {
-        setTimeout(onComplete, 100); // Very short pause before voice message
+    return () => {
+      if (celebrationAudio) {
+        celebrationAudio.removeEventListener('ended', onEnded);
       }
-    }, 2500); // 2.5 seconds of effects
-
-    return () => clearTimeout(timer);
+    };
   }, [audioPlayed, onComplete]);
 
   if (!showEffects) return null;
