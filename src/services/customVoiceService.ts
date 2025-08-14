@@ -121,7 +121,7 @@ export class CustomVoiceService {
   // Stop current playback using the audio manager
   stopVoice(): void {
     console.log('[CustomVoice] 🛑 Requesting stop from AudioManager');
-    audioManager.stopAll();
+    audioManager.stopAudio();
   }
 
   // Get all available question voice files (1-15 based on your upload)

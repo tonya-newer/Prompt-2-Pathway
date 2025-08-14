@@ -88,7 +88,7 @@ const Assessment = () => {
     // Auto-advance to next question after 1.5 seconds
     setTimeout(() => {
       // Stop any playing audio before advancing
-      customVoiceService.stopVoice();
+      // customVoiceService.stopVoice();
       nativeSpeech.stop();
       
       if (currentQuestionIndex < (assessment?.questions.length || 0) - 1) {
@@ -101,7 +101,7 @@ const Assessment = () => {
 
   const handleNextQuestion = () => {
     // Stop any playing audio before advancing
-    customVoiceService.stopVoice();
+    // customVoiceService.stopVoice();
     nativeSpeech.stop();
     
     if (currentQuestionIndex < (assessment?.questions.length || 0) - 1) {
