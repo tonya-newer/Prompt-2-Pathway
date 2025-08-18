@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { VoicePlayer } from '@/components/VoicePlayer';
 import { QuestionRenderer } from '@/components/QuestionRenderer';
 import { WelcomePage } from '@/components/WelcomePage';
 import { useToast } from "@/hooks/use-toast";
