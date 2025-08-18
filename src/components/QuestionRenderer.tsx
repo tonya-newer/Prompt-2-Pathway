@@ -1,3 +1,5 @@
+
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -7,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Question } from '@/types/assessment';
 import { Check } from 'lucide-react';
 import { VoicePlayer } from '@/components/VoicePlayer';
+import { customVoiceService } from '@/services/customVoiceService';
+import { nativeSpeech } from '@/services/nativeSpeech';
 
 interface QuestionRendererProps {
   question: Question;
@@ -23,6 +27,40 @@ export const QuestionRenderer = ({
   answer, 
   onAnswer 
 }: QuestionRendererProps) => {
+  const [keepGoingDone, setKeepGoingDone] = useState(false);
+  let keepGoingAudio: HTMLAudioElement | null = null;
+  useEffect(() => {
+    if (questionIndex === 7) {
+      customVoiceService.stopVoice();
+      nativeSpeech.stop();
+      
+      setKeepGoingDone(false);
+
+      keepGoingAudio = new Audio('/custom-voices/keep-going-message.wav');
+      keepGoingAudio.play();
+      keepGoingAudio.onended = () => {
+        setKeepGoingDone(true);
+      };
+    } else {
+      if (keepGoingAudio) {
+        keepGoingAudio.pause();
+        keepGoingAudio.currentTime = 0;
+        keepGoingAudio = null;
+      }
+
+      setKeepGoingDone(false);
+    }
+
+    return () => {
+      if (keepGoingAudio) {
+        keepGoingAudio.pause();
+        keepGoingAudio.currentTime = 0;
+        keepGoingAudio = null;
+      }
+    };
+
+  }, [questionIndex]);
+
   const renderYesNo = () => (
     <div className="grid grid-cols-2 gap-3 sm:gap-6 mt-6 sm:mt-8">
       <Button
@@ -207,19 +245,29 @@ export const QuestionRenderer = ({
             {questionIndex + 1} of {totalQuestions}
           </Badge>
         </div>
-        
-        {/* Voice Player positioned near question */}
+
         {question.voiceScript && (
           <div className="mb-4 sm:mb-6 lg:mb-8">
-            <VoicePlayer
-              text={question.voiceScript}
-              autoPlay={true}
-              questionId={questionIndex + 1}
-            />
+            {questionIndex === 7 ? (
+              <div>
+                {keepGoingDone && (
+                  <VoicePlayer
+                    text={question.voiceScript}
+                    autoPlay={true}
+                    questionId={questionIndex + 1}
+                  />
+                )}
+              </div>
+            ) : (
+              <VoicePlayer
+                text={question.voiceScript}
+                autoPlay={true}
+                questionId={questionIndex + 1}
+              />
+            )}
           </div>
         )}
         
-        {/* Voice transcript - enhanced visual treatment */}
         {question.voiceScript && (
           <div className="bg-gradient-to-r from-blue-100 via-purple-50 to-blue-100 border-l-4 sm:border-l-8 border-blue-500 p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 lg:mb-8 rounded-r-2xl shadow-lg">
             <div className="flex items-start space-x-2 sm:space-x-4">
