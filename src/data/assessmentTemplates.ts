@@ -1,4 +1,4 @@
-import { AssessmentTemplate } from '@/types/assessment';
+import { AssessmentTemplate } from '@/types';
 
 export const assessmentTemplates: AssessmentTemplate[] = [
   {

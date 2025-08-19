@@ -7,19 +7,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, Copy, Trash2, Link, Users, BarChart3, Settings, Mic } from 'lucide-react';
-import { AssessmentTemplate } from '@/types/assessment';
+import { Users, BarChart3, Settings, Mic } from 'lucide-react';
+import { AssessmentTemplate } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { AssessmentEditor } from '@/components/admin/AssessmentEditor';
+import { AssessmentsList } from '@/components/admin/AssessmentsList';
 import { LeadsList } from '@/components/admin/LeadsList';
 import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
 import { leadStorageService } from '@/services/leadStorage';
-import { assessmentStorageService } from '@/services/assessmentStorage';
+// import { assessmentStorageService } from '@/services/assessmentStorage';
 
 const Index = () => {
   const [templates, setTemplates] = useState<AssessmentTemplate[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<AssessmentTemplate | null>(null);
-  const [editMode, setEditMode] = useState(false);
   const [selectedTemplateForVoice, setSelectedTemplateForVoice] = useState<AssessmentTemplate | null>(null);
   const [voiceSettings, setVoiceSettings] = useState({
     welcomeMessage: "Welcome to this assessment. Let's begin your journey of discovery.",
@@ -29,138 +27,11 @@ const Index = () => {
   const { toast } = useToast();
 
   // Load templates from storage service
-  useEffect(() => {
-    setTemplates(assessmentStorageService.getAllAssessments());
-  }, []);
+  // useEffect(() => {
+  //   setTemplates(assessmentStorageService.getAllAssessments());
+  // }, []);
 
   const leads = leadStorageService.getLeads();
-
-  const handleCreateNew = () => {
-    const newTemplate: AssessmentTemplate = {
-      id: Date.now(),
-      title: 'New Assessment',
-      description: 'New assessment description',
-      audience: 'individual',
-      tags: ['new'],
-      questions: [
-        {
-          id: 1,
-          type: "yes-no",
-          question: "Sample question - Do you agree?",
-          voiceScript: "This is a sample question. Do you agree with this statement?"
-        }
-      ],
-      image: ''
-    };
-    setSelectedTemplate(newTemplate);
-    setEditMode(true);
-    toast({
-      title: "New Template",
-      description: "Creating new assessment template",
-    });
-  };
-
-  const handleEditTemplate = (template: AssessmentTemplate) => {
-    setSelectedTemplate({...template});
-    setEditMode(true);
-    toast({
-      title: "Opening Editor",
-      description: `Now editing "${template.title}"`,
-    });
-  };
-
-  const handleSaveTemplate = (updatedTemplate: AssessmentTemplate) => {
-    try {
-      let savedTemplate: AssessmentTemplate;
-      
-      if (templates.find(t => t.id === updatedTemplate.id)) {
-        savedTemplate = assessmentStorageService.updateAssessment(updatedTemplate);
-        toast({
-          title: "Template Updated",
-          description: `"${updatedTemplate.title}" has been saved successfully.`,
-        });
-      } else {
-        savedTemplate = assessmentStorageService.createAssessment(updatedTemplate);
-        toast({
-          title: "Template Created",
-          description: `"${updatedTemplate.title}" has been created successfully.`,
-        });
-      }
-      
-      setTemplates(assessmentStorageService.getAllAssessments());
-      setEditMode(false);
-      setSelectedTemplate(null);
-      
-    } catch (error) {
-      console.error('Error saving template:', error);
-      toast({
-        title: "Save Error",
-        description: "Failed to save the template. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDuplicateTemplate = (template: AssessmentTemplate) => {
-    try {
-      const duplicated = assessmentStorageService.duplicateAssessment(template.id);
-      setTemplates(assessmentStorageService.getAllAssessments());
-      toast({
-        title: "Template Duplicated",
-        description: `"${duplicated.title}" has been created.`,
-      });
-    } catch (error) {
-      console.error('Error duplicating template:', error);
-      toast({
-        title: "Duplicate Error",
-        description: "Failed to duplicate the template. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteTemplate = (templateId: number) => {
-    try {
-      const templateToDelete = assessmentStorageService.getAssessmentById(templateId);
-      assessmentStorageService.deleteAssessment(templateId);
-      setTemplates(assessmentStorageService.getAllAssessments());
-      toast({
-        title: "Template Deleted",
-        description: `"${templateToDelete?.title}" has been deleted.`,
-        variant: "destructive",
-      });
-    } catch (error) {
-      console.error('Error deleting template:', error);
-      toast({
-        title: "Delete Error",
-        description: "Failed to delete the template. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const copyAssessmentLink = async (template: AssessmentTemplate) => {
-    const url = `${window.location.origin}/assessment/${template.id}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      toast({
-        title: "Assessment Link Copied!",
-        description: `Link copied: ${url}`,
-      });
-    } catch (error) {
-      const textArea = document.createElement('textarea');
-      textArea.value = url;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      
-      toast({
-        title: "Assessment Link Copied!",
-        description: `Link copied: ${url}`,
-      });
-    }
-  };
 
   const handleSaveVoiceSettings = () => {
     toast({
@@ -168,23 +39,6 @@ const Index = () => {
       description: "Voice scripts and settings have been updated successfully.",
     });
   };
-
-  if (editMode && selectedTemplate) {
-    return (
-      <AssessmentEditor
-        template={selectedTemplate}
-        onSave={handleSaveTemplate}
-        onCancel={() => {
-          setEditMode(false);
-          setSelectedTemplate(null);
-          toast({
-            title: "Editor Closed",
-            description: "Changes have been discarded.",
-          });
-        }}
-      />
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -221,97 +75,10 @@ const Index = () => {
           </TabsList>
 
           <TabsContent value="assessments" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Available Assessments</h3>
-              <Button onClick={handleCreateNew} className="flex items-center">
-                <Plus className="h-4 w-4 mr-2" />
-                Create New
-              </Button>
-            </div>
-            
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {templates.map((template) => (
-                <Card key={template.id} className="overflow-hidden">
-                  {template.image && (
-                    <div className="h-48 overflow-hidden">
-                      <img 
-                        src={template.image} 
-                        alt={template.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-lg mb-2">{template.title}</h4>
-                        <p className="text-sm text-gray-600 mb-3">{template.description}</p>
-                        
-                        <div className="flex flex-wrap gap-1 mb-3">
-                          <Badge variant={template.audience === 'business' ? 'default' : 'secondary'}>
-                            {template.audience}
-                          </Badge>
-                          {template.tags.map((tag, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                        
-                        <p className="text-xs text-gray-500 mb-4">
-                          {template.questions.length} questions • Est. {Math.ceil(template.questions.length * 0.75)} min
-                        </p>
-                        
-                        <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4">
-                          <p className="text-sm font-medium text-blue-900 mb-1">Public Link:</p>
-                          <code className="text-xs bg-white px-2 py-1 rounded border block w-full text-gray-700 break-all">
-                            {window.location.origin}/assessment/{template.id}
-                          </code>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-2">
-                      <Button 
-                        size="sm"
-                        onClick={() => copyAssessmentLink(template)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1"
-                      >
-                        <Link className="h-3 w-3" />
-                        Copy URL
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleEditTemplate(template)}
-                      >
-                        <Edit className="h-3 w-3 mr-1" />
-                        Edit
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleDuplicateTemplate(template)}
-                      >
-                        <Copy className="h-3 w-3 mr-1" />
-                        Duplicate
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleDeleteTemplate(template.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
+            <AssessmentsList />
           </TabsContent>
 
-          <TabsContent value="voice-settings" className="space-y-6">
+          {/* <TabsContent value="voice-settings" className="space-y-6">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold">Voice Scripts & Settings</h3>
               <Button onClick={handleSaveVoiceSettings} className="flex items-center">
@@ -428,7 +195,7 @@ const Index = () => {
                 </div>
               </Card>
             </div>
-          </TabsContent>
+          </TabsContent> */}
 
           <TabsContent value="leads">
             <LeadsList />

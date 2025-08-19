@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { addLead } from '@/store/leadsSlice';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,13 +10,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { VoicePlayer } from '@/components/VoicePlayer';
 import { useToast } from "@/hooks/use-toast";
-import { leadStorageService } from '@/services/leadStorage';
+import { RootState } from '@/store';
 
 export let celebrationAudio: HTMLAudioElement | null = null;
 
 const ContactForm = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const assessment = useSelector(
+    (state: RootState) => state.assessments.selected
+  );
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -74,9 +80,10 @@ const ContactForm = () => {
       
       // Get assessment results for lead storage
       const assessmentResults = localStorage.getItem('assessment-results');
-      const assessmentTitle = localStorage.getItem('assessment-title');
       
-      if (assessmentResults && assessmentTitle) {
+      if (assessmentResults) {
+        const results = JSON.parse(assessmentResults);
+
         const leadData = {
           firstName: formData.firstName,
           lastName: formData.lastName,
@@ -85,12 +92,15 @@ const ContactForm = () => {
           ageRange: formData.ageRange || '',
           gender: formData.gender || '',
           source: formData.source || 'direct',
-          audience: 'individual'
+          audience: 'individual',
+          assessment: assessment._id,
+          score: results.overallScore
         };
         
-        const results = JSON.parse(assessmentResults);
-        leadStorageService.storeLead(leadData, results, assessmentTitle);
-        console.log('Lead data stored successfully');
+        await dispatch(addLead({
+          ...leadData,
+          results
+        })).unwrap();
       }
 
       toast({

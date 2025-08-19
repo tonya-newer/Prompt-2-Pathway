@@ -6,7 +6,7 @@ import { Sparkles, Heart, Target } from 'lucide-react';
 interface WelcomePageProps {
   assessmentTitle: string;
   audience: 'individual' | 'business';
-  onSubmit: (data: any) => void;
+  onSubmit: () => void;
 }
 
 export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePageProps) => {
@@ -81,7 +81,7 @@ export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePage
               </div>
               
               <button
-                onClick={() => onSubmit({})}
+                onClick={() => onSubmit()}
                 className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-4 px-8 rounded-full text-lg shadow-lg transform hover:scale-105 transition-all duration-200"
               >
                 Begin My Assessment

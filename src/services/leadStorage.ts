@@ -1,5 +1,5 @@
 
-import { LeadData, AssessmentResults } from '@/types/assessment';
+import { LeadData, AssessmentResults } from '@/types';
 
 interface StoredLead {
   id: string;

@@ -1,5 +1,16 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, AppDispatch } from '@/store';
+import {
+  addAssessment,
+  updateAssessment,
+  fetchAssessmentById
+} from '@/store/assessmentsSlice';
+import { useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,21 +20,48 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Plus, Save, X, Trash2, GripVertical, ArrowUp, ArrowDown, Upload, Image } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { AssessmentTemplate, Question } from '@/types/assessment';
+import { AssessmentTemplate, Question } from '@/types';
 
 interface AssessmentEditorProps {
-  template: AssessmentTemplate;
-  onSave: (template: AssessmentTemplate) => void;
-  onCancel: () => void;
+  mode: 'add' | 'update';
 }
 
-export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEditorProps) => {
-  const [editedTemplate, setEditedTemplate] = useState<AssessmentTemplate>(template);
-  const [newTag, setNewTag] = useState('');
+export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
+  const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSave = () => {
-    if (!editedTemplate.title.trim()) {
+  const dispatch: AppDispatch = useDispatch();
+  const { id } = useParams<{ id: string }>();
+
+  const initialAssessment: AssessmentTemplate = {
+    _id: '',
+    title: '',
+    audience: 'individual',
+    description: '',
+    image: '',
+    tags: [],
+    questions: []
+  };
+
+  const [assessment, setAssessment] = useState<AssessmentTemplate>(initialAssessment);
+
+  useEffect(() => {
+    if (mode === 'update' && id) {
+      dispatch(fetchAssessmentById(id))
+        .unwrap()
+        .then((res) => setAssessment(res))
+        .catch((err) => {
+          console.error(err);
+          toast({ title: "Error", description: "Failed to fetch assessment", variant: "destructive" });
+        });
+    }
+  }, [id, mode, dispatch, toast]);
+
+
+  const [newTag, setNewTag] = useState('');
+
+  const handleSave = async () => {
+    if (!assessment.title.trim()) {
       toast({
         title: "Validation Error",
         description: "Assessment title is required.",
@@ -31,7 +69,26 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
       });
       return;
     }
-    onSave(editedTemplate);
+  
+    try {
+      const { _id, ...rest } = assessment;
+      const payload = {
+        ...rest,
+        tags: JSON.stringify(assessment.tags),
+        questions: JSON.stringify(assessment.questions)
+      }
+
+      if (mode === 'add') {
+        await dispatch(addAssessment(payload)).unwrap();
+        toast({ title: "Assessment Created", description: "Successfully added." });
+      } else if (mode === 'update' && id) {
+        await dispatch(updateAssessment({ id, data: payload })).unwrap();
+        toast({ title: "Assessment Updated", description: "Successfully saved." });
+      }
+      navigate('/');
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Something went wrong", variant: "destructive" });
+    }
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,8 +97,8 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
       const reader = new FileReader();
       reader.onload = (e) => {
         const imageUrl = e.target?.result as string;
-        setEditedTemplate({
-          ...editedTemplate,
+        setAssessment({
+          ...assessment,
           image: imageUrl
         });
         toast({
@@ -60,9 +117,9 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
       question: 'New question',
       voiceScript: 'Voice script for new question'
     };
-    setEditedTemplate({
-      ...editedTemplate,
-      questions: [...editedTemplate.questions, newQuestion]
+    setAssessment({
+      ...assessment,
+      questions: [...assessment.questions, newQuestion]
     });
     toast({
       title: "Question Added",
@@ -71,19 +128,19 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
   };
 
   const updateQuestion = (index: number, updatedQuestion: Question) => {
-    const updatedQuestions = [...editedTemplate.questions];
+    const updatedQuestions = [...assessment.questions];
     updatedQuestions[index] = updatedQuestion;
-    setEditedTemplate({
-      ...editedTemplate,
+    setAssessment({
+      ...assessment,
       questions: updatedQuestions
     });
   };
 
   const removeQuestion = (index: number) => {
-    const questionToRemove = editedTemplate.questions[index];
-    setEditedTemplate({
-      ...editedTemplate,
-      questions: editedTemplate.questions.filter((_, i) => i !== index)
+    const questionToRemove = assessment.questions[index];
+    setAssessment({
+      ...assessment,
+      questions: assessment.questions.filter((_, i) => i !== index)
     });
     toast({
       title: "Question Removed",
@@ -93,38 +150,42 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
 
   const moveQuestion = (index: number, direction: 'up' | 'down') => {
     const newIndex = direction === 'up' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= editedTemplate.questions.length) return;
+    if (newIndex < 0 || newIndex >= assessment.questions.length) return;
 
-    const updatedQuestions = [...editedTemplate.questions];
+    const updatedQuestions = [...assessment.questions];
     [updatedQuestions[index], updatedQuestions[newIndex]] = [updatedQuestions[newIndex], updatedQuestions[index]];
     
-    setEditedTemplate({
-      ...editedTemplate,
+    setAssessment({
+      ...assessment,
       questions: updatedQuestions
     });
   };
 
   const addTag = () => {
-    if (newTag.trim() && !editedTemplate.tags.includes(newTag.trim())) {
-      setEditedTemplate({
-        ...editedTemplate,
-        tags: [...editedTemplate.tags, newTag.trim()]
+    if (newTag.trim() && !assessment.tags.includes(newTag.trim())) {
+      setAssessment({
+        ...assessment,
+        tags: [...assessment.tags, newTag.trim()]
       });
       setNewTag('');
     }
   };
 
   const removeTag = (tagToRemove: string) => {
-    setEditedTemplate({
-      ...editedTemplate,
-      tags: editedTemplate.tags.filter(tag => tag !== tagToRemove)
+    setAssessment({
+      ...assessment,
+      tags: assessment.tags.filter(tag => tag !== tagToRemove)
     });
   };
 
+  const onCancel = () => {
+    navigate('/')
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Edit Assessment</h2>
+        <h2 className="text-2xl font-bold">{mode === 'add' ? 'Add Assessment' : 'Edit Assessment'}</h2>
         <div className="flex space-x-2">
           <Button variant="outline" onClick={onCancel}>
             <X className="h-4 w-4 mr-2" />
@@ -144,17 +205,17 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
               <Label htmlFor="title">Assessment Title</Label>
               <Input 
                 id="title"
-                value={editedTemplate.title}
-                onChange={(e) => setEditedTemplate({...editedTemplate, title: e.target.value})}
+                value={assessment.title}
+                onChange={(e) => setAssessment({...assessment, title: e.target.value})}
                 placeholder="Enter assessment title"
               />
             </div>
             <div>
               <Label htmlFor="audience">Target Audience</Label>
               <Select 
-                value={editedTemplate.audience} 
+                value={assessment.audience} 
                 onValueChange={(value: 'individual' | 'business') => 
-                  setEditedTemplate({...editedTemplate, audience: value})
+                  setAssessment({...assessment, audience: value})
                 }
               >
                 <SelectTrigger>
@@ -172,8 +233,8 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
             <Label htmlFor="description">Description</Label>
             <Textarea 
               id="description"
-              value={editedTemplate.description}
-              onChange={(e) => setEditedTemplate({...editedTemplate, description: e.target.value})}
+              value={assessment.description}
+              onChange={(e) => setAssessment({...assessment, description: e.target.value})}
               rows={3}
               placeholder="Enter assessment description"
             />
@@ -182,17 +243,17 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
           <div>
             <Label htmlFor="image-upload">Assessment Image (Displays Vertically)</Label>
             <div className="space-y-4">
-              {editedTemplate.image && (
+              {assessment.image && (
                 <div className="relative max-w-md">
                   <img 
-                    src={editedTemplate.image} 
+                    src={assessment.image} 
                     alt="Assessment preview"
                     className="w-full h-64 object-cover rounded-lg border-2 border-gray-200"
                   />
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setEditedTemplate({...editedTemplate, image: ''})}
+                    onClick={() => setAssessment({...assessment, image: ''})}
                     className="absolute top-2 right-2 bg-white/80 hover:bg-white"
                   >
                     <X className="h-4 w-4" />
@@ -216,10 +277,10 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
                   className="flex items-center"
                 >
                   <Upload className="h-4 w-4 mr-2" />
-                  {editedTemplate.image ? 'Change Image' : 'Upload Image'}
+                  {assessment.image ? 'Change Image' : 'Upload Image'}
                 </Button>
                 <span className="text-sm text-gray-500">
-                  {editedTemplate.image ? 'Image uploaded - will display vertically' : 'Recommended: 400x600px or similar vertical format'}
+                  {assessment.image ? 'Image uploaded - will display vertically' : 'Recommended: 400x600px or similar vertical format'}
                 </span>
               </div>
             </div>
@@ -228,7 +289,7 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
           <div>
             <Label>Tags</Label>
             <div className="flex flex-wrap gap-2 mb-2">
-              {editedTemplate.tags.map((tag, index) => (
+              {assessment.tags.map((tag, index) => (
                 <Badge key={index} variant="outline" className="flex items-center gap-1">
                   {tag}
                   <X 
@@ -253,7 +314,7 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
 
       <Card className="p-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Questions ({editedTemplate.questions.length})</h3>
+          <h3 className="text-lg font-semibold">Questions ({assessment.questions.length})</h3>
           <Button onClick={addQuestion}>
             <Plus className="h-4 w-4 mr-2" />
             Add Question
@@ -261,7 +322,7 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
         </div>
 
         <div className="space-y-4">
-          {editedTemplate.questions.map((question, index) => (
+          {assessment.questions.map((question, index) => (
             <QuestionEditor
               key={question.id}
               question={question}
@@ -271,11 +332,11 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
               onMoveUp={() => moveQuestion(index, 'up')}
               onMoveDown={() => moveQuestion(index, 'down')}
               canMoveUp={index > 0}
-              canMoveDown={index < editedTemplate.questions.length - 1}
+              canMoveDown={index < assessment.questions.length - 1}
             />
           ))}
           
-          {editedTemplate.questions.length === 0 && (
+          {assessment.questions.length === 0 && (
             <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
               <p className="text-gray-500 mb-4">No questions yet</p>
               <Button onClick={addQuestion} variant="outline">

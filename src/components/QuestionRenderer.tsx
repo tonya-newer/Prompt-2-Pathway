@@ -6,7 +6,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Question } from '@/types/assessment';
+import { Question } from '@/types';
 import { Check } from 'lucide-react';
 import { VoicePlayer } from '@/components/VoicePlayer';
 import { customVoiceService } from '@/services/customVoiceService';

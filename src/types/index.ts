@@ -9,7 +9,7 @@ export interface Question {
 }
 
 export interface AssessmentTemplate {
-  id: number;
+  _id: string;
   title: string;
   description: string;
   audience: 'individual' | 'business';

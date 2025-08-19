@@ -1,15 +1,16 @@
 
 import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { QuestionRenderer } from '@/components/QuestionRenderer';
 import { WelcomePage } from '@/components/WelcomePage';
 import { useToast } from "@/hooks/use-toast";
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { AssessmentTemplate } from '@/types/assessment';
-import { assessmentStorageService } from '@/services/assessmentStorage';
 import { customVoiceService } from '@/services/customVoiceService';
 import { nativeSpeech } from '@/services/nativeSpeech';
+import { RootState } from '@/store';
+import { fetchAssessmentById } from '@/store/assessmentsSlice';
 
 interface AssessmentResult {
   overallScore: number;
@@ -20,56 +21,43 @@ interface AssessmentResult {
 const Assessment = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [assessment, setAssessment] = useState<AssessmentTemplate | null>(null);
+  const dispatch = useDispatch();
+  const assessment = useSelector(
+    (state: RootState) => state.assessments.selected
+  );
+
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showLeadCapture, setShowLeadCapture] = useState(true);
-  const [userInfo, setUserInfo] = useState<any>(null);
+  const [showWelcomePage, setShowWelcomePage] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     if (id) {
-      // Handle both string and number IDs with retry logic
-      const assessmentId = isNaN(Number(id)) ? id : Number(id);
-      
-      const loadAssessment = () => {
-        const template = assessmentStorageService.getAssessmentById(assessmentId);
-        if (template) {
-          setAssessment(template);
-          console.log('Loaded assessment:', template.title, 'with', template.questions.length, 'questions');
+      setLoading(true); // still keep local loading spinner if needed
+      dispatch(fetchAssessmentById(id))
+        .unwrap()
+        .then((res) => {
+          console.log('Loaded assessment:', res.title, 'with', res.questions.length, 'questions');
           setLoading(false);
-        } else {
-          console.warn('Assessment not found for ID:', assessmentId, 'retrying in 1s...');
-          // Retry after 1 second in case of race condition
-          setTimeout(() => {
-            const retryTemplate = assessmentStorageService.getAssessmentById(assessmentId);
-            if (retryTemplate) {
-              setAssessment(retryTemplate);
-              console.log('Loaded assessment on retry:', retryTemplate.title);
-            } else {
-              console.error('Assessment not found after retry for ID:', assessmentId);
-            }
-            setLoading(false);
-          }, 1000);
-        }
-      };
-      
-      loadAssessment();
+        })
+        .catch(() => {
+          console.error('Assessment not found for ID:', id);
+          setLoading(false);
+        });
     } else {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, dispatch]);
 
   useEffect(() => {
-    if (assessment && !showLeadCapture) {
+    if (assessment && !showWelcomePage) {
       setAnswers(new Array(assessment.questions.length).fill(null));
     }
-  }, [assessment, showLeadCapture]);
+  }, [assessment, showWelcomePage]);
 
-  const handleLeadSubmit = (data: any) => {
-    setUserInfo(data);
-    setShowLeadCapture(false);
+  const handleSubmit = () => {
+    setShowWelcomePage(false);
     toast({
       title: "Welcome!",
       description: "Let's begin your personalized assessment.",
@@ -184,11 +172,11 @@ const Assessment = () => {
               Return to Home
             </Button>
           </div>
-        ) : showLeadCapture ? (
+        ) : showWelcomePage ? (
           <WelcomePage
             assessmentTitle={assessment.title}
             audience={assessment.audience}
-            onSubmit={handleLeadSubmit}
+            onSubmit={handleSubmit}
           />
         ) : currentQuestionIndex < assessment.questions.length ? (
           <div className="space-y-4 sm:space-y-6">
