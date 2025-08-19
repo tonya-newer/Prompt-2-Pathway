@@ -1,5 +1,3 @@
-const path = require('path');
-const fs = require('fs');
 const Assessment = require('../models/assessmentModel');
 
 const getAllAssessments = async (req, res) => {
@@ -24,34 +22,31 @@ const getAssessmentById = async (req, res) => {
 };
 
 const createAssessment = async (req, res) => {
-    try {
-        const assessmentData = { ...req.body};
-        if (assessmentData.tags) {
-          try {
-            assessmentData.tags = JSON.parse(assessmentData.tags);
-          } catch {
-            return res.status(400).json({ error: 'Invalid JSON in tags field' });
-          }
-        }
-
-        if (assessmentData.questions) {
-          try {
-            assessmentData.questions = JSON.parse(assessmentData.questions);
-          } catch {
-            return res.status(400).json({ error: 'Invalid JSON in questions field' });
-          }
-        }
-
-        if (req.file) {
-          assessmentData.image = req.file.filename;
-        }
-
-        const newAssessment = new Assessment(assessmentData);
-        const savedAssessment = await newAssessment.save();
-        res.status(201).json(savedAssessment);
-    } catch (err) {
-        res.status(400).json({ error: err.message });
+  try {
+    const assessmentData = { ...req.body};
+    
+    if (assessmentData.tags) {
+      try {
+        assessmentData.tags = JSON.parse(assessmentData.tags);
+      } catch {
+        return res.status(400).json({ error: 'Invalid JSON in tags field' });
+      }
     }
+
+    if (assessmentData.questions) {
+      try {
+        assessmentData.questions = JSON.parse(assessmentData.questions);
+      } catch {
+        return res.status(400).json({ error: 'Invalid JSON in questions field' });
+      }
+    }
+
+    const newAssessment = new Assessment(assessmentData);
+    const savedAssessment = await newAssessment.save();
+    res.status(201).json(savedAssessment);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 };
 
 const updateAssessment = async (req, res) => {
@@ -72,10 +67,6 @@ const updateAssessment = async (req, res) => {
       } catch {
         return res.status(400).json({ error: 'Invalid JSON in questions field' });
       }
-    }
-
-    if (req.file) {
-      updateData.image = req.file.filename;
     }
 
     const updatedAssessment = await Assessment.findByIdAndUpdate(
@@ -100,16 +91,6 @@ const deleteAssessment = async (req, res) => {
     if (!deletedAssessment) {
       return res.status(404).json({ error: 'Assessment not found' });
     }
-
-    if (deletedAssessment.image) {
-      const imagePath = path.join(__dirname, '..', 'uploads', deletedAssessment.image);
-      fs.unlink(imagePath, (err) => {
-        if (err) {
-          console.error('Failed to delete image:', err);
-        }
-      });
-    }
-    
     res.json({ message: 'Assessment deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });

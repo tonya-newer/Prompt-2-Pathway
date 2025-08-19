@@ -4,7 +4,8 @@ const questionSchema = new mongoose.Schema({
   id: { type: Number, required: true },
   type: { type: String, required: true },
   question: { type: String, required: true },
-  voiceScript: { type: String, required: true }
+  voiceScript: { type: String, required: true },
+  options: { type: [String], default: [] }
 });
 
 const assessmentSchema = new mongoose.Schema({

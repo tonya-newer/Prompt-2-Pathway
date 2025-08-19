@@ -18,13 +18,18 @@ connectDB().catch((err) => {
 // Create the Express application
 const app = express();
 
-var corsOptions = {
-  origin: [],
-  optionsSuccessStatus: 200, // For legacy browser support  
+// CORS configuration
+let corsOptions = {
+  origin: [], // Fill in allowed origins in production
+  optionsSuccessStatus: 200,
 };
 
 if (process.env.NODE_ENV === "development") {
-  corsOptions.origin.push("*");
+  // Allow all origins in development
+  corsOptions = {
+    origin: true, // Reflect request origin
+    optionsSuccessStatus: 200,
+  };
 }
 
 // Enable cross-origin resource sharing
