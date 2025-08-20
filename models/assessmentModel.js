@@ -5,7 +5,8 @@ const questionSchema = new mongoose.Schema({
   type: { type: String, required: true },
   question: { type: String, required: true },
   voiceScript: { type: String, required: true },
-  options: { type: [String], default: [] }
+  options: { type: [String], default: [] },
+  questionAudio: { type: String }
 });
 
 const assessmentSchema = new mongoose.Schema({
@@ -14,6 +15,9 @@ const assessmentSchema = new mongoose.Schema({
   audience: { type: String, enum: ['individual', 'business'], required: true },
   tags: [{ type: String }],
   image: { type: String },
+  welcomeMessageAudio: { type: String },
+  keepGoingMessageAudio: { type: String },
+  congratulationMessageAudio: { type: String },
   questions: [questionSchema]
 });
 
