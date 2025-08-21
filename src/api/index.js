@@ -21,4 +21,8 @@ export const createLeadAPI = (data) => API.post('/leads', data);
 export const updateLeadAPI = (id, data) => API.put(`/leads/${id}`, data);
 export const addTagToLeadAPI = (id, tagData) => API.post(`/leads/${id}/tags`, tagData);
 
+// ------- Voice Settings -------
+export const getVoiceSettingsAPI = () => API.get('/voicesettings');
+export const updateVoiceSettingsAPI = (data) => API.put('/voicesettings', data);
+
 export default API;

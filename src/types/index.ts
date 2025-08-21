@@ -6,6 +6,7 @@ export interface Question {
   voiceScript?: string;
   description?: string;
   options?: string[];
+  audio?: string | File;
 }
 
 export interface AssessmentTemplate {
@@ -16,6 +17,9 @@ export interface AssessmentTemplate {
   tags: string[];
   image?: string;
   questions: Question[];
+  welcomeMessageAudio?: string | File;
+  keepGoingMessageAudio?: string | File;
+  congratulationMessageAudio?: string | File;
 }
 
 export interface LeadData {
