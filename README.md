@@ -77,9 +77,15 @@ server {
         proxy_cache_bypass $http_upgrade;
     }
 
+    location /uploads/ {
+        alias /var/www/Prompt-2-Pathway-server/uploads/;
+    }
+
     location / {
         try_files $uri /index.html;
     }
+
+    client_max_body_size 100M;
 }
 ```
 
