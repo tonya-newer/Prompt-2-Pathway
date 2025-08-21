@@ -21,4 +21,5 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         script: |
           cd /var/www/Prompt-2-Pathway-server
+          chmod +x deploy.sh
           ./deploy.sh
