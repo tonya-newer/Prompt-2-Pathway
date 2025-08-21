@@ -6,7 +6,7 @@ const questionSchema = new mongoose.Schema({
   question: { type: String, required: true },
   voiceScript: { type: String, required: true },
   options: { type: [String], default: [] },
-  questionAudio: { type: String }
+  audio: { type: String }
 });
 
 const assessmentSchema = new mongoose.Schema({

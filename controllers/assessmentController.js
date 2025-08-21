@@ -1,4 +1,34 @@
+const path = require('path');
+const fs = require('fs');
 const Assessment = require('../models/assessmentModel');
+
+function mapQuestionAudios(questions, files, indexes) {
+  if (!questions || !Array.isArray(questions)) return questions;
+  if (!files || !indexes) return questions;
+
+  const updatedQuestions = [...questions];
+
+  files.forEach((file, i) => {
+    const questionIndex = indexes[i]; // index of question this file belongs to
+    if (updatedQuestions[questionIndex]) {
+      updatedQuestions[questionIndex].audio = `/uploads/audio/${file.filename}`;
+    }
+  });
+
+  return updatedQuestions;
+}
+
+function deleteFileIfExists(filePath) {
+  if (!filePath) return;
+  const fullPath = path.join(__dirname, '..', filePath);
+  fs.access(fullPath, fs.constants.F_OK, (err) => {
+    if (!err) {
+      fs.unlink(fullPath, (err) => {
+        if (err) console.error('Failed to delete file:', fullPath, err);
+      });
+    }
+  });
+}
 
 const getAllAssessments = async (req, res) => {
   try {
@@ -41,6 +71,17 @@ const createAssessment = async (req, res) => {
       }
     }
 
+    if (req.files) {
+      if (req.files.welcomeMessageAudio) assessmentData.welcomeMessageAudio = `/uploads/audio/${req.files.welcomeMessageAudio[0].filename}`;
+      if (req.files.keepGoingMessageAudio) assessmentData.keepGoingMessageAudio = `/uploads/audio/${req.files.keepGoingMessageAudio[0].filename}`;
+      if (req.files.congratulationMessageAudio) assessmentData.congratulationMessageAudio = `/uploads/audio/${req.files.congratulationMessageAudio[0].filename}`;
+    
+      const indexes = req.body.questionAudioIndexes
+        ? JSON.parse(req.body.questionAudioIndexes)
+        : [];
+        assessmentData.questions = mapQuestionAudios(assessmentData.questions, req.files.questionAudios, indexes);
+    }
+
     const newAssessment = new Assessment(assessmentData);
     const savedAssessment = await newAssessment.save();
     res.status(201).json(savedAssessment);
@@ -69,6 +110,39 @@ const updateAssessment = async (req, res) => {
       }
     }
 
+    if (req.files) {
+      if (req.files.welcomeMessageAudio) updateData.welcomeMessageAudio = `/uploads/audio/${req.files.welcomeMessageAudio[0].filename}`;
+      if (req.files.keepGoingMessageAudio) updateData.keepGoingMessageAudio = `/uploads/audio/${req.files.keepGoingMessageAudio[0].filename}`;
+      if (req.files.congratulationMessageAudio) updateData.congratulationMessageAudio = `/uploads/audio/${req.files.congratulationMessageAudio[0].filename}`;
+    
+      const indexes = req.body.questionAudioIndexes
+        ? JSON.parse(req.body.questionAudioIndexes)
+        : [];
+        updateData.questions = mapQuestionAudios(updateData.questions, req.files.questionAudios, indexes);
+    }
+
+    const oldAssessment = await Assessment.findById(req.params.id);
+    if (oldAssessment) {
+      if (req.files?.welcomeMessageAudio && oldAssessment.welcomeMessageAudio) {
+        deleteFileIfExists(oldAssessment.welcomeMessageAudio);
+      }
+      if (req.files?.keepGoingMessageAudio && oldAssessment.keepGoingMessageAudio) {
+        deleteFileIfExists(oldAssessment.keepGoingMessageAudio);
+      }
+      if (req.files?.congratulationMessageAudio && oldAssessment.congratulationMessageAudio) {
+        deleteFileIfExists(oldAssessment.congratulationMessageAudio);
+      }
+    }
+
+    oldAssessment.questions.forEach((q, idx) => {
+      const newFileIndex = req.body.questionAudioIndexes
+        ? JSON.parse(req.body.questionAudioIndexes)
+        : [];
+      if (q.audio && newFileIndex.includes(idx)) {
+        deleteFileIfExists(q.audio);
+      }
+    });
+
     const updatedAssessment = await Assessment.findByIdAndUpdate(
       req.params.id,
       updateData,
@@ -90,6 +164,13 @@ const deleteAssessment = async (req, res) => {
     const deletedAssessment = await Assessment.findByIdAndDelete(req.params.id);
     if (!deletedAssessment) {
       return res.status(404).json({ error: 'Assessment not found' });
+    } else {
+      if (deletedAssessment.welcomeMessageAudio) deleteFileIfExists(deletedAssessment.welcomeMessageAudio);
+      if (deletedAssessment.keepGoingMessageAudio) deleteFileIfExists(deletedAssessment.keepGoingMessageAudio);
+      if (deletedAssessment.congratulationMessageAudio) deleteFileIfExists(deletedAssessment.congratulationMessageAudio);
+      deletedAssessment.questions.forEach(q => {
+        if (q.audio) deleteFileIfExists(q.audio);
+      });
     }
     res.json({ message: 'Assessment deleted' });
   } catch (err) {
