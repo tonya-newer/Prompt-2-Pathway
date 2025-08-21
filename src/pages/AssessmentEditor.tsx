@@ -40,7 +40,10 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
     description: '',
     image: '',
     tags: [],
-    questions: []
+    questions: [],
+    welcomeMessageAudio: '',
+    keepGoingMessageAudio: '',
+    congratulationMessageAudio: ''
   };
 
   const [assessment, setAssessment] = useState<AssessmentTemplate>(initialAssessment);
@@ -71,18 +74,36 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
     }
   
     try {
-      const { _id, ...rest } = assessment;
-      const payload = {
-        ...rest,
-        tags: JSON.stringify(assessment.tags),
-        questions: JSON.stringify(assessment.questions)
-      }
+      const formData = new FormData();
+      formData.append('title', assessment.title);
+      formData.append('audience', assessment.audience);
+      formData.append('description', assessment.description);
+      formData.append('tags', JSON.stringify(assessment.tags));
+      formData.append('questions', JSON.stringify(assessment.questions));
+      formData.append('image', assessment.image);
+
+      if (assessment.welcomeMessageAudio) formData.append('welcomeMessageAudio', assessment.welcomeMessageAudio);
+      if (assessment.keepGoingMessageAudio) formData.append('keepGoingMessageAudio', assessment.keepGoingMessageAudio);
+      if (assessment.congratulationMessageAudio) formData.append('congratulationMessageAudio', assessment.congratulationMessageAudio);
+      
+      const questionAudioFiles: File[] = [];
+      const questionAudioIndexes: number[] = [];
+
+      assessment.questions.forEach((q, idx) => {
+        if (q.audio instanceof File) {
+          questionAudioFiles.push(q.audio);
+          questionAudioIndexes.push(idx);
+        }
+      });
+
+      questionAudioFiles.forEach((file) => formData.append('questionAudios', file));
+      formData.append('questionAudioIndexes', JSON.stringify(questionAudioIndexes));
 
       if (mode === 'add') {
-        await dispatch(addAssessment(payload)).unwrap();
+        await dispatch(addAssessment(formData)).unwrap();
         toast({ title: "Assessment Created", description: "Successfully added." });
       } else if (mode === 'update' && id) {
-        await dispatch(updateAssessment({ id, data: payload })).unwrap();
+        await dispatch(updateAssessment({ id, data: formData })).unwrap();
         toast({ title: "Assessment Updated", description: "Successfully saved." });
       }
       navigate('/');
@@ -284,6 +305,51 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
                 </span>
               </div>
             </div>
+          </div>
+
+          <div className="space-y-4">
+            <Label>Welcome Message Audio</Label>
+            <p className="text-sm text-gray-500 mt-1">
+              {assessment.welcomeMessageAudio instanceof File ? assessment.welcomeMessageAudio.name : assessment.welcomeMessageAudio}
+            </p>
+            <Input
+              type="file"
+              accept="audio/*"
+              onChange={(e) => setAssessment({
+                ...assessment,
+                welcomeMessageAudio: e.target.files?.[0] ?? null
+              })}
+            />
+          </div>
+
+          <div className="space-y-4">
+            <Label>Keep Going Message Audio</Label>
+            <p className="text-sm text-gray-500 mt-1">
+              {assessment.keepGoingMessageAudio instanceof File ? assessment.keepGoingMessageAudio.name : assessment.keepGoingMessageAudio}
+            </p>
+            <Input
+              type="file"
+              accept="audio/*"
+              onChange={(e) => setAssessment({
+                ...assessment,
+                keepGoingMessageAudio: e.target.files?.[0] ?? null
+              })}
+            />
+          </div>
+
+          <div className="space-y-4">
+            <Label>Congratulation Message Audio</Label>
+            <p className="text-sm text-gray-500 mt-1">
+              {assessment.congratulationMessageAudio instanceof File ? assessment.congratulationMessageAudio.name : assessment.congratulationMessageAudio}
+            </p>
+            <Input
+              type="file"
+              accept="audio/*"
+              onChange={(e) => setAssessment({
+                ...assessment,
+                congratulationMessageAudio: e.target.files?.[0] ?? null
+              })}
+            />
           </div>
           
           <div>
@@ -518,6 +584,22 @@ const QuestionEditor = ({
                 </div>
               </div>
             )}
+            <div>
+              <Label>Question Message Audio</Label>
+              {question.audio && (
+                  <p className="text-sm text-gray-500 my-1">
+                    {question.audio instanceof File ? question.audio.name : question.audio}
+                  </p>
+                )}
+              <Input
+                type="file"
+                accept="audio/*"
+                onChange={(e) => onUpdate({
+                  ...question,
+                  audio: e.target.files?.[0] ?? undefined
+                })}
+              />
+            </div>
           </>
         )}
       </div>

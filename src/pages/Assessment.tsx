@@ -56,6 +56,12 @@ const Assessment = () => {
     }
   }, [assessment, showWelcomePage]);
 
+  useEffect(() => {
+    if (assessment) {
+      customVoiceService.setAssessment(assessment)
+    }
+  }, [assessment]);
+
   const handleSubmit = () => {
     setShowWelcomePage(false);
     toast({

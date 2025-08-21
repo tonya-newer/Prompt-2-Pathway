@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -11,6 +12,7 @@ import { Check } from 'lucide-react';
 import { VoicePlayer } from '@/components/VoicePlayer';
 import { customVoiceService } from '@/services/customVoiceService';
 import { nativeSpeech } from '@/services/nativeSpeech';
+import { RootState } from '@/store';
 
 interface QuestionRendererProps {
   question: Question;
@@ -28,7 +30,10 @@ export const QuestionRenderer = ({
   onAnswer 
 }: QuestionRendererProps) => {
   const [keepGoingDone, setKeepGoingDone] = useState(false);
+  const assessment = useSelector((state: RootState) => state.assessments.selected);
+
   let keepGoingAudio: HTMLAudioElement | null = null;
+
   useEffect(() => {
     if (questionIndex === 7) {
       customVoiceService.stopVoice();
@@ -36,7 +41,7 @@ export const QuestionRenderer = ({
       
       setKeepGoingDone(false);
 
-      keepGoingAudio = new Audio('/custom-voices/keep-going-message.wav');
+      keepGoingAudio = new Audio(import.meta.env.VITE_AUDIO_BASE_URL + assessment.keepGoingMessageAudio);
       keepGoingAudio.play();
       keepGoingAudio.onended = () => {
         setKeepGoingDone(true);
@@ -59,7 +64,7 @@ export const QuestionRenderer = ({
       }
     };
 
-  }, [questionIndex]);
+  }, [questionIndex, assessment?.keepGoingMessageAudio]);
 
   const renderYesNo = () => (
     <div className="grid grid-cols-2 gap-3 sm:gap-6 mt-6 sm:mt-8">
