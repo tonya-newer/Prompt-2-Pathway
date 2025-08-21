@@ -47,6 +47,7 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
   };
 
   const [assessment, setAssessment] = useState<AssessmentTemplate>(initialAssessment);
+  const { status } = useSelector((state: RootState) => state.assessments);
 
   useEffect(() => {
     if (mode === 'update' && id) {
@@ -205,214 +206,223 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">{mode === 'add' ? 'Add Assessment' : 'Edit Assessment'}</h2>
-        <div className="flex space-x-2">
-          <Button variant="outline" onClick={onCancel}>
-            <X className="h-4 w-4 mr-2" />
-            Cancel
-          </Button>
-          <Button onClick={handleSave}>
-            <Save className="h-4 w-4 mr-2" />
-            Save Assessment
-          </Button>
+      {status == 'loading' && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-90">
+          <div className="text-xl font-bold">
+            Saving...
+          </div>
         </div>
-      </div>
+      )}
+      <div className={`${status == 'loading' ? 'opacity-50 pointer-events-none' : ''}`}>
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">{mode === 'add' ? 'Add Assessment' : 'Edit Assessment'}</h2>
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={onCancel}>
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+            <Button onClick={handleSave}>
+              <Save className="h-4 w-4 mr-2" />
+              Save Assessment
+            </Button>
+          </div>
+        </div>
 
-      <Card className="p-6">
-        <div className="space-y-6">
-          <div className="grid md:grid-cols-2 gap-4">
+        <Card className="p-6">
+          <div className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="title">Assessment Title</Label>
+                <Input 
+                  id="title"
+                  value={assessment.title}
+                  onChange={(e) => setAssessment({...assessment, title: e.target.value})}
+                  placeholder="Enter assessment title"
+                />
+              </div>
+              <div>
+                <Label htmlFor="audience">Target Audience</Label>
+                <Select 
+                  value={assessment.audience} 
+                  onValueChange={(value: 'individual' | 'business') => 
+                    setAssessment({...assessment, audience: value})
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="individual">Individual</SelectItem>
+                    <SelectItem value="business">Business Owner</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
             <div>
-              <Label htmlFor="title">Assessment Title</Label>
-              <Input 
-                id="title"
-                value={assessment.title}
-                onChange={(e) => setAssessment({...assessment, title: e.target.value})}
-                placeholder="Enter assessment title"
+              <Label htmlFor="description">Description</Label>
+              <Textarea 
+                id="description"
+                value={assessment.description}
+                onChange={(e) => setAssessment({...assessment, description: e.target.value})}
+                rows={3}
+                placeholder="Enter assessment description"
               />
             </div>
-            <div>
-              <Label htmlFor="audience">Target Audience</Label>
-              <Select 
-                value={assessment.audience} 
-                onValueChange={(value: 'individual' | 'business') => 
-                  setAssessment({...assessment, audience: value})
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="individual">Individual</SelectItem>
-                  <SelectItem value="business">Business Owner</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Textarea 
-              id="description"
-              value={assessment.description}
-              onChange={(e) => setAssessment({...assessment, description: e.target.value})}
-              rows={3}
-              placeholder="Enter assessment description"
-            />
-          </div>
 
-          <div>
-            <Label htmlFor="image-upload">Assessment Image (Displays Vertically)</Label>
-            <div className="space-y-4">
-              {assessment.image && (
-                <div className="relative max-w-md">
-                  <img 
-                    src={assessment.image} 
-                    alt="Assessment preview"
-                    className="w-full h-64 object-cover rounded-lg border-2 border-gray-200"
+            <div>
+              <Label htmlFor="image-upload">Assessment Image (Displays Vertically)</Label>
+              <div className="space-y-4">
+                {assessment.image && (
+                  <div className="relative max-w-md">
+                    <img 
+                      src={assessment.image} 
+                      alt="Assessment preview"
+                      className="w-full h-64 object-cover rounded-lg border-2 border-gray-200"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setAssessment({...assessment, image: ''})}
+                      className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                    <div className="mt-2 text-sm text-gray-600">
+                      This image will display vertically at the top of your assessment
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-center space-x-4">
+                  <Input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
                   />
                   <Button
                     variant="outline"
-                    size="sm"
-                    onClick={() => setAssessment({...assessment, image: ''})}
-                    className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+                    onClick={() => document.getElementById('image-upload')?.click()}
+                    className="flex items-center"
                   >
-                    <X className="h-4 w-4" />
+                    <Upload className="h-4 w-4 mr-2" />
+                    {assessment.image ? 'Change Image' : 'Upload Image'}
                   </Button>
-                  <div className="mt-2 text-sm text-gray-600">
-                    This image will display vertically at the top of your assessment
-                  </div>
+                  <span className="text-sm text-gray-500">
+                    {assessment.image ? 'Image uploaded - will display vertically' : 'Recommended: 400x600px or similar vertical format'}
+                  </span>
                 </div>
-              )}
-              <div className="flex items-center space-x-4">
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <Label>Welcome Message Audio</Label>
+              <p className="text-sm text-gray-500 mt-1">
+                {assessment.welcomeMessageAudio instanceof File ? assessment.welcomeMessageAudio.name : assessment.welcomeMessageAudio}
+              </p>
+              <Input
+                type="file"
+                accept="audio/*"
+                onChange={(e) => setAssessment({
+                  ...assessment,
+                  welcomeMessageAudio: e.target.files?.[0] ?? null
+                })}
+              />
+            </div>
+
+            <div className="space-y-4">
+              <Label>Keep Going Message Audio</Label>
+              <p className="text-sm text-gray-500 mt-1">
+                {assessment.keepGoingMessageAudio instanceof File ? assessment.keepGoingMessageAudio.name : assessment.keepGoingMessageAudio}
+              </p>
+              <Input
+                type="file"
+                accept="audio/*"
+                onChange={(e) => setAssessment({
+                  ...assessment,
+                  keepGoingMessageAudio: e.target.files?.[0] ?? null
+                })}
+              />
+            </div>
+
+            <div className="space-y-4">
+              <Label>Congratulation Message Audio</Label>
+              <p className="text-sm text-gray-500 mt-1">
+                {assessment.congratulationMessageAudio instanceof File ? assessment.congratulationMessageAudio.name : assessment.congratulationMessageAudio}
+              </p>
+              <Input
+                type="file"
+                accept="audio/*"
+                onChange={(e) => setAssessment({
+                  ...assessment,
+                  congratulationMessageAudio: e.target.files?.[0] ?? null
+                })}
+              />
+            </div>
+            
+            <div>
+              <Label>Tags</Label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {assessment.tags.map((tag, index) => (
+                  <Badge key={index} variant="outline" className="flex items-center gap-1">
+                    {tag}
+                    <X 
+                      className="h-3 w-3 cursor-pointer" 
+                      onClick={() => removeTag(tag)}
+                    />
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex gap-2">
                 <Input
-                  id="image-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
+                  placeholder="Add tag"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && addTag()}
                 />
-                <Button
-                  variant="outline"
-                  onClick={() => document.getElementById('image-upload')?.click()}
-                  className="flex items-center"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  {assessment.image ? 'Change Image' : 'Upload Image'}
-                </Button>
-                <span className="text-sm text-gray-500">
-                  {assessment.image ? 'Image uploaded - will display vertically' : 'Recommended: 400x600px or similar vertical format'}
-                </span>
+                <Button variant="outline" onClick={addTag}>Add</Button>
               </div>
             </div>
           </div>
+        </Card>
 
-          <div className="space-y-4">
-            <Label>Welcome Message Audio</Label>
-            <p className="text-sm text-gray-500 mt-1">
-              {assessment.welcomeMessageAudio instanceof File ? assessment.welcomeMessageAudio.name : assessment.welcomeMessageAudio}
-            </p>
-            <Input
-              type="file"
-              accept="audio/*"
-              onChange={(e) => setAssessment({
-                ...assessment,
-                welcomeMessageAudio: e.target.files?.[0] ?? null
-              })}
-            />
+        <Card className="p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Questions ({assessment.questions.length})</h3>
+            <Button onClick={addQuestion}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Question
+            </Button>
           </div>
 
           <div className="space-y-4">
-            <Label>Keep Going Message Audio</Label>
-            <p className="text-sm text-gray-500 mt-1">
-              {assessment.keepGoingMessageAudio instanceof File ? assessment.keepGoingMessageAudio.name : assessment.keepGoingMessageAudio}
-            </p>
-            <Input
-              type="file"
-              accept="audio/*"
-              onChange={(e) => setAssessment({
-                ...assessment,
-                keepGoingMessageAudio: e.target.files?.[0] ?? null
-              })}
-            />
-          </div>
-
-          <div className="space-y-4">
-            <Label>Congratulation Message Audio</Label>
-            <p className="text-sm text-gray-500 mt-1">
-              {assessment.congratulationMessageAudio instanceof File ? assessment.congratulationMessageAudio.name : assessment.congratulationMessageAudio}
-            </p>
-            <Input
-              type="file"
-              accept="audio/*"
-              onChange={(e) => setAssessment({
-                ...assessment,
-                congratulationMessageAudio: e.target.files?.[0] ?? null
-              })}
-            />
-          </div>
-          
-          <div>
-            <Label>Tags</Label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {assessment.tags.map((tag, index) => (
-                <Badge key={index} variant="outline" className="flex items-center gap-1">
-                  {tag}
-                  <X 
-                    className="h-3 w-3 cursor-pointer" 
-                    onClick={() => removeTag(tag)}
-                  />
-                </Badge>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Add tag"
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addTag()}
+            {assessment.questions.map((question, index) => (
+              <QuestionEditor
+                key={question.id}
+                question={question}
+                index={index}
+                onUpdate={(updatedQuestion) => updateQuestion(index, updatedQuestion)}
+                onRemove={() => removeQuestion(index)}
+                onMoveUp={() => moveQuestion(index, 'up')}
+                onMoveDown={() => moveQuestion(index, 'down')}
+                canMoveUp={index > 0}
+                canMoveDown={index < assessment.questions.length - 1}
               />
-              <Button variant="outline" onClick={addTag}>Add</Button>
-            </div>
+            ))}
+            
+            {assessment.questions.length === 0 && (
+              <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                <p className="text-gray-500 mb-4">No questions yet</p>
+                <Button onClick={addQuestion} variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add First Question
+                </Button>
+              </div>
+            )}
           </div>
-        </div>
-      </Card>
-
-      <Card className="p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Questions ({assessment.questions.length})</h3>
-          <Button onClick={addQuestion}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Question
-          </Button>
-        </div>
-
-        <div className="space-y-4">
-          {assessment.questions.map((question, index) => (
-            <QuestionEditor
-              key={question.id}
-              question={question}
-              index={index}
-              onUpdate={(updatedQuestion) => updateQuestion(index, updatedQuestion)}
-              onRemove={() => removeQuestion(index)}
-              onMoveUp={() => moveQuestion(index, 'up')}
-              onMoveDown={() => moveQuestion(index, 'down')}
-              canMoveUp={index > 0}
-              canMoveDown={index < assessment.questions.length - 1}
-            />
-          ))}
-          
-          {assessment.questions.length === 0 && (
-            <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-              <p className="text-gray-500 mb-4">No questions yet</p>
-              <Button onClick={addQuestion} variant="outline">
-                <Plus className="h-4 w-4 mr-2" />
-                Add First Question
-              </Button>
-            </div>
-          )}
-        </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };

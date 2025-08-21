@@ -52,8 +52,14 @@ const assessmentsSlice = createSlice({
       .addCase(fetchAssessmentById.fulfilled, (state, action) => {
         state.selected = action.payload;
       })
+      .addCase(addAssessment.pending, (state) => {
+        state.status = 'loading';
+      })
       .addCase(addAssessment.fulfilled, (state, action) => {
         state.list.push(action.payload);
+      })
+      .addCase(updateAssessment.pending, (state) => {
+        state.status = 'loading';
       })
       .addCase(updateAssessment.fulfilled, (state, action) => {
         const idx = state.list.findIndex((a) => a._id === action.payload._id);
