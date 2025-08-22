@@ -91,7 +91,7 @@ const ContactForm = () => {
           phone: formData.phone || '',
           ageRange: formData.ageRange || '',
           gender: formData.gender || '',
-          source: formData.source || 'direct',
+          source: formData.source || 'other',
           audience: 'individual',
           assessment: assessment._id,
           score: results.overallScore

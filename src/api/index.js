@@ -25,4 +25,7 @@ export const addTagToLeadAPI = (id, tagData) => API.post(`/leads/${id}/tags`, ta
 export const getVoiceSettingsAPI = () => API.get('/voicesettings');
 export const updateVoiceSettingsAPI = (data) => API.put('/voicesettings', data);
 
+// ------- Analytics -------
+export const getAnalyticsAPI = () => API.get('/analytics');
+
 export default API;

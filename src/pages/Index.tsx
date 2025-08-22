@@ -1,39 +1,12 @@
-
-import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Users, BarChart3, Settings, Mic } from 'lucide-react';
-import { AssessmentTemplate } from '@/types';
-import { useToast } from '@/hooks/use-toast';
 import { AssessmentsList } from '@/components/admin/AssessmentsList';
 import { LeadsList } from '@/components/admin/LeadsList';
 import { VoiceSettings } from '@/components/admin/VoiceSettings';
 import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
-import { leadStorageService } from '@/services/leadStorage';
-// import { assessmentStorageService } from '@/services/assessmentStorage';
 
 const Index = () => {
-  const [templates, setTemplates] = useState<AssessmentTemplate[]>([]);
-  const [selectedTemplateForVoice, setSelectedTemplateForVoice] = useState<AssessmentTemplate | null>(null);
-  const [voiceSettings, setVoiceSettings] = useState({
-    welcomeMessage: "Welcome to this assessment. Let's begin your journey of discovery.",
-    completionMessage: "Congratulations! You've completed the assessment. Your results are being calculated.",
-    voiceTone: "warm and encouraging"
-  });
-  const { toast } = useToast();
-
-  // Load templates from storage service
-  // useEffect(() => {
-  //   setTemplates(assessmentStorageService.getAllAssessments());
-  // }, []);
-
-  const leads = leadStorageService.getLeads();
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <div className="container mx-auto px-4 py-8">
@@ -81,7 +54,7 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="analytics">
-            <AnalyticsDashboard leads={leads} />
+            <AnalyticsDashboard />
           </TabsContent>
 
           <TabsContent value="settings">
