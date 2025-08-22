@@ -53,12 +53,14 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 const assessmentRoutes = require('./routes/assessmentRoutes');
 const leadRoutes = require('./routes/leadRoutes');
-const voiceSettingRoutes = require('./routes/voiceSettingRoutes')
+const voiceSettingRoutes = require('./routes/voiceSettingRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 
 // Define routes for the API
 app.use("/api/assessments", assessmentRoutes);
 app.use('/api/leads', leadRoutes);
 app.use("/api/voicesettings", voiceSettingRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 const server = http.createServer(app);
 
