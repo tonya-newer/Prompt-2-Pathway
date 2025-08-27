@@ -28,4 +28,8 @@ export const updateVoiceSettingsAPI = (data) => API.put('/voicesettings', data);
 // ------- Analytics -------
 export const getAnalyticsAPI = () => API.get('/analytics');
 
+// ------- Platform Settings -------
+export const getSettingsAPI = () => API.get('/settings');
+export const updateSettingsAPI = (data) => API.put('/settings', data);
+
 export default API;

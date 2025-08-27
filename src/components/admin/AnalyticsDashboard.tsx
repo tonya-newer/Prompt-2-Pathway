@@ -13,8 +13,8 @@ export const AnalyticsDashboard = () => {
     dispatch(fetchAnalytics());
   }, [dispatch]);
 
-  if (status === 'loading') return <div>Loading analytics...</div>;
-  if (status === 'failed' || !data) return <div>Error loading analytics</div>;
+  if (status === 'loading') return <div className="text-center text-lg font-bold text-gray-800">Loading analytics...</div>;
+  if (status === 'failed' || !data) return <div className="text-center text-lg font-bold text-gray-800">Error loading analytics</div>;
 
   const { keyMetrics, scoreRanges, audienceData, sourceChartData, assessmentPerformance, completionTrends } = data;
 
