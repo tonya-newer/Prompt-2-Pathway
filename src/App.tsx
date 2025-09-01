@@ -9,6 +9,9 @@ import Assessment from "./pages/Assessment";
 import ContactForm from "./pages/ContactForm";
 import Results from "./pages/Results";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login"; 
+import Signup from "./pages/Signup";
+import ProtectedRoute from "./ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -19,7 +22,16 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Index />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/assessment/:id" element={<Assessment />} />
           <Route path="/assessment/add" element={<AssessmentEditor mode="add" />} />
           <Route path="/assessment/update/:id" element={<AssessmentEditor mode="update" />} />

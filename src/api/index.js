@@ -5,6 +5,22 @@ const API = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+// ------- Request interceptor to add JWT token -------
+API.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token'); // get JWT from localStorage
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// ------- Auth -------
+export const loginAPI = (data) => API.post('/users/login', data);
+export const signupAPI = (data) => API.post('/users/signup', data);
+
 // ------- Assessments -------
 export const getAssessmentsAPI = () => API.get('/assessments');
 export const getAssessmentByIdAPI = (id) => API.get(`/assessments/${id}`);
