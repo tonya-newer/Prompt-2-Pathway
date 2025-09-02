@@ -24,6 +24,7 @@ const Login = () => {
 
       // Save token (optional: localStorage or cookie)
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("userId", res.data.user.id);
       localStorage.setItem("roles", JSON.stringify(res.data.user.roles));
       localStorage.setItem("allowedTabs", JSON.stringify(res.data.user.allowedTabs || []));
 

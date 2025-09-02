@@ -26,7 +26,7 @@ const availableTabs = [
   "assessments",
   "leads",
   "analytics",
-  "voice settings",
+  "voice_settings",
   "settings",
 ];
 
