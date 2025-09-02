@@ -21,6 +21,12 @@ API.interceptors.request.use(
 export const loginAPI = (data) => API.post('/users/login', data);
 export const signupAPI = (data) => API.post('/users/signup', data);
 
+// ------- Users -------
+export const getUsersAPI = () => API.get('/users');
+export const addUserAPI = (data) => API.post('/users', data);
+export const deleteUserAPI = (id) => API.delete(`/users/${id}`);
+export const updateUserAPI = (id, data) => API.put(`/users/${id}`, data);
+
 // ------- Assessments -------
 export const getAssessmentsAPI = () => API.get('/assessments');
 export const getAssessmentByIdAPI = (id) => API.get(`/assessments/${id}`);

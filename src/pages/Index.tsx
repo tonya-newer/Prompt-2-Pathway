@@ -1,20 +1,33 @@
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Users, BarChart3, Settings as SettingsIcon, Mic, LogOut } from 'lucide-react';
+import { Users as UsersIcon, BarChart3, Settings as SettingsIcon, Mic, LogOut } from 'lucide-react';
+import { Users } from '@/components/admin/Users';
 import { AssessmentsList } from '@/components/admin/AssessmentsList';
 import { LeadsList } from '@/components/admin/LeadsList';
 import { VoiceSettings } from '@/components/admin/VoiceSettings';
 import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
 import { Settings } from '@/components/admin/Settings';
 
+const tabs = [
+  { key: "assessments", label: "Assessments", icon: SettingsIcon },
+  { key: "leads", label: "Leads", icon: Mic },
+  { key: "analytics", label: "Analytics", icon: UsersIcon },
+  { key: "voice_settings", label: "Voice Settings", icon: BarChart3 },
+  { key: "settings", label: "Settings", icon: SettingsIcon },
+];
+
 const Index = () => {
   const navigate = useNavigate();
+  const userRoles = localStorage.getItem("roles");
 
   const handleLogout = () => {
     localStorage.removeItem('token'); // clear JWT
+    localStorage.removeItem("roles");
     navigate('/login'); // redirect to login
   };
+
+  const allowedTabs: string[] = JSON.parse(localStorage.getItem("allowedTabs") || "[]");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -33,34 +46,34 @@ const Index = () => {
         </div>
 
         <Tabs defaultValue="assessments" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="assessments" className="flex items-center space-x-2">
-              <SettingsIcon className="h-4 w-4" />
-              <span>Assessments</span>
-            </TabsTrigger>
-            <TabsTrigger value="voice-settings" className="flex items-center space-x-2">
-              <Mic className="h-4 w-4" />
-              <span>Voice Settings</span>
-            </TabsTrigger>
-            <TabsTrigger value="leads" className="flex items-center space-x-2">
-              <Users className="h-4 w-4" />
-              <span>Leads</span>
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center space-x-2">
-              <BarChart3 className="h-4 w-4" />
-              <span>Analytics</span>
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center space-x-2">
-              <SettingsIcon className="h-4 w-4" />
-              <span>Settings</span>
-            </TabsTrigger>
+          <TabsList className="grid w-full grid-cols-6">
+            {userRoles.includes("platform_admin") && (
+              <TabsTrigger value="users" className="flex items-center space-x-2">
+                <UsersIcon className="h-4 w-4" />
+                <span>Users</span>
+              </TabsTrigger>
+            )}
+            {tabs
+              .filter((tab) => allowedTabs.includes(tab.key))
+              .map(({ key, label, icon: Icon }) => (
+                <TabsTrigger key={key} value={key} className="flex items-center space-x-2">
+                  <Icon className="h-4 w-4" />
+                  <span>{label}</span>
+                </TabsTrigger>
+              ))}
           </TabsList>
+
+          {userRoles.includes("platform_admin") && (
+            <TabsContent value="users" className="space-y-6">
+              <Users />
+            </TabsContent>
+          )}
 
           <TabsContent value="assessments" className="space-y-6">
             <AssessmentsList />
           </TabsContent>
 
-          <TabsContent value="voice-settings" className="space-y-6">
+          <TabsContent value="voice_settings" className="space-y-6">
             <VoiceSettings />
           </TabsContent>
 
