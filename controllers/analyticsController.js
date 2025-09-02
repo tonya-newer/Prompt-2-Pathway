@@ -1,9 +1,13 @@
 const Lead = require('../models/leadModel');
+const mongoose = require('mongoose');
 
 const getAnalytics = async (req, res) => {
   try {
+    const userId = new mongoose.Types.ObjectId(req.user.userId);
+
     // Aggregate key metrics and charts
     const aggregation = await Lead.aggregate([
+      { $match: { user_id: userId }},
       // Join with Assessment to get title and audience
       {
         $lookup: {

@@ -18,7 +18,12 @@ const assessmentSchema = new mongoose.Schema({
   welcomeMessageAudio: { type: String },
   keepGoingMessageAudio: { type: String },
   congratulationMessageAudio: { type: String },
-  questions: [questionSchema]
+  questions: [questionSchema],
+  user_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
 });
 
 module.exports = mongoose.model('Assessment', assessmentSchema);

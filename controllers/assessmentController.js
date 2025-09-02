@@ -32,7 +32,7 @@ function deleteFileIfExists(filePath) {
 
 const getAllAssessments = async (req, res) => {
   try {
-    const assessments = await Assessment.find();
+    const assessments = await Assessment.find({ user_id: req.user.userId });
     res.json(assessments);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -81,6 +81,8 @@ const createAssessment = async (req, res) => {
         : [];
         assessmentData.questions = mapQuestionAudios(assessmentData.questions, req.files.questionAudios, indexes);
     }
+
+    assessmentData.user_id = req.user.userId;
 
     const newAssessment = new Assessment(assessmentData);
     const savedAssessment = await newAssessment.save();

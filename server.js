@@ -58,13 +58,15 @@ const voiceSettingRoutes = require('./routes/voiceSettingRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const settingsRoute = require('./routes/settingsRoutes');
 
+const { authenticate, authorize } = require("./middleware/auth.js");
+
 // Define routes for the API
 app.use("/api/users", userRoutes);
 app.use("/api/assessments", assessmentRoutes);
 app.use("/api/leads", leadRoutes);
-app.use("/api/voicesettings", voiceSettingRoutes);
-app.use("/api/analytics", analyticsRoutes);
-app.use("/api/settings", settingsRoute);
+app.use("/api/voicesettings", authenticate, authorize(["client_admin"]), voiceSettingRoutes);
+app.use("/api/analytics", authenticate, authorize(["client_admin"]), analyticsRoutes);
+app.use("/api/settings", authenticate, authorize(["client_admin"]), settingsRoute);
 
 const server = http.createServer(app);
 

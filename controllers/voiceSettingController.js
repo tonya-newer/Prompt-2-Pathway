@@ -3,10 +3,10 @@ const VoiceSetting = require("../models/voiceSettingModel");
 // Get the global voice setting
 const getVoiceSetting = async (req, res) => {
 	try {
-		let setting = await VoiceSetting.findOne();
+		let setting = await VoiceSetting.findOne({ user_id: req.user.userId });
 		if (!setting) {
 			// Optionally create a default one if none exists
-			setting = await VoiceSetting.create({});
+			setting = await VoiceSetting.create({ user_id: req.user.userId });
 		}
 		res.json(setting);
 	} catch (err) {
@@ -17,10 +17,10 @@ const getVoiceSetting = async (req, res) => {
 // Update the global voice setting
 const updateVoiceSetting = async (req, res) => {
 	try {
-		let setting = await VoiceSetting.findOne();
+		let setting = await VoiceSetting.findOne({ user_id: req.user.userId });
 		if (!setting) {
 			// Create if it doesn't exist
-			setting = await VoiceSetting.create(req.body);
+			setting = await VoiceSetting.create({ ...req.body, user_id: req.user.userId });
 		} else {
 			// Update existing
 			Object.assign(setting, req.body);

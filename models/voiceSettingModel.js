@@ -35,6 +35,11 @@ const VoiceSettingSchema = new mongoose.Schema(
       stability: { type: Number, min: 0, max: 1, default: 0.8 },
       similarityBoost: { type: Number, min: 0, max: 1, default: 0.88 },
     },
+    user_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
   }
 );
 

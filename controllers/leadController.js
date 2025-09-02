@@ -1,9 +1,10 @@
 const Lead = require('../models/leadModel');
+const Assessment = require('../models/assessmentModel');
 
 // List all leads
 const getAllLeads = async (req, res) => {
   try {
-    const leads = await Lead.find().populate('assessment'); // populate assessment details
+    const leads = await Lead.find({ user_id: req.user.userId }).populate('assessment'); // populate assessment details
     res.json(leads);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -18,6 +19,10 @@ const createLead = async (req, res) => {
     if (!leadData.completedAt) {
         leadData.completedAt = new Date();
     }
+
+    const assessment = await Assessment.findById(leadData.assessment);
+    leadData.user_id = assessment.user_id;
+
     const lead = new Lead(leadData);
     const savedLead = await lead.save();
 

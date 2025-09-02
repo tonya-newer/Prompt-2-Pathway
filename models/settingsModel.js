@@ -8,6 +8,11 @@ const settingsSchema = new mongoose.Schema({
   secondaryColor: { type: String, default: '#ffffff' },
   accentColor: { type: String, default: '#007bff' },
   whiteLabel: { type: Boolean, default: false },
+  user_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
 });
 
 module.exports = mongoose.model('Settings', settingsSchema);

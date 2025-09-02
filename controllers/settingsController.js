@@ -2,7 +2,7 @@ const Settings = require('../models/settingsModel');
 
 const getSettings = async (req, res) => {
   try {
-    const settings = await Settings.findOne();
+    const settings = await Settings.findOne({ user_id: req.user.userId });
     res.json(settings || {});
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -18,7 +18,7 @@ const updateSettings = async (req, res) => {
       if (req.files.favicon) updates.favicon = `/uploads/${req.files.favicon[0].filename}`;
     }
 
-    let settings = await Settings.findOneAndUpdate({}, updates, { new: true, upsert: true });
+    let settings = await Settings.findOneAndUpdate({ user_id: req.user.userId }, updates, { new: true, upsert: true });
     res.json(settings);
   } catch (err) {
     res.status(500).json({ error: err.message });

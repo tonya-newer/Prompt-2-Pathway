@@ -12,7 +12,12 @@ const leadSchema = new mongoose.Schema({
   source:    { type: String, enum: ['website', 'email', 'referral', 'social-media', 'event', 'other'],  default: 'other' },
   status:    { type: String, enum: ['qualified', 'contacted', 'converted', 'new'], default: 'new' },
   completedAt: { type: Date },
-  tags: [{ type: String }]
+  tags: [{ type: String }],
+  user_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
 });
 
 module.exports = mongoose.model('Lead', leadSchema);
