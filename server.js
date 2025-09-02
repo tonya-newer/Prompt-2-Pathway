@@ -51,6 +51,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Parse incoming URL-encoded data
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
+const userRoutes = require('./routes/userRoutes');
 const assessmentRoutes = require('./routes/assessmentRoutes');
 const leadRoutes = require('./routes/leadRoutes');
 const voiceSettingRoutes = require('./routes/voiceSettingRoutes');
@@ -58,8 +59,9 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 const settingsRoute = require('./routes/settingsRoutes');
 
 // Define routes for the API
+app.use("/api/users", userRoutes);
 app.use("/api/assessments", assessmentRoutes);
-app.use('/api/leads', leadRoutes);
+app.use("/api/leads", leadRoutes);
 app.use("/api/voicesettings", voiceSettingRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/settings", settingsRoute);
