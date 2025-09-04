@@ -101,7 +101,7 @@ const addUser = async (req, res) => {
       text: `Hi Your password is ${password}`,
     };
 
-    await transporter.sendMail(mailOptions);
+    // await transporter.sendMail(mailOptions);
 
     return res.status(201).json({
       message: "New user added successfully",
