@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/userModel.js");
+const transporter = require("../config/mailer");
 
 const JWT_SECRET = process.env.JWT_SECRET; 
 const JWT_EXPIRES_IN = "1d";
@@ -92,6 +93,15 @@ const addUser = async (req, res) => {
     });
 
     await newUser.save();
+
+    const mailOptions = {
+      from: `"Prompt 2 Pathway" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: "Welcome to Prompt 2 Pathway! Your Account Details Inside",
+      text: `Hi Your password is ${password}`,
+    };
+
+    await transporter.sendMail(mailOptions);
 
     return res.status(201).json({
       message: "New user added successfully",
