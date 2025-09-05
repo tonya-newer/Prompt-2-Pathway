@@ -4,7 +4,7 @@ const Assessment = require('../models/assessmentModel');
 // List all leads
 const getAllLeads = async (req, res) => {
   try {
-    const leads = await Lead.find({ user_id: req.user.userId }).populate('assessment'); // populate assessment details
+    const leads = await Lead.find({ user_id: req.user.userId }).populate('assessment').sort({ completedAt: -1 }); // populate assessment details
     res.json(leads);
   } catch (err) {
     res.status(500).json({ error: err.message });
