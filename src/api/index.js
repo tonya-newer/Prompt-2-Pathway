@@ -50,8 +50,9 @@ export const updateVoiceSettingsAPI = (data) => API.put('/voicesettings', data);
 // ------- Analytics -------
 export const getAnalyticsAPI = () => API.get('/analytics');
 
-// ------- Platform Settings -------
+// ------- Settings -------
 export const getSettingsAPI = () => API.get('/settings');
+export const getSettingsByAssessmentIdAPI = (assessmentId) => API.get(`/settings/${assessmentId}`);
 export const updateSettingsAPI = (data) => API.put('/settings', data);
 
 export default API;

@@ -2,6 +2,7 @@
 import { Card } from '@/components/ui/card';
 import { WelcomeVoicePlayer } from './WelcomeVoicePlayer';
 import { Sparkles, Heart, Target } from 'lucide-react';
+import { useSettings } from '../SettingsContext';
 
 interface WelcomePageProps {
   assessmentTitle: string;
@@ -10,23 +11,38 @@ interface WelcomePageProps {
 }
 
 export const WelcomePage = ({ assessmentTitle, audience, onSubmit }: WelcomePageProps) => {
+  const { settings } = useSettings();
+  const heading = settings?.welcomePage?.heading.replace('{assessmentTitle}', assessmentTitle);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
           {/* Header Section */}
           <div className="text-center mb-12">
             <div className="flex justify-center mb-6">
-              <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 rounded-full shadow-2xl">
-                <Sparkles className="h-12 w-12 text-white" />
-              </div>
+              
+              {settings?.platform?.logo ? (
+                  <img
+                    src={settings.platform.logo}
+                    alt="Platform Logo"
+                    className="h-24 w-24 object-contain"
+                  />
+                ) : (
+                  <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 rounded-full shadow-2xl">
+                    <Sparkles className="h-12 w-12 text-white" />
+                  </div>
+                )}
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-6 px-2">
-              Welcome to Your Are You AI-Ready Assessment!
+            <h1 
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 px-2"
+              style={{ color: settings?.welcomePage?.headingColor }}>
+              { heading }
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed px-4">
-              Discover powerful insights about yourself through this personalized assessment experience. 
-              Your journey to clarity begins here.
+            <p
+              className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed px-4"
+              style={{ color: settings?.welcomePage?.subHeadingColor }}>
+              { settings?.welcomePage?.subHeading }
             </p>
           </div>
 

@@ -11,6 +11,7 @@ import { customVoiceService } from '@/services/customVoiceService';
 import { nativeSpeech } from '@/services/nativeSpeech';
 import { RootState } from '@/store';
 import { fetchAssessmentById } from '@/store/assessmentsSlice';
+import { useSettings } from '../SettingsContext';
 
 interface AssessmentResult {
   overallScore: number;
@@ -19,7 +20,7 @@ interface AssessmentResult {
 }
 
 const Assessment = () => {
-  const { id } = useParams<{ id: string }>();
+  const { assessmentId } = useParams<{ assessmentId: string }>();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const assessment = useSelector(
@@ -33,22 +34,22 @@ const Assessment = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (id) {
+    if (assessmentId) {
       setLoading(true); // still keep local loading spinner if needed
-      dispatch(fetchAssessmentById(id))
+      dispatch(fetchAssessmentById(assessmentId))
         .unwrap()
         .then((res) => {
           console.log('Loaded assessment:', res.title, 'with', res.questions.length, 'questions');
           setLoading(false);
         })
         .catch(() => {
-          console.error('Assessment not found for ID:', id);
+          console.error('Assessment not found for ID:', assessmentId);
           setLoading(false);
         });
     } else {
       setLoading(false);
     }
-  }, [id, dispatch]);
+  }, [assessmentId, dispatch]);
 
   useEffect(() => {
     if (assessment && !showWelcomePage) {
@@ -160,8 +161,16 @@ const Assessment = () => {
     navigate('/contact-form');
   };
 
+  const { settings } = useSettings();
+  const backgroundStyle = { 
+    backgroundImage: `url(${settings?.welcomePage?.background})`,
+    backgroundSize: 'cover', 
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/50" style={ backgroundStyle }>
       <div className="container mx-auto px-4 py-4 sm:py-8">
         {loading ? (
           <div className="flex justify-center items-center min-h-[400px]">

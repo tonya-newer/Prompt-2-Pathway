@@ -12,6 +12,8 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login"; 
 import Signup from "./pages/Signup";
 import ProtectedRoute from "./ProtectedRoute";
+import { SettingsProvider } from "./SettingsContext";
+import { Footer } from "./components/Footer";
 
 const queryClient = new QueryClient();
 
@@ -21,24 +23,27 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Index />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/assessment/:id" element={<Assessment />} />
-          <Route path="/assessment/add" element={<AssessmentEditor mode="add" />} />
-          <Route path="/assessment/update/:id" element={<AssessmentEditor mode="update" />} />
-          <Route path="/contact-form" element={<ContactForm />} />
-          <Route path="/results" element={<Results />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <SettingsProvider>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/assessment/:assessmentId" element={<Assessment />} />
+            <Route path="/assessment/add" element={<AssessmentEditor mode="add" />} />
+            <Route path="/assessment/update/:id" element={<AssessmentEditor mode="update" />} />
+            <Route path="/contact-form" element={<ContactForm />} />
+            <Route path="/results" element={<Results />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Footer />
+        </SettingsProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
