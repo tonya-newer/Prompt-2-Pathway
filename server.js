@@ -66,7 +66,7 @@ app.use("/api/assessments", assessmentRoutes);
 app.use("/api/leads", leadRoutes);
 app.use("/api/voicesettings", authenticate, authorize(["client_admin"]), voiceSettingRoutes);
 app.use("/api/analytics", authenticate, authorize(["client_admin"]), analyticsRoutes);
-app.use("/api/settings", authenticate, authorize(["client_admin"]), settingsRoute);
+app.use("/api/settings", settingsRoute);
 
 const server = http.createServer(app);
 
