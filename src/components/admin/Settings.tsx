@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from "@/components/ui/use-toast";
 import { fetchSettings, saveSettings } from "@/store/settingsSlice";
 import type { RootState } from "@/store";
@@ -23,12 +24,26 @@ export const Settings = () => {
       favicon: "",
       whiteLabel: false
     },
+    interactionPage: {
+      layout: 'single',
+      image1: "",
+      image2: "",
+      heading: "",
+      subHeading: "",
+      buttonText: ""
+    },
     welcomePage: {
       background: "",
       heading: "",
       headingColor: "",
       subHeading: "",
       subHeadingColor: ""
+    },
+    resultPage: {
+      category1: "Readiness",
+      category2: "Confidence",
+      category3: "Clarity",
+      bookingLink: "https://tidycal.com/newerconsulting"
     },
     theme: {
       primaryColor: "#000000",
@@ -52,21 +67,33 @@ export const Settings = () => {
     }
   }, [settingsFromStore]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const target = e.target;
-    const { name } = target;
-
-    // Determine value based on input type
-    const value =
-      (target as HTMLInputElement).type === "checkbox"
-        ? (target as HTMLInputElement).checked
-        : target.value;
-
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | string,
+    name?: string
+  ) => {
+    let fieldName: string;
+    let value: string | boolean;
+  
+    if (typeof e === "string") {
+      // Case: Select component
+      if (!name) return; // name must be passed for selects
+      fieldName = name;
+      value = e;
+    } else {
+      // Case: Input or Textarea
+      const target = e.target;
+      fieldName = target.name;
+      value =
+        (target as HTMLInputElement).type === "checkbox"
+          ? (target as HTMLInputElement).checked
+          : target.value;
+    }
+  
     setForm((prev) => {
-      const keys = name.split('.');
+      const keys = fieldName.split(".");
       const newState = { ...prev };
       let temp = newState;
-
+  
       keys.forEach((key, index) => {
         if (index === keys.length - 1) {
           temp[key] = value;
@@ -75,11 +102,11 @@ export const Settings = () => {
           temp = temp[key];
         }
       });
-
+  
       return newState;
     });
   };
-
+  
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>, fieldPath: string) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -128,7 +155,6 @@ export const Settings = () => {
       </div>
 
       <div className="grid gap-6">
-        {/* Branding & White-Label */}
         <Card className="p-6">
           <h4 className="text-lg font-semibold mb-4">Platform</h4>
           <div className="space-y-4">
@@ -297,6 +323,155 @@ export const Settings = () => {
         </Card>
 
         <Card className="p-6 space-y-4">
+          <h4 className="text-lg font-semibold">Interaction Page</h4>
+          <div>
+            <Label htmlFor="interaction-layout">Background Image Layout</Label>
+            <Select
+              value={form.interactionPage.layout} 
+              onValueChange={(val) => handleChange(val, "interactionPage.layout")}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="single">Single</SelectItem>
+                <SelectItem value="dual">Dual</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="logo-upload">Background Image 1</Label>
+              <div className="space-y-4">
+                {form.interactionPage.image1 && (
+                  <div className="relative max-w-md">
+                    <img 
+                      src={form.interactionPage.image1} 
+                      alt="Image 1 preview"
+                      className="w-full h-64 object-cover rounded-lg border-2 border-gray-200"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setForm({
+                        ...form,
+                        interactionPage: {
+                          ...form.interactionPage,
+                          image1: ''
+                        }
+                      })}
+                      className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+                <Input
+                  id="interaction-image-1-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload(e, "interactionPage.image1")}
+                  className="hidden"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => document.getElementById('interaction-image-1-upload')?.click()}
+                  className="flex items-center"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {form.interactionPage.image1 ? 'Change Image' : 'Upload Image'}
+                </Button>
+                <span className="text-sm text-gray-500">
+                  {form.interactionPage.image1 ? 'Image uploaded - will display vertically' : 'Recommended: 400x600px or similar vertical format'}
+                </span>
+              </div>
+            </div>
+            { form.interactionPage.layout == 'dual' && 
+            <div>
+              <Label htmlFor="logo-upload">Background Image 2</Label>
+              <div className="space-y-4">
+                {form.interactionPage.image2 && (
+                  <div className="relative max-w-md">
+                    <img 
+                      src={form.interactionPage.image2} 
+                      alt="Image 1 preview"
+                      className="w-full h-64 object-cover rounded-lg border-2 border-gray-200"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setForm({
+                        ...form,
+                        interactionPage: {
+                          ...form.interactionPage,
+                          image2: ''
+                        }
+                      })}
+                      className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+                <Input
+                  id="interaction-image-2-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload(e, "interactionPage.image2")}
+                  className="hidden"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => document.getElementById('interaction-image-2-upload')?.click()}
+                  className="flex items-center"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {form.interactionPage.image2 ? 'Change Image' : 'Upload Image'}
+                </Button>
+                <span className="text-sm text-gray-500">
+                  {form.interactionPage.image2 ? 'Image uploaded - will display vertically' : 'Recommended: 400x600px or similar vertical format'}
+                </span>
+              </div>
+            </div>
+            }
+          </div>
+          
+          <div>
+            <Label htmlFor="interaction-heading-text">Heading Text</Label>
+            <Input
+              id="interaction-heading-text"
+              name="interactionPage.heading"
+              value={form.interactionPage.heading}
+              onChange={handleChange}
+              placeholder="Enter Heading Text"
+              className="mt-2"
+            />
+          </div>
+          <div>
+            <Label htmlFor="interaction-subheading-text">Subheading Text</Label>
+            <Input
+              id="interaction-subheading-text"
+              name="interactionPage.subHeading"
+              value={form.interactionPage.subHeading}
+              onChange={handleChange}
+              placeholder="Enter Subheading Text"
+              className="mt-2"
+            />
+          </div>
+          <div>
+            <Label htmlFor="interaction-button-text">Button Text</Label>
+            <Input
+              id="interaction-button-text"
+              name="interactionPage.buttonText"
+              value={form.interactionPage.buttonText}
+              onChange={handleChange}
+              placeholder="Enter Button Text"
+              className="mt-2"
+            />
+          </div>
+        </Card>
+
+        <Card className="p-6 space-y-4">
           <h4 className="text-lg font-semibold">Welcome Page</h4>
           <div className="my-4">
             <Label htmlFor="logo-upload">Background Image</Label>
@@ -376,7 +551,7 @@ export const Settings = () => {
                 name="welcomePage.subHeading"
                 value={form.welcomePage.subHeading}
                 onChange={handleChange}
-                placeholder="Enter Heading Text"
+                placeholder="Enter Subheading Text"
                 className="mt-2"
               />
             </div>
@@ -391,6 +566,56 @@ export const Settings = () => {
                 className="mt-2 w-full h-10 p-0 border-none"
               />
             </div>
+          </div>
+        </Card>
+        
+        <Card className="p-6 space-y-4">
+          <h4 className="text-lg font-semibold">Result Page</h4>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="result-category1">Result Category 1</Label>
+              <Input
+                id="result-category1"
+                name="resultPage.category1"
+                value={form.resultPage.category1}
+                onChange={handleChange}
+                placeholder="Enter Result Category 1"
+                className="mt-2"
+              />
+            </div>
+            <div>
+              <Label htmlFor="result-category1">Result Category 2</Label>
+              <Input
+                id="result-category2"
+                name="resultPage.category2"
+                value={form.resultPage.category2}
+                onChange={handleChange}
+                placeholder="Enter Result Category 2"
+                className="mt-2"
+              />
+            </div>
+            <div>
+              <Label htmlFor="result-category1">Result Category 3</Label>
+              <Input
+                id="result-category3"
+                name="resultPage.category3"
+                value={form.resultPage.category3}
+                onChange={handleChange}
+                placeholder="Enter Result Category 3"
+                className="mt-2"
+              />
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="result-booking-link">Booking Call Link</Label>
+            <Input
+              id="result-booking-link"
+              name="resultPage.bookingLink"
+              value={form.resultPage.bookingLink}
+              onChange={handleChange}
+              placeholder="Enter Your Booking Link"
+              className="mt-2"
+            />
           </div>
         </Card>
 

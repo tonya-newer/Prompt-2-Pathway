@@ -33,6 +33,14 @@ const Assessment = () => {
   const [showWelcomePage, setShowWelcomePage] = useState(true);
   const { toast } = useToast();
 
+  const { settings } = useSettings();
+  const backgroundStyle = { 
+    backgroundImage: `url(${settings?.welcomePage?.background})`,
+    backgroundSize: 'cover', 
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+  };
+
   useEffect(() => {
     if (assessmentId) {
       setLoading(true); // still keep local loading spinner if needed
@@ -142,13 +150,15 @@ const Assessment = () => {
 
     const interpretation = `Congratulations! Based on your responses to the ${assessment.title}, you've completed this assessment with valuable insights about yourself. Your results show your current readiness and understanding in this area.`;
 
+    const categories: any = {};
+
+    categories[settings?.resultPage?.category1] = Math.round(overallScore * 0.8);
+    categories[settings?.resultPage?.category2] = Math.round(overallScore * 0.9);
+    categories[settings?.resultPage?.category3] = Math.round(overallScore * 1.1);
+
     const results: AssessmentResult = {
       overallScore: overallScore,
-      categories: {
-        readiness: Math.round(overallScore * 0.8),
-        confidence: Math.round(overallScore * 0.9),
-        clarity: Math.round(overallScore * 1.1)
-      },
+      categories,
       interpretation: interpretation,
     };
 
@@ -157,16 +167,9 @@ const Assessment = () => {
     localStorage.setItem('assessment-title', assessment.title);
     localStorage.setItem('assessment-audience', assessment.audience);
     localStorage.setItem('assessment-answers', JSON.stringify(answers));
+    localStorage.setItem('assessment-booking-link', settings?.resultPage?.bookingLink);
 
     navigate('/contact-form');
-  };
-
-  const { settings } = useSettings();
-  const backgroundStyle = { 
-    backgroundImage: `url(${settings?.welcomePage?.background})`,
-    backgroundSize: 'cover', 
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
   };
 
   return (

@@ -115,8 +115,6 @@ export const WelcomeVoicePlayer = ({ className = '' }: WelcomeVoicePlayerProps) 
       {showInteractionGate && (
         <InteractionGate
           onInteraction={handleInteractionGateStart}
-          title="🎧 Welcome to Your Voice Experience"
-          description="Your personalized assessment includes voice guidance. Tap to start and hear your welcome message."
         />
       )}
       
