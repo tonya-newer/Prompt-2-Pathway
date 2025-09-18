@@ -16,6 +16,7 @@ export const SettingsProvider = ({ children }) => {
   const assessmentId = match?.params?.assessmentId;
 
   const loadSettings = async () => {
+    if (!assessmentId) return;
     try {
       const { data } = await getSettingsByAssessmentIdAPI(assessmentId);
       setSettings(data);
@@ -29,6 +30,23 @@ export const SettingsProvider = ({ children }) => {
   useEffect(() => {
     loadSettings();
   }, []);
+
+  useEffect(() => {
+    if (!settings?.platform?.favicon) return;
+  
+    let favicon = document.querySelector("link[rel~='icon']");
+  
+    if (!favicon) {
+      favicon = document.createElement("link");
+      favicon.rel = "icon";
+      document.head.appendChild(favicon);
+    }
+  
+    // runtime check to ensure favicon is an HTMLLinkElement
+    if (favicon instanceof HTMLLinkElement) {
+      favicon.href = settings.platform.favicon;
+    }
+  }, [settings]);
 
   return (
     <SettingsContext.Provider value={{ settings, setSettings, loading }}>
