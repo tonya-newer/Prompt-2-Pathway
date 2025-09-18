@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const mongoose = require('mongoose')
 const Assessment = require('../models/assessmentModel');
 
 function mapQuestionAudios(questions, files, indexes) {
@@ -39,9 +40,9 @@ const getAllAssessments = async (req, res) => {
   }
 };
 
-const getAssessmentById = async (req, res) => {
+const getAssessmentBySlug = async (req, res) => {
   try {
-    const assessment = await Assessment.findById(req.params.id);
+    const assessment = await Assessment.findOne({ slug: req.params.slug });
     if (!assessment) {
       return res.status(404).json({ error: 'Assessment not found' });
     }
@@ -123,20 +124,20 @@ const updateAssessment = async (req, res) => {
         updateData.questions = mapQuestionAudios(updateData.questions, req.files.questionAudios, indexes);
     }
 
-    const oldAssessment = await Assessment.findById(req.params.id);
-    if (oldAssessment) {
-      if (req.files?.welcomeMessageAudio && oldAssessment.welcomeMessageAudio) {
-        deleteFileIfExists(oldAssessment.welcomeMessageAudio);
-      }
-      if (req.files?.keepGoingMessageAudio && oldAssessment.keepGoingMessageAudio) {
-        deleteFileIfExists(oldAssessment.keepGoingMessageAudio);
-      }
-      if (req.files?.congratulationMessageAudio && oldAssessment.congratulationMessageAudio) {
-        deleteFileIfExists(oldAssessment.congratulationMessageAudio);
-      }
+    const assessment = await Assessment.findById(req.params.id);
+    if (!assessment) return res.status(404).json({ error: 'Assessment not found' });
+
+    if (req.files?.welcomeMessageAudio && assessment.welcomeMessageAudio) {
+      deleteFileIfExists(assessment.welcomeMessageAudio);
+    }
+    if (req.files?.keepGoingMessageAudio && assessment.keepGoingMessageAudio) {
+      deleteFileIfExists(assessment.keepGoingMessageAudio);
+    }
+    if (req.files?.congratulationMessageAudio && assessment.congratulationMessageAudio) {
+      deleteFileIfExists(assessment.congratulationMessageAudio);
     }
 
-    oldAssessment.questions.forEach((q, idx) => {
+    assessment.questions.forEach((q, idx) => {
       const newFileIndex = req.body.questionAudioIndexes
         ? JSON.parse(req.body.questionAudioIndexes)
         : [];
@@ -145,16 +146,11 @@ const updateAssessment = async (req, res) => {
       }
     });
 
-    const updatedAssessment = await Assessment.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true, runValidators: true }
-    );
+    Object.keys(updateData).forEach((key) => {
+      assessment[key] = updateData[key];
+    });
 
-    if (!updatedAssessment) {
-      return res.status(404).json({ error: 'Assessment not found' });
-    }
-
+    const updatedAssessment = await assessment.save();
     res.json(updatedAssessment);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -201,7 +197,7 @@ const duplicateAssessment = async (req, res) => {
 
 module.exports = {
   getAllAssessments,
-  getAssessmentById,
+  getAssessmentBySlug,
   createAssessment,
   updateAssessment,
   deleteAssessment,

@@ -14,9 +14,9 @@ const getSettings = async (req, res) => {
   }
 };
 
-const getSettingsByAssessmentId = async (req, res) => {
+const getSettingsByAssessmentSlug = async (req, res) => {
   try {
-    const assessment = await Assessment.findById(req.params.assessmentId);
+    const assessment = await Assessment.findOne({ slug: req.params.slug });
     if (!assessment) {
       return res.status(404).json({ error: 'Assessment not found' });
     }
@@ -45,5 +45,5 @@ const updateSettings = async (req, res) => {
 module.exports = {
 	getSettings,
 	updateSettings,
-  getSettingsByAssessmentId
+  getSettingsByAssessmentSlug
 }

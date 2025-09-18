@@ -6,7 +6,7 @@ const { authenticate, authorize } = require("../middleware/auth.js");
 const router = express.Router();
 
 router.get("/", authenticate, authorize(["client_admin"]), controller.getAllAssessments);
-router.get("/:id", controller.getAssessmentById);
+router.get("/:slug", controller.getAssessmentBySlug);
 
 router.post(
   "/",

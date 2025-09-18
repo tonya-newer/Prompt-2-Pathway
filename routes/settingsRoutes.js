@@ -5,6 +5,6 @@ const { authenticate, authorize } = require("../middleware/auth.js");
 
 router.get("/", authenticate, authorize(["client_admin"]), settingsController.getSettings);
 router.put("/", authenticate, authorize(["client_admin"]), settingsController.updateSettings);
-router.get("/:assessmentId", settingsController.getSettingsByAssessmentId);
+router.get("/:slug", settingsController.getSettingsByAssessmentSlug);
 
 module.exports = router;
