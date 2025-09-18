@@ -1,6 +1,6 @@
 // SettingsContext.jsx
 import React, { createContext, useState, useEffect, useContext } from "react";
-import { getSettingsByAssessmentIdAPI } from "./api";
+import { getSettingsByAssessmentSlugAPI } from "./api";
 import { useLocation, matchPath } from "react-router-dom";
 
 const SettingsContext = createContext();
@@ -12,13 +12,13 @@ export const SettingsProvider = ({ children }) => {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const match = matchPath("/assessment/:assessmentId", location.pathname);
-  const assessmentId = match?.params?.assessmentId;
+  const match = matchPath("/assessment/:slug", location.pathname);
+  const slug = match?.params?.slug;
 
   const loadSettings = async () => {
-    if (!assessmentId) return;
+    if (!slug) return;
     try {
-      const { data } = await getSettingsByAssessmentIdAPI(assessmentId);
+      const { data } = await getSettingsByAssessmentSlugAPI(slug);
       setSettings(data);
     } catch (err) {
       console.error("Failed to fetch settings:", err);

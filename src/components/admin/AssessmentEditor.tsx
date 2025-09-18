@@ -6,7 +6,7 @@ import { RootState, AppDispatch } from '@/store';
 import {
   addAssessment,
   updateAssessment,
-  fetchAssessmentById
+  fetchAssessmentBySlug
 } from '@/store/assessmentsSlice';
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
@@ -31,11 +31,12 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
   const { toast } = useToast();
 
   const dispatch: AppDispatch = useDispatch();
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
 
   const initialAssessment: AssessmentTemplate = {
     _id: '',
     title: '',
+    slug: '',
     audience: 'individual',
     description: '',
     image: '',
@@ -50,16 +51,15 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
   const { status } = useSelector((state: RootState) => state.assessments);
 
   useEffect(() => {
-    if (mode === 'update' && id) {
-      dispatch(fetchAssessmentById(id))
+    if (mode === 'update' && slug) {
+      dispatch(fetchAssessmentBySlug(slug))
         .unwrap()
         .then((res) => setAssessment(res))
-        .catch((err) => {
-          console.error(err);
+        .catch(() => {
           toast({ title: "Error", description: "Failed to fetch assessment", variant: "destructive" });
         });
     }
-  }, [id, mode, dispatch, toast]);
+  }, [slug, mode, dispatch, toast]);
 
 
   const [newTag, setNewTag] = useState('');
@@ -103,8 +103,8 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
       if (mode === 'add') {
         await dispatch(addAssessment(formData)).unwrap();
         toast({ title: "Assessment Created", description: "Successfully added." });
-      } else if (mode === 'update' && id) {
-        await dispatch(updateAssessment({ id, data: formData })).unwrap();
+      } else if (mode === 'update' && slug) {
+        await dispatch(updateAssessment({ id: assessment._id, data: formData })).unwrap();
         toast({ title: "Assessment Updated", description: "Successfully saved." });
       }
       navigate('/');
@@ -364,7 +364,7 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
             <div>
               <Label>Tags</Label>
               <div className="flex flex-wrap gap-2 mb-2">
-                {assessment.tags.map((tag, index) => (
+                {(assessment.tags || []).map((tag, index) => (
                   <Badge key={index} variant="outline" className="flex items-center gap-1">
                     {tag}
                     <X 
@@ -397,7 +397,7 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
           </div>
 
           <div className="space-y-4">
-            {assessment.questions.map((question, index) => (
+            {(assessment.questions || []).map((question, index) => (
               <QuestionEditor
                 key={question.id}
                 question={question}

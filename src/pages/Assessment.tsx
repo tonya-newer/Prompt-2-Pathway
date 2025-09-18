@@ -10,7 +10,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { customVoiceService } from '@/services/customVoiceService';
 import { nativeSpeech } from '@/services/nativeSpeech';
 import { RootState } from '@/store';
-import { fetchAssessmentById } from '@/store/assessmentsSlice';
+import { fetchAssessmentBySlug } from '@/store/assessmentsSlice';
 import { useSettings } from '../SettingsContext';
 
 interface AssessmentResult {
@@ -20,7 +20,7 @@ interface AssessmentResult {
 }
 
 const Assessment = () => {
-  const { assessmentId } = useParams<{ assessmentId: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const assessment = useSelector(
@@ -42,22 +42,31 @@ const Assessment = () => {
   };
 
   useEffect(() => {
-    if (assessmentId) {
+    if (slug) {
+      let favicon = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
+
+      if (!favicon) {
+        favicon = document.createElement("link");
+        favicon.rel = "icon";
+        document.head.appendChild(favicon);
+      }
+
+      favicon.href = settings?.platform.favicon;
+
       setLoading(true); // still keep local loading spinner if needed
-      dispatch(fetchAssessmentById(assessmentId))
+      dispatch(fetchAssessmentBySlug(slug))
         .unwrap()
         .then((res) => {
           console.log('Loaded assessment:', res.title, 'with', res.questions.length, 'questions');
           setLoading(false);
         })
         .catch(() => {
-          console.error('Assessment not found for ID:', assessmentId);
           setLoading(false);
         });
     } else {
       setLoading(false);
     }
-  }, [assessmentId, dispatch]);
+  }, [slug, dispatch]);
 
   useEffect(() => {
     if (assessment && !showWelcomePage) {

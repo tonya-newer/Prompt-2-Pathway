@@ -12,6 +12,7 @@ export interface Question {
 export interface AssessmentTemplate {
   _id: string;
   title: string;
+  slug: string;
   description: string;
   audience: 'individual' | 'business';
   tags: string[];

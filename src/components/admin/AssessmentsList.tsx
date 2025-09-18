@@ -35,7 +35,7 @@ export const AssessmentsList = () => {
   };
 
 	const handleEdit = (assessment) => {
-    navigate(`/assessment/update/${assessment._id}`);
+    navigate(`/assessment/update/${assessment.slug}`);
   };
 
 	const handleDuplicate = async (assessment) => {
@@ -58,7 +58,7 @@ export const AssessmentsList = () => {
   };
 
   const copyAssessmentLink = (assessment) => {
-    navigator.clipboard.writeText(`${window.location.origin}/assessment/${assessment._id}`);
+    navigator.clipboard.writeText(`${window.location.origin}/assessment/${assessment.slug}`);
     toast({ title: 'Copied', description: 'Assessment URL copied to clipboard' });
   };
 
@@ -112,7 +112,7 @@ export const AssessmentsList = () => {
 									<div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4">
 										<p className="text-sm font-medium text-blue-900 mb-1">Public Link:</p>
 										<code className="text-xs bg-white px-2 py-1 rounded border block w-full text-gray-700 break-all">
-											{window.location.origin}/assessment/{assessment._id}
+											{window.location.origin}/assessment/{assessment.slug}
 										</code>
 									</div>
 								</div>

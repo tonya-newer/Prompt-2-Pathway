@@ -29,7 +29,7 @@ export const updateUserAPI = (id, data) => API.put(`/users/${id}`, data);
 
 // ------- Assessments -------
 export const getAssessmentsAPI = () => API.get('/assessments');
-export const getAssessmentByIdAPI = (id) => API.get(`/assessments/${id}`);
+export const getAssessmentBySlugAPI = (slug) => API.get(`/assessments/${slug}`);
 export const createAssessmentAPI = (data) =>
   API.post('/assessments', data, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const updateAssessmentAPI = (id, data) =>
@@ -52,7 +52,7 @@ export const getAnalyticsAPI = () => API.get('/analytics');
 
 // ------- Settings -------
 export const getSettingsAPI = () => API.get('/settings');
-export const getSettingsByAssessmentIdAPI = (assessmentId) => API.get(`/settings/${assessmentId}`);
+export const getSettingsByAssessmentSlugAPI = (slug) => API.get(`/settings/${slug}`);
 export const updateSettingsAPI = (data) => API.put('/settings', data);
 
 export default API;

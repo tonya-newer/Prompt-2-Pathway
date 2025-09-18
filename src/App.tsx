@@ -35,9 +35,9 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            <Route path="/assessment/:assessmentId" element={<Assessment />} />
+            <Route path="/assessment/:slug" element={<Assessment />} />
             <Route path="/assessment/add" element={<AssessmentEditor mode="add" />} />
-            <Route path="/assessment/update/:id" element={<AssessmentEditor mode="update" />} />
+            <Route path="/assessment/update/:slug" element={<AssessmentEditor mode="update" />} />
             <Route path="/contact-form" element={<ContactForm />} />
             <Route path="/results" element={<Results />} />
             <Route path="*" element={<NotFound />} />

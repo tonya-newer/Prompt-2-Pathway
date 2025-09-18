@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import {
   getAssessmentsAPI,
-  getAssessmentByIdAPI,
+  getAssessmentBySlugAPI,
   createAssessmentAPI,
   updateAssessmentAPI,
   deleteAssessmentAPI,
@@ -14,8 +14,8 @@ export const fetchAssessments = createAsyncThunk('assessments/fetchAll', async (
   return res.data;
 });
 
-export const fetchAssessmentById = createAsyncThunk('assessments/fetchById', async (id) => {
-  const res = await getAssessmentByIdAPI(id);
+export const fetchAssessmentBySlug = createAsyncThunk('assessments/fetchBySlug', async (slug) => {
+  const res = await getAssessmentBySlugAPI(slug);
   return res.data;
 });
 
@@ -49,7 +49,7 @@ const assessmentsSlice = createSlice({
         state.list = action.payload;
         state.status = 'succeeded';
       })
-      .addCase(fetchAssessmentById.fulfilled, (state, action) => {
+      .addCase(fetchAssessmentBySlug.fulfilled, (state, action) => {
         state.selected = action.payload;
       })
       .addCase(addAssessment.pending, (state) => {
