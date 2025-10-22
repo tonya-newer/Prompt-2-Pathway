@@ -1,5 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchLeads, addTagToLead } from '@/store/leadsSlice';
+import { RootState } from '@/store';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,103 +20,18 @@ import {
   Eye, 
   Mail, 
   Tag, 
-  Download, 
-  Filter,
-  MoreHorizontal,
-  Phone,
-  Calendar
+  Download
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-interface Lead {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  ageRange: string;
-  assessment: string;
-  score: number;
-  status: 'new' | 'contacted' | 'qualified' | 'converted';
-  completedAt: string;
-  tags: string[];
-}
+export const LeadsList = () => {
+  const dispatch = useDispatch();
+  const leads = useSelector((state: RootState) => state.leads.list);
 
-interface LeadsListProps {
-  leads?: any[];
-  onView?: (leadId: number) => void;
-  onEmail?: (leadId: number) => void;
-  onTag?: (leadId: number) => void;
-}
+  useEffect(() => {
+    dispatch(fetchLeads());
+  }, [dispatch]);
 
-const mockLeads: Lead[] = [
-  {
-    id: '1',
-    firstName: 'Sarah',
-    lastName: 'Johnson',
-    email: 'sarah.johnson@email.com',
-    phone: '(555) 123-4567',
-    ageRange: '35-44',
-    assessment: 'Career Clarity',
-    score: 85,
-    status: 'qualified',
-    completedAt: '2024-01-15',
-    tags: ['high-priority', 'career-change']
-  },
-  {
-    id: '2',
-    firstName: 'Michael',
-    lastName: 'Brown',
-    email: 'michael.brown@email.com',
-    ageRange: '25-34',
-    assessment: 'Leadership Skills',
-    score: 62,
-    status: 'contacted',
-    completedAt: '2024-02-01',
-    tags: ['leadership', 'follow-up']
-  },
-  {
-    id: '3',
-    firstName: 'Emily',
-    lastName: 'Davis',
-    email: 'emily.davis@email.com',
-    phone: '(555) 987-6543',
-    ageRange: '45-54',
-    assessment: 'Financial Planning',
-    score: 92,
-    status: 'converted',
-    completedAt: '2024-02-10',
-    tags: ['financial-planning', 'vip']
-  },
-  {
-    id: '4',
-    firstName: 'David',
-    lastName: 'Wilson',
-    email: 'david.wilson@email.com',
-    ageRange: '55+',
-    assessment: 'Retirement Readiness',
-    score: 48,
-    status: 'new',
-    completedAt: '2024-02-18',
-    tags: ['retirement', 'urgent']
-  },
-  {
-    id: '5',
-    firstName: 'Jessica',
-    lastName: 'Garcia',
-    email: 'jessica.garcia@email.com',
-    phone: '(555) 246-8013',
-    ageRange: '25-34',
-    assessment: 'Personal Development',
-    score: 75,
-    status: 'qualified',
-    completedAt: '2024-02-25',
-    tags: ['personal-growth']
-  }
-];
-
-export const LeadsList = ({ leads: externalLeads, onView, onEmail, onTag }: LeadsListProps) => {
-  const [leads, setLeads] = useState(externalLeads || mockLeads);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const { toast } = useToast();
@@ -130,11 +48,6 @@ export const LeadsList = ({ leads: externalLeads, onView, onEmail, onTag }: Lead
     const lead = leads.find(l => l.id === leadId);
     console.log('Viewing lead details:', lead);
     
-    // Use external handler if provided, otherwise use internal logic
-    if (onView) {
-      onView(parseInt(leadId));
-    }
-    
     toast({
       title: "Lead Details",
       description: `Viewing details for ${lead?.firstName} ${lead?.lastName}`,
@@ -144,11 +57,6 @@ export const LeadsList = ({ leads: externalLeads, onView, onEmail, onTag }: Lead
   const handleEmailLead = async (leadId: string) => {
     const lead = leads.find(l => l.id === leadId);
     try {
-      // Use external handler if provided
-      if (onEmail) {
-        onEmail(parseInt(leadId));
-      }
-      
       // This would integrate with an email service
       console.log('Sending email to:', lead?.email);
       toast({
@@ -165,23 +73,22 @@ export const LeadsList = ({ leads: externalLeads, onView, onEmail, onTag }: Lead
     }
   };
 
-  const handleTagLead = (leadId: string, newTag: string) => {
-    setLeads(leads.map(lead => 
-      lead.id === leadId 
-        ? { ...lead, tags: [...lead.tags, newTag] }
-        : lead
-    ));
-    
-    // Use external handler if provided
-    if (onTag) {
-      onTag(parseInt(leadId));
+  const handleTagLead = async (leadId: string, newTag: string) => {
+    try {
+      await dispatch(addTagToLead({ id: leadId, tagData: { tag: newTag } })).unwrap();
+  
+      toast({
+        title: "Tag Added",
+        description: `Added tag "${newTag}" to lead`,
+      });
+    } catch (error) {
+      console.error('Failed to add tag:', error);
+      toast({
+        title: "Error",
+        description: "Could not add tag. Please try again.",
+        variant: "destructive",
+      });
     }
-    
-    const lead = leads.find(l => l.id === leadId);
-    toast({
-      title: "Tag Added",
-      description: `Added tag "${newTag}" to ${lead?.firstName} ${lead?.lastName}`,
-    });
   };
 
   const exportLeads = () => {
@@ -254,7 +161,7 @@ export const LeadsList = ({ leads: externalLeads, onView, onEmail, onTag }: Lead
             </TableHeader>
             <TableBody>
               {filteredLeads.map(lead => (
-                <TableRow key={lead.id}>
+                <TableRow key={lead._id}>
                   <TableCell>
                     <div>
                       <div className="font-medium">{lead.firstName} {lead.lastName}</div>
@@ -271,12 +178,12 @@ export const LeadsList = ({ leads: externalLeads, onView, onEmail, onTag }: Lead
                   </TableCell>
                   <TableCell>
                     <div>
-                      <div className="font-medium">{lead.assessment}</div>
+                      <div className="font-medium">{lead.assessment.title}</div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <Badge variant={lead.score >= 80 ? 'default' : lead.score >= 60 ? 'secondary' : 'outline'}>
-                      {lead.score}/100
+                      {lead.score} / 100
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -289,7 +196,7 @@ export const LeadsList = ({ leads: externalLeads, onView, onEmail, onTag }: Lead
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm">{lead.completedAt}</div>
+                    <div className="text-sm">{lead.completedAt.slice(0, 10)}</div>
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">

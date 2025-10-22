@@ -1,433 +1,80 @@
-
-import { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Plus, Edit, Copy, Trash2, Link, Users, BarChart3, Settings, Mic } from 'lucide-react';
-import { AssessmentTemplate } from '@/types/assessment';
-import { useToast } from '@/hooks/use-toast';
-import { AssessmentEditor } from '@/components/admin/AssessmentEditor';
+import { Button } from '@/components/ui/button';
+import { Users as UsersIcon, BarChart3, Settings as SettingsIcon, Mic, LogOut } from 'lucide-react';
+import { Users } from '@/components/admin/Users';
+import { AssessmentsList } from '@/components/admin/AssessmentsList';
 import { LeadsList } from '@/components/admin/LeadsList';
+import { VoiceSettings } from '@/components/admin/VoiceSettings';
 import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
-import { leadStorageService } from '@/services/leadStorage';
-import { assessmentStorageService } from '@/services/assessmentStorage';
+import { Settings } from '@/components/admin/Settings';
+
+const tabs = [
+  { key: "assessments", label: "Assessments", icon: SettingsIcon },
+  { key: "leads", label: "Leads", icon: Mic },
+  { key: "analytics", label: "Analytics", icon: UsersIcon },
+  { key: "voice_settings", label: "Voice Settings", icon: BarChart3 },
+  { key: "settings", label: "Settings", icon: SettingsIcon },
+];
 
 const Index = () => {
-  const [templates, setTemplates] = useState<AssessmentTemplate[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<AssessmentTemplate | null>(null);
-  const [editMode, setEditMode] = useState(false);
-  const [selectedTemplateForVoice, setSelectedTemplateForVoice] = useState<AssessmentTemplate | null>(null);
-  const [voiceSettings, setVoiceSettings] = useState({
-    welcomeMessage: "Welcome to this assessment. Let's begin your journey of discovery.",
-    completionMessage: "Congratulations! You've completed the assessment. Your results are being calculated.",
-    voiceTone: "warm and encouraging"
-  });
-  const { toast } = useToast();
+  const navigate = useNavigate();
+  const userRoles = localStorage.getItem("roles");
 
-  // Load templates from storage service
-  useEffect(() => {
-    setTemplates(assessmentStorageService.getAllAssessments());
-  }, []);
-
-  const leads = leadStorageService.getLeads();
-
-  const handleCreateNew = () => {
-    const newTemplate: AssessmentTemplate = {
-      id: Date.now(),
-      title: 'New Assessment',
-      description: 'New assessment description',
-      audience: 'individual',
-      tags: ['new'],
-      questions: [
-        {
-          id: 1,
-          type: "yes-no",
-          question: "Sample question - Do you agree?",
-          voiceScript: "This is a sample question. Do you agree with this statement?"
-        }
-      ],
-      image: ''
-    };
-    setSelectedTemplate(newTemplate);
-    setEditMode(true);
-    toast({
-      title: "New Template",
-      description: "Creating new assessment template",
-    });
+  const handleLogout = () => {
+    localStorage.removeItem('token'); // clear JWT
+    localStorage.removeItem("roles");
+    navigate('/login'); // redirect to login
   };
 
-  const handleEditTemplate = (template: AssessmentTemplate) => {
-    setSelectedTemplate({...template});
-    setEditMode(true);
-    toast({
-      title: "Opening Editor",
-      description: `Now editing "${template.title}"`,
-    });
-  };
-
-  const handleSaveTemplate = (updatedTemplate: AssessmentTemplate) => {
-    try {
-      let savedTemplate: AssessmentTemplate;
-      
-      if (templates.find(t => t.id === updatedTemplate.id)) {
-        savedTemplate = assessmentStorageService.updateAssessment(updatedTemplate);
-        toast({
-          title: "Template Updated",
-          description: `"${updatedTemplate.title}" has been saved successfully.`,
-        });
-      } else {
-        savedTemplate = assessmentStorageService.createAssessment(updatedTemplate);
-        toast({
-          title: "Template Created",
-          description: `"${updatedTemplate.title}" has been created successfully.`,
-        });
-      }
-      
-      setTemplates(assessmentStorageService.getAllAssessments());
-      setEditMode(false);
-      setSelectedTemplate(null);
-      
-    } catch (error) {
-      console.error('Error saving template:', error);
-      toast({
-        title: "Save Error",
-        description: "Failed to save the template. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDuplicateTemplate = (template: AssessmentTemplate) => {
-    try {
-      const duplicated = assessmentStorageService.duplicateAssessment(template.id);
-      setTemplates(assessmentStorageService.getAllAssessments());
-      toast({
-        title: "Template Duplicated",
-        description: `"${duplicated.title}" has been created.`,
-      });
-    } catch (error) {
-      console.error('Error duplicating template:', error);
-      toast({
-        title: "Duplicate Error",
-        description: "Failed to duplicate the template. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteTemplate = (templateId: number) => {
-    try {
-      const templateToDelete = assessmentStorageService.getAssessmentById(templateId);
-      assessmentStorageService.deleteAssessment(templateId);
-      setTemplates(assessmentStorageService.getAllAssessments());
-      toast({
-        title: "Template Deleted",
-        description: `"${templateToDelete?.title}" has been deleted.`,
-        variant: "destructive",
-      });
-    } catch (error) {
-      console.error('Error deleting template:', error);
-      toast({
-        title: "Delete Error",
-        description: "Failed to delete the template. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const copyAssessmentLink = async (template: AssessmentTemplate) => {
-    const url = `${window.location.origin}/assessment/${template.id}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      toast({
-        title: "Assessment Link Copied!",
-        description: `Link copied: ${url}`,
-      });
-    } catch (error) {
-      const textArea = document.createElement('textarea');
-      textArea.value = url;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      
-      toast({
-        title: "Assessment Link Copied!",
-        description: `Link copied: ${url}`,
-      });
-    }
-  };
-
-  const handleSaveVoiceSettings = () => {
-    toast({
-      title: "Voice Settings Saved",
-      description: "Voice scripts and settings have been updated successfully.",
-    });
-  };
-
-  if (editMode && selectedTemplate) {
-    return (
-      <AssessmentEditor
-        template={selectedTemplate}
-        onSave={handleSaveTemplate}
-        onCancel={() => {
-          setEditMode(false);
-          setSelectedTemplate(null);
-          toast({
-            title: "Editor Closed",
-            description: "Changes have been discarded.",
-          });
-        }}
-      />
-    );
-  }
+  const allowedTabs: string[] = JSON.parse(localStorage.getItem("allowedTabs") || "[]");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome to Prompt 2 Pathway</h1>
-          <p className="text-xl text-gray-600 mb-8">
-            Discover your path through personalized voice-guided assessments
-          </p>
+        <div className="flex justify-between items-center mb-8">
+          <div className="text-center flex-1">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome to Prompt 2 Pathway</h1>
+            <p className="text-xl text-gray-600 mb-8">
+              Discover your path through personalized voice-guided assessments
+            </p>
+          </div>
+          <Button onClick={handleLogout} className="flex items-center">
+            <LogOut className="h-4 w-4" />
+            <span>Logout</span>
+				  </Button>
         </div>
 
         <Tabs defaultValue="assessments" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="assessments" className="flex items-center space-x-2">
-              <Settings className="h-4 w-4" />
-              <span>Assessments</span>
-            </TabsTrigger>
-            <TabsTrigger value="voice-settings" className="flex items-center space-x-2">
-              <Mic className="h-4 w-4" />
-              <span>Voice Settings</span>
-            </TabsTrigger>
-            <TabsTrigger value="leads" className="flex items-center space-x-2">
-              <Users className="h-4 w-4" />
-              <span>Leads</span>
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center space-x-2">
-              <BarChart3 className="h-4 w-4" />
-              <span>Analytics</span>
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center space-x-2">
-              <Settings className="h-4 w-4" />
-              <span>Settings</span>
-            </TabsTrigger>
+          <TabsList className="grid w-full grid-cols-6">
+            {userRoles.includes("platform_admin") && (
+              <TabsTrigger value="users" className="flex items-center space-x-2">
+                <UsersIcon className="h-4 w-4" />
+                <span>Users</span>
+              </TabsTrigger>
+            )}
+            {tabs
+              .filter((tab) => allowedTabs.includes(tab.key))
+              .map(({ key, label, icon: Icon }) => (
+                <TabsTrigger key={key} value={key} className="flex items-center space-x-2">
+                  <Icon className="h-4 w-4" />
+                  <span>{label}</span>
+                </TabsTrigger>
+              ))}
           </TabsList>
 
+          {userRoles.includes("platform_admin") && (
+            <TabsContent value="users" className="space-y-6">
+              <Users />
+            </TabsContent>
+          )}
+
           <TabsContent value="assessments" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Available Assessments</h3>
-              <Button onClick={handleCreateNew} className="flex items-center">
-                <Plus className="h-4 w-4 mr-2" />
-                Create New
-              </Button>
-            </div>
-            
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {templates.map((template) => (
-                <Card key={template.id} className="overflow-hidden">
-                  {template.image && (
-                    <div className="h-48 overflow-hidden">
-                      <img 
-                        src={template.image} 
-                        alt={template.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-lg mb-2">{template.title}</h4>
-                        <p className="text-sm text-gray-600 mb-3">{template.description}</p>
-                        
-                        <div className="flex flex-wrap gap-1 mb-3">
-                          <Badge variant={template.audience === 'business' ? 'default' : 'secondary'}>
-                            {template.audience}
-                          </Badge>
-                          {template.tags.map((tag, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                        
-                        <p className="text-xs text-gray-500 mb-4">
-                          {template.questions.length} questions • Est. {Math.ceil(template.questions.length * 0.75)} min
-                        </p>
-                        
-                        <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4">
-                          <p className="text-sm font-medium text-blue-900 mb-1">Public Link:</p>
-                          <code className="text-xs bg-white px-2 py-1 rounded border block w-full text-gray-700 break-all">
-                            {window.location.origin}/assessment/{template.id}
-                          </code>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-2">
-                      <Button 
-                        size="sm"
-                        onClick={() => copyAssessmentLink(template)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1"
-                      >
-                        <Link className="h-3 w-3" />
-                        Copy URL
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleEditTemplate(template)}
-                      >
-                        <Edit className="h-3 w-3 mr-1" />
-                        Edit
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleDuplicateTemplate(template)}
-                      >
-                        <Copy className="h-3 w-3 mr-1" />
-                        Duplicate
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleDeleteTemplate(template.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
+            <AssessmentsList />
           </TabsContent>
 
-          <TabsContent value="voice-settings" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Voice Scripts & Settings</h3>
-              <Button onClick={handleSaveVoiceSettings} className="flex items-center">
-                <Mic className="h-4 w-4 mr-2" />
-                Save Voice Settings
-              </Button>
-            </div>
-
-            <div className="grid gap-6">
-              <Card className="p-6">
-                <h4 className="text-lg font-semibold mb-4">Select Assessment to Edit Voice Scripts</h4>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {templates.map((template) => (
-                    <Button
-                      key={template.id}
-                      variant={selectedTemplateForVoice?.id === template.id ? 'default' : 'outline'}
-                      onClick={() => setSelectedTemplateForVoice(template)}
-                      className="h-auto p-4 text-left flex flex-col items-start"
-                    >
-                      <span className="font-medium">{template.title}</span>
-                      <span className="text-xs text-gray-500">{template.questions.length} questions</span>
-                    </Button>
-                  ))}
-                </div>
-              </Card>
-
-              <Card className="p-6">
-                <h4 className="text-lg font-semibold mb-4">Global Voice Settings</h4>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="welcome-message">Welcome Message</Label>
-                    <Textarea
-                      id="welcome-message"
-                      value={voiceSettings.welcomeMessage}
-                      onChange={(e) => setVoiceSettings({...voiceSettings, welcomeMessage: e.target.value})}
-                      placeholder="Enter the welcome message for all assessments..."
-                      className="mt-2"
-                      rows={3}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="completion-message">Completion Message</Label>
-                    <Textarea
-                      id="completion-message"
-                      value={voiceSettings.completionMessage}
-                      onChange={(e) => setVoiceSettings({...voiceSettings, completionMessage: e.target.value})}
-                      placeholder="Enter the completion message for all assessments..."
-                      className="mt-2"
-                      rows={3}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="voice-tone">Voice Tone & Style</Label>
-                    <Input
-                      id="voice-tone"
-                      value={voiceSettings.voiceTone}
-                      onChange={(e) => setVoiceSettings({...voiceSettings, voiceTone: e.target.value})}
-                      placeholder="e.g., warm and encouraging, professional, friendly"
-                      className="mt-2"
-                    />
-                  </div>
-                </div>
-              </Card>
-
-              {selectedTemplateForVoice && (
-                <Card className="p-6">
-                  <h4 className="text-lg font-semibold mb-4">
-                    Voice Scripts for "{selectedTemplateForVoice.title}"
-                  </h4>
-                  <div className="space-y-6">
-                    {selectedTemplateForVoice.questions.map((question, index) => (
-                      <div key={question.id} className="border rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <h5 className="font-medium">Question {index + 1}</h5>
-                          <Badge variant="outline">{question.type}</Badge>
-                        </div>
-                        
-                        <div className="text-sm text-gray-600 mb-3">
-                          <strong>Question:</strong> {question.question}
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor={`voice-script-${question.id}`}>Voice Script</Label>
-                          <Textarea
-                            id={`voice-script-${question.id}`}
-                            value={question.voiceScript || ''}
-                            placeholder="Enter the voice script for this question..."
-                            className="mt-2"
-                            rows={2}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              )}
-
-              <Card className="p-6 bg-blue-50 border-blue-200">
-                <h4 className="text-lg font-semibold mb-4 text-blue-900">Voice Configuration</h4>
-                <div className="bg-white p-4 rounded-lg border border-blue-200">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <Mic className="h-5 w-5 text-blue-600" />
-                    <span className="font-medium text-blue-900">Natural American Female Voice</span>
-                    <Badge className="bg-green-100 text-green-800 border-green-300">Active</Badge>
-                  </div>
-                  <p className="text-sm text-blue-800 mb-3">
-                    Using consistent, warm American female voice across all assessments for optimal user experience.
-                  </p>
-                  <div className="text-xs text-blue-600">
-                    <strong>Voice Parameters:</strong> Rate: 0.9 | Pitch: 1.0 | Natural Tone
-                  </div>
-                </div>
-              </Card>
-            </div>
+          <TabsContent value="voice_settings" className="space-y-6">
+            <VoiceSettings />
           </TabsContent>
 
           <TabsContent value="leads">
@@ -435,27 +82,11 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="analytics">
-            <AnalyticsDashboard leads={leads} />
+            <AnalyticsDashboard />
           </TabsContent>
 
           <TabsContent value="settings">
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Prompt 2 Pathway Settings</h3>
-              <div className="space-y-4">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-2">Voice Configuration</h4>
-                  <p className="text-sm text-blue-800">
-                    All assessments use a consistent, natural American female voice for the best user experience.
-                  </p>
-                </div>
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-green-900 mb-2">Public Access</h4>
-                  <p className="text-sm text-green-800">
-                    All assessment links are publicly accessible without login requirements.
-                  </p>
-                </div>
-              </div>
-            </Card>
+            <Settings />
           </TabsContent>
         </Tabs>
       </div>

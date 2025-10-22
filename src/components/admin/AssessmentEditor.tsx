@@ -1,5 +1,16 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, AppDispatch } from '@/store';
+import {
+  addAssessment,
+  updateAssessment,
+  fetchAssessmentBySlug
+} from '@/store/assessmentsSlice';
+import { useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,21 +20,52 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Plus, Save, X, Trash2, GripVertical, ArrowUp, ArrowDown, Upload, Image } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { AssessmentTemplate, Question } from '@/types/assessment';
+import { AssessmentTemplate, Question } from '@/types';
 
 interface AssessmentEditorProps {
-  template: AssessmentTemplate;
-  onSave: (template: AssessmentTemplate) => void;
-  onCancel: () => void;
+  mode: 'add' | 'update';
 }
 
-export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEditorProps) => {
-  const [editedTemplate, setEditedTemplate] = useState<AssessmentTemplate>(template);
-  const [newTag, setNewTag] = useState('');
+export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
+  const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSave = () => {
-    if (!editedTemplate.title.trim()) {
+  const dispatch: AppDispatch = useDispatch();
+  const { slug } = useParams<{ slug: string }>();
+
+  const initialAssessment: AssessmentTemplate = {
+    _id: '',
+    title: '',
+    slug: '',
+    audience: 'individual',
+    description: '',
+    image: '',
+    tags: [],
+    questions: [],
+    welcomeMessageAudio: '',
+    keepGoingMessageAudio: '',
+    congratulationMessageAudio: ''
+  };
+
+  const [assessment, setAssessment] = useState<AssessmentTemplate>(initialAssessment);
+  const { status } = useSelector((state: RootState) => state.assessments);
+
+  useEffect(() => {
+    if (mode === 'update' && slug) {
+      dispatch(fetchAssessmentBySlug(slug))
+        .unwrap()
+        .then((res) => setAssessment(res))
+        .catch(() => {
+          toast({ title: "Error", description: "Failed to fetch assessment", variant: "destructive" });
+        });
+    }
+  }, [slug, mode, dispatch, toast]);
+
+
+  const [newTag, setNewTag] = useState('');
+
+  const handleSave = async () => {
+    if (!assessment.title.trim()) {
       toast({
         title: "Validation Error",
         description: "Assessment title is required.",
@@ -31,7 +73,44 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
       });
       return;
     }
-    onSave(editedTemplate);
+  
+    try {
+      const formData = new FormData();
+      formData.append('title', assessment.title);
+      formData.append('audience', assessment.audience);
+      formData.append('description', assessment.description);
+      formData.append('tags', JSON.stringify(assessment.tags));
+      formData.append('questions', JSON.stringify(assessment.questions));
+      formData.append('image', assessment.image);
+
+      if (assessment.welcomeMessageAudio) formData.append('welcomeMessageAudio', assessment.welcomeMessageAudio);
+      if (assessment.keepGoingMessageAudio) formData.append('keepGoingMessageAudio', assessment.keepGoingMessageAudio);
+      if (assessment.congratulationMessageAudio) formData.append('congratulationMessageAudio', assessment.congratulationMessageAudio);
+      
+      const questionAudioFiles: File[] = [];
+      const questionAudioIndexes: number[] = [];
+
+      assessment.questions.forEach((q, idx) => {
+        if (q.audio instanceof File) {
+          questionAudioFiles.push(q.audio);
+          questionAudioIndexes.push(idx);
+        }
+      });
+
+      questionAudioFiles.forEach((file) => formData.append('questionAudios', file));
+      formData.append('questionAudioIndexes', JSON.stringify(questionAudioIndexes));
+
+      if (mode === 'add') {
+        await dispatch(addAssessment(formData)).unwrap();
+        toast({ title: "Assessment Created", description: "Successfully added." });
+      } else if (mode === 'update' && slug) {
+        await dispatch(updateAssessment({ id: assessment._id, data: formData })).unwrap();
+        toast({ title: "Assessment Updated", description: "Successfully saved." });
+      }
+      navigate('/');
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Something went wrong", variant: "destructive" });
+    }
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,8 +119,8 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
       const reader = new FileReader();
       reader.onload = (e) => {
         const imageUrl = e.target?.result as string;
-        setEditedTemplate({
-          ...editedTemplate,
+        setAssessment({
+          ...assessment,
           image: imageUrl
         });
         toast({
@@ -60,9 +139,9 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
       question: 'New question',
       voiceScript: 'Voice script for new question'
     };
-    setEditedTemplate({
-      ...editedTemplate,
-      questions: [...editedTemplate.questions, newQuestion]
+    setAssessment({
+      ...assessment,
+      questions: [...assessment.questions, newQuestion]
     });
     toast({
       title: "Question Added",
@@ -71,19 +150,19 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
   };
 
   const updateQuestion = (index: number, updatedQuestion: Question) => {
-    const updatedQuestions = [...editedTemplate.questions];
+    const updatedQuestions = [...assessment.questions];
     updatedQuestions[index] = updatedQuestion;
-    setEditedTemplate({
-      ...editedTemplate,
+    setAssessment({
+      ...assessment,
       questions: updatedQuestions
     });
   };
 
   const removeQuestion = (index: number) => {
-    const questionToRemove = editedTemplate.questions[index];
-    setEditedTemplate({
-      ...editedTemplate,
-      questions: editedTemplate.questions.filter((_, i) => i !== index)
+    const questionToRemove = assessment.questions[index];
+    setAssessment({
+      ...assessment,
+      questions: assessment.questions.filter((_, i) => i !== index)
     });
     toast({
       title: "Question Removed",
@@ -93,199 +172,257 @@ export const AssessmentEditor = ({ template, onSave, onCancel }: AssessmentEdito
 
   const moveQuestion = (index: number, direction: 'up' | 'down') => {
     const newIndex = direction === 'up' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= editedTemplate.questions.length) return;
+    if (newIndex < 0 || newIndex >= assessment.questions.length) return;
 
-    const updatedQuestions = [...editedTemplate.questions];
+    const updatedQuestions = [...assessment.questions];
     [updatedQuestions[index], updatedQuestions[newIndex]] = [updatedQuestions[newIndex], updatedQuestions[index]];
     
-    setEditedTemplate({
-      ...editedTemplate,
+    setAssessment({
+      ...assessment,
       questions: updatedQuestions
     });
   };
 
   const addTag = () => {
-    if (newTag.trim() && !editedTemplate.tags.includes(newTag.trim())) {
-      setEditedTemplate({
-        ...editedTemplate,
-        tags: [...editedTemplate.tags, newTag.trim()]
+    if (newTag.trim() && !assessment.tags.includes(newTag.trim())) {
+      setAssessment({
+        ...assessment,
+        tags: [...assessment.tags, newTag.trim()]
       });
       setNewTag('');
     }
   };
 
   const removeTag = (tagToRemove: string) => {
-    setEditedTemplate({
-      ...editedTemplate,
-      tags: editedTemplate.tags.filter(tag => tag !== tagToRemove)
+    setAssessment({
+      ...assessment,
+      tags: assessment.tags.filter(tag => tag !== tagToRemove)
     });
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Edit Assessment</h2>
-        <div className="flex space-x-2">
-          <Button variant="outline" onClick={onCancel}>
-            <X className="h-4 w-4 mr-2" />
-            Cancel
-          </Button>
-          <Button onClick={handleSave}>
-            <Save className="h-4 w-4 mr-2" />
-            Save Assessment
-          </Button>
-        </div>
-      </div>
+  const onCancel = () => {
+    navigate('/')
+  }
 
-      <Card className="p-6">
-        <div className="space-y-6">
-          <div className="grid md:grid-cols-2 gap-4">
+  return (
+    <div className="space-y-6 p-6">
+      {status == 'loading' && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-90">
+          <div className="text-xl font-bold">
+            Saving...
+          </div>
+        </div>
+      )}
+      <div className={`${status == 'loading' ? 'opacity-50 pointer-events-none' : ''}`}>
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">{mode === 'add' ? 'Add Assessment' : 'Edit Assessment'}</h2>
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={onCancel}>
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+            <Button onClick={handleSave}>
+              <Save className="h-4 w-4 mr-2" />
+              Save Assessment
+            </Button>
+          </div>
+        </div>
+
+        <Card className="p-6">
+          <div className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="title">Assessment Title</Label>
+                <Input 
+                  id="title"
+                  value={assessment.title}
+                  onChange={(e) => setAssessment({...assessment, title: e.target.value})}
+                  placeholder="Enter assessment title"
+                />
+              </div>
+              <div>
+                <Label htmlFor="audience">Target Audience</Label>
+                <Select 
+                  value={assessment.audience} 
+                  onValueChange={(value: 'individual' | 'business') => 
+                    setAssessment({...assessment, audience: value})
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="individual">Individual</SelectItem>
+                    <SelectItem value="business">Business Owner</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
             <div>
-              <Label htmlFor="title">Assessment Title</Label>
-              <Input 
-                id="title"
-                value={editedTemplate.title}
-                onChange={(e) => setEditedTemplate({...editedTemplate, title: e.target.value})}
-                placeholder="Enter assessment title"
+              <Label htmlFor="description">Description</Label>
+              <Textarea 
+                id="description"
+                value={assessment.description}
+                onChange={(e) => setAssessment({...assessment, description: e.target.value})}
+                rows={3}
+                placeholder="Enter assessment description"
               />
             </div>
-            <div>
-              <Label htmlFor="audience">Target Audience</Label>
-              <Select 
-                value={editedTemplate.audience} 
-                onValueChange={(value: 'individual' | 'business') => 
-                  setEditedTemplate({...editedTemplate, audience: value})
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="individual">Individual</SelectItem>
-                  <SelectItem value="business">Business Owner</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Textarea 
-              id="description"
-              value={editedTemplate.description}
-              onChange={(e) => setEditedTemplate({...editedTemplate, description: e.target.value})}
-              rows={3}
-              placeholder="Enter assessment description"
-            />
-          </div>
 
-          <div>
-            <Label htmlFor="image-upload">Assessment Image (Displays Vertically)</Label>
-            <div className="space-y-4">
-              {editedTemplate.image && (
-                <div className="relative max-w-md">
-                  <img 
-                    src={editedTemplate.image} 
-                    alt="Assessment preview"
-                    className="w-full h-64 object-cover rounded-lg border-2 border-gray-200"
+            <div>
+              <Label htmlFor="image-upload">Assessment Image (Displays Vertically)</Label>
+              <div className="space-y-4">
+                {assessment.image && (
+                  <div className="relative max-w-md">
+                    <img 
+                      src={assessment.image} 
+                      alt="Assessment preview"
+                      className="w-full h-64 object-cover rounded-lg border-2 border-gray-200"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setAssessment({...assessment, image: ''})}
+                      className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                    <div className="mt-2 text-sm text-gray-600">
+                      This image will display vertically at the top of your assessment
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-center space-x-4">
+                  <Input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
                   />
                   <Button
                     variant="outline"
-                    size="sm"
-                    onClick={() => setEditedTemplate({...editedTemplate, image: ''})}
-                    className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+                    onClick={() => document.getElementById('image-upload')?.click()}
+                    className="flex items-center"
                   >
-                    <X className="h-4 w-4" />
+                    <Upload className="h-4 w-4 mr-2" />
+                    {assessment.image ? 'Change Image' : 'Upload Image'}
                   </Button>
-                  <div className="mt-2 text-sm text-gray-600">
-                    This image will display vertically at the top of your assessment
-                  </div>
+                  <span className="text-sm text-gray-500">
+                    {assessment.image ? 'Image uploaded - will display vertically' : 'Recommended: 400x600px or similar vertical format'}
+                  </span>
                 </div>
-              )}
-              <div className="flex items-center space-x-4">
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <Label>Welcome Message Audio</Label>
+              <p className="text-sm text-gray-500 mt-1">
+                {assessment.welcomeMessageAudio instanceof File ? assessment.welcomeMessageAudio.name : assessment.welcomeMessageAudio}
+              </p>
+              <Input
+                type="file"
+                accept="audio/*"
+                onChange={(e) => setAssessment({
+                  ...assessment,
+                  welcomeMessageAudio: e.target.files?.[0] ?? null
+                })}
+              />
+            </div>
+
+            <div className="space-y-4">
+              <Label>Keep Going Message Audio</Label>
+              <p className="text-sm text-gray-500 mt-1">
+                {assessment.keepGoingMessageAudio instanceof File ? assessment.keepGoingMessageAudio.name : assessment.keepGoingMessageAudio}
+              </p>
+              <Input
+                type="file"
+                accept="audio/*"
+                onChange={(e) => setAssessment({
+                  ...assessment,
+                  keepGoingMessageAudio: e.target.files?.[0] ?? null
+                })}
+              />
+            </div>
+
+            <div className="space-y-4">
+              <Label>Congratulation Message Audio</Label>
+              <p className="text-sm text-gray-500 mt-1">
+                {assessment.congratulationMessageAudio instanceof File ? assessment.congratulationMessageAudio.name : assessment.congratulationMessageAudio}
+              </p>
+              <Input
+                type="file"
+                accept="audio/*"
+                onChange={(e) => setAssessment({
+                  ...assessment,
+                  congratulationMessageAudio: e.target.files?.[0] ?? null
+                })}
+              />
+            </div>
+            
+            <div>
+              <Label>Tags</Label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {(assessment.tags || []).map((tag, index) => (
+                  <Badge key={index} variant="outline" className="flex items-center gap-1">
+                    {tag}
+                    <X 
+                      className="h-3 w-3 cursor-pointer" 
+                      onClick={() => removeTag(tag)}
+                    />
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex gap-2">
                 <Input
-                  id="image-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
+                  placeholder="Add tag"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && addTag()}
                 />
-                <Button
-                  variant="outline"
-                  onClick={() => document.getElementById('image-upload')?.click()}
-                  className="flex items-center"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  {editedTemplate.image ? 'Change Image' : 'Upload Image'}
-                </Button>
-                <span className="text-sm text-gray-500">
-                  {editedTemplate.image ? 'Image uploaded - will display vertically' : 'Recommended: 400x600px or similar vertical format'}
-                </span>
+                <Button variant="outline" onClick={addTag}>Add</Button>
               </div>
             </div>
           </div>
-          
-          <div>
-            <Label>Tags</Label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {editedTemplate.tags.map((tag, index) => (
-                <Badge key={index} variant="outline" className="flex items-center gap-1">
-                  {tag}
-                  <X 
-                    className="h-3 w-3 cursor-pointer" 
-                    onClick={() => removeTag(tag)}
-                  />
-                </Badge>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Add tag"
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addTag()}
-              />
-              <Button variant="outline" onClick={addTag}>Add</Button>
-            </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Questions ({assessment.questions.length})</h3>
+            <Button onClick={addQuestion}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Question
+            </Button>
           </div>
-        </div>
-      </Card>
 
-      <Card className="p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Questions ({editedTemplate.questions.length})</h3>
-          <Button onClick={addQuestion}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Question
-          </Button>
-        </div>
-
-        <div className="space-y-4">
-          {editedTemplate.questions.map((question, index) => (
-            <QuestionEditor
-              key={question.id}
-              question={question}
-              index={index}
-              onUpdate={(updatedQuestion) => updateQuestion(index, updatedQuestion)}
-              onRemove={() => removeQuestion(index)}
-              onMoveUp={() => moveQuestion(index, 'up')}
-              onMoveDown={() => moveQuestion(index, 'down')}
-              canMoveUp={index > 0}
-              canMoveDown={index < editedTemplate.questions.length - 1}
-            />
-          ))}
-          
-          {editedTemplate.questions.length === 0 && (
-            <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-              <p className="text-gray-500 mb-4">No questions yet</p>
-              <Button onClick={addQuestion} variant="outline">
-                <Plus className="h-4 w-4 mr-2" />
-                Add First Question
-              </Button>
-            </div>
-          )}
-        </div>
-      </Card>
+          <div className="space-y-4">
+            {(assessment.questions || []).map((question, index) => (
+              <QuestionEditor
+                key={question.id}
+                question={question}
+                index={index}
+                onUpdate={(updatedQuestion) => updateQuestion(index, updatedQuestion)}
+                onRemove={() => removeQuestion(index)}
+                onMoveUp={() => moveQuestion(index, 'up')}
+                onMoveDown={() => moveQuestion(index, 'down')}
+                canMoveUp={index > 0}
+                canMoveDown={index < assessment.questions.length - 1}
+              />
+            ))}
+            
+            {assessment.questions.length === 0 && (
+              <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                <p className="text-gray-500 mb-4">No questions yet</p>
+                <Button onClick={addQuestion} variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add First Question
+                </Button>
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };
@@ -457,6 +594,22 @@ const QuestionEditor = ({
                 </div>
               </div>
             )}
+            <div>
+              <Label>Question Message Audio</Label>
+              {question.audio && (
+                  <p className="text-sm text-gray-500 my-1">
+                    {question.audio instanceof File ? question.audio.name : question.audio}
+                  </p>
+                )}
+              <Input
+                type="file"
+                accept="audio/*"
+                onChange={(e) => onUpdate({
+                  ...question,
+                  audio: e.target.files?.[0] ?? undefined
+                })}
+              />
+            </div>
           </>
         )}
       </div>

@@ -4,6 +4,7 @@ import { audioManager } from './audioManager';
 
 export class CustomVoiceService {
   private static instance: CustomVoiceService;
+  private assessment: any | null = null;
 
   static getInstance(): CustomVoiceService {
     if (!CustomVoiceService.instance) {
@@ -12,22 +13,26 @@ export class CustomVoiceService {
     return CustomVoiceService.instance;
   }
 
+  setAssessment(assessment: any) {
+    this.assessment = assessment;
+  }
+
   // Get the appropriate voice file URL based on context
   getVoiceUrl(type: 'welcome' | 'question' | 'congratulations' | 'contact-form', questionId?: number): string | null {
     try {
       switch (type) {
         case 'welcome':
-          // Use the fresh welcome message file with cache busting
-          return `/custom-voices/welcome-fresh.mp3?v=${Date.now()}`;
-        case 'question':
-          if (questionId) {
-            return `/custom-voices/question-${questionId}.wav?v=${Date.now()}`;
-          }
-          return `/custom-voices/question-1.wav?v=${Date.now()}`;
+          return import.meta.env.VITE_AUDIO_BASE_URL + this.assessment.welcomeMessageAudio || null;
         case 'congratulations':
-          return `/custom-voices/congratulations-message.wav?v=${Date.now()}`;
+          return import.meta.env.VITE_AUDIO_BASE_URL + this.assessment.congratulationMessageAudio || null;
         case 'contact-form':
-          return `/custom-voices/contact-form.wav?v=${Date.now()}`;
+          return `/assets/contact-form.wav?v=${Date.now()}`;
+        case 'question':
+          if (questionId != null && this.assessment.questions?.[questionId - 1]?.audio) {
+            return import.meta.env.VITE_AUDIO_BASE_URL + this.assessment.questions[questionId - 1].audio;
+          }
+          return null;
+        
         default:
           return null;
       }
@@ -97,8 +102,6 @@ export class CustomVoiceService {
   async checkVoiceExists(type: 'welcome' | 'question' | 'congratulations' | 'contact-form', questionId?: number): Promise<boolean> {
     const voiceUrl = this.getVoiceUrl(type, questionId);
     
-    console.log(`[CustomVoice] Checking ${type} voice file: ${voiceUrl} (questionId: ${questionId})`);
-    
     if (!voiceUrl) {
       console.log('[CustomVoice] No voice URL generated');
       return false;
@@ -118,15 +121,10 @@ export class CustomVoiceService {
     }
   }
 
-  // Stop current playback using the audio manager
+  // Stop current playback
   stopVoice(): void {
     console.log('[CustomVoice] 🛑 Requesting stop from AudioManager');
     audioManager.stopAudio();
-  }
-
-  // Get all available question voice files (1-15 based on your upload)
-  getAvailableQuestionVoices(): number[] {
-    return Array.from({length: 15}, (_, i) => i + 1);
   }
 }
 

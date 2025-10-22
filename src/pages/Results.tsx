@@ -6,6 +6,7 @@ import { Trophy, Star, Calendar, ExternalLink } from 'lucide-react';
 import { VoicePlayer } from '@/components/VoicePlayer';
 import { useToast } from "@/hooks/use-toast";
 import { CelebrationEffects } from '@/components/CelebrationEffects';
+import { useSettings } from '../SettingsContext';
 
 interface AssessmentResult {
   overallScore: number;
@@ -20,16 +21,19 @@ interface AssessmentTemplate {
 }
 
 const Results = () => {
+  const { settings } = useSettings();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const [results, setResults] = useState<AssessmentResult | null>(null);
+  const [ bookingLink, setBookingLink] = useState<string>('');
   const [assessment, setAssessment] = useState<AssessmentTemplate | null>(null);
   const [userInfo, setUserInfo] = useState<any>(null);
   const [showVoicePlayer, setShowVoicePlayer] = useState(false);
   const [showCelebration, setShowCelebration] = useState(true);
 
   useEffect(() => {
+    setBookingLink(localStorage.getItem('assessment-booking-link'));
     const storedResults = localStorage.getItem('assessment-results');
     const storedUserInfo = localStorage.getItem('user-info');
     const assessmentData = location.state?.assessment;
@@ -69,7 +73,7 @@ const Results = () => {
 
   const handleScheduleCall = () => {
     // Direct link to TidyCal - opens in new tab
-    window.open('https://tidycal.com/newerconsulting', '_blank');
+    window.open(bookingLink, '_blank');
   };
 
   if (!results || !assessment) {

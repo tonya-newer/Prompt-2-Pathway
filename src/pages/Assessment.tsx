@@ -1,15 +1,17 @@
 
 import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { QuestionRenderer } from '@/components/QuestionRenderer';
 import { WelcomePage } from '@/components/WelcomePage';
 import { useToast } from "@/hooks/use-toast";
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { AssessmentTemplate } from '@/types/assessment';
-import { assessmentStorageService } from '@/services/assessmentStorage';
 import { customVoiceService } from '@/services/customVoiceService';
 import { nativeSpeech } from '@/services/nativeSpeech';
+import { RootState } from '@/store';
+import { fetchAssessmentBySlug } from '@/store/assessmentsSlice';
+import { useSettings } from '../SettingsContext';
 
 interface AssessmentResult {
   overallScore: number;
@@ -18,58 +20,68 @@ interface AssessmentResult {
 }
 
 const Assessment = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const [assessment, setAssessment] = useState<AssessmentTemplate | null>(null);
+  const dispatch = useDispatch();
+  const assessment = useSelector(
+    (state: RootState) => state.assessments.selected
+  );
+
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showLeadCapture, setShowLeadCapture] = useState(true);
-  const [userInfo, setUserInfo] = useState<any>(null);
+  const [showWelcomePage, setShowWelcomePage] = useState(true);
   const { toast } = useToast();
 
+  const { settings } = useSettings();
+  const backgroundStyle = { 
+    backgroundImage: `url(${settings?.welcomePage?.background})`,
+    backgroundSize: 'cover', 
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+  };
+
   useEffect(() => {
-    if (id) {
-      // Handle both string and number IDs with retry logic
-      const assessmentId = isNaN(Number(id)) ? id : Number(id);
-      
-      const loadAssessment = () => {
-        const template = assessmentStorageService.getAssessmentById(assessmentId);
-        if (template) {
-          setAssessment(template);
-          console.log('Loaded assessment:', template.title, 'with', template.questions.length, 'questions');
+    if (slug) {
+      let favicon = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
+
+      if (!favicon) {
+        favicon = document.createElement("link");
+        favicon.rel = "icon";
+        document.head.appendChild(favicon);
+      }
+
+      favicon.href = settings?.platform.favicon;
+
+      setLoading(true); // still keep local loading spinner if needed
+      dispatch(fetchAssessmentBySlug(slug))
+        .unwrap()
+        .then((res) => {
+          console.log('Loaded assessment:', res.title, 'with', res.questions.length, 'questions');
           setLoading(false);
-        } else {
-          console.warn('Assessment not found for ID:', assessmentId, 'retrying in 1s...');
-          // Retry after 1 second in case of race condition
-          setTimeout(() => {
-            const retryTemplate = assessmentStorageService.getAssessmentById(assessmentId);
-            if (retryTemplate) {
-              setAssessment(retryTemplate);
-              console.log('Loaded assessment on retry:', retryTemplate.title);
-            } else {
-              console.error('Assessment not found after retry for ID:', assessmentId);
-            }
-            setLoading(false);
-          }, 1000);
-        }
-      };
-      
-      loadAssessment();
+        })
+        .catch(() => {
+          setLoading(false);
+        });
     } else {
       setLoading(false);
     }
-  }, [id]);
+  }, [slug, dispatch]);
 
   useEffect(() => {
-    if (assessment && !showLeadCapture) {
+    if (assessment && !showWelcomePage) {
       setAnswers(new Array(assessment.questions.length).fill(null));
     }
-  }, [assessment, showLeadCapture]);
+  }, [assessment, showWelcomePage]);
 
-  const handleLeadSubmit = (data: any) => {
-    setUserInfo(data);
-    setShowLeadCapture(false);
+  useEffect(() => {
+    if (assessment) {
+      customVoiceService.setAssessment(assessment)
+    }
+  }, [assessment]);
+
+  const handleSubmit = () => {
+    setShowWelcomePage(false);
     toast({
       title: "Welcome!",
       description: "Let's begin your personalized assessment.",
@@ -147,13 +159,15 @@ const Assessment = () => {
 
     const interpretation = `Congratulations! Based on your responses to the ${assessment.title}, you've completed this assessment with valuable insights about yourself. Your results show your current readiness and understanding in this area.`;
 
+    const categories: any = {};
+
+    categories[settings?.resultPage?.category1] = Math.round(overallScore * 0.8);
+    categories[settings?.resultPage?.category2] = Math.round(overallScore * 0.9);
+    categories[settings?.resultPage?.category3] = Math.round(overallScore * 1.1);
+
     const results: AssessmentResult = {
       overallScore: overallScore,
-      categories: {
-        readiness: Math.round(overallScore * 0.8),
-        confidence: Math.round(overallScore * 0.9),
-        clarity: Math.round(overallScore * 1.1)
-      },
+      categories,
       interpretation: interpretation,
     };
 
@@ -162,12 +176,13 @@ const Assessment = () => {
     localStorage.setItem('assessment-title', assessment.title);
     localStorage.setItem('assessment-audience', assessment.audience);
     localStorage.setItem('assessment-answers', JSON.stringify(answers));
+    localStorage.setItem('assessment-booking-link', settings?.resultPage?.bookingLink);
 
     navigate('/contact-form');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/50" style={ backgroundStyle }>
       <div className="container mx-auto px-4 py-4 sm:py-8">
         {loading ? (
           <div className="flex justify-center items-center min-h-[400px]">
@@ -184,11 +199,11 @@ const Assessment = () => {
               Return to Home
             </Button>
           </div>
-        ) : showLeadCapture ? (
+        ) : showWelcomePage ? (
           <WelcomePage
             assessmentTitle={assessment.title}
             audience={assessment.audience}
-            onSubmit={handleLeadSubmit}
+            onSubmit={handleSubmit}
           />
         ) : currentQuestionIndex < assessment.questions.length ? (
           <div className="space-y-4 sm:space-y-6">
