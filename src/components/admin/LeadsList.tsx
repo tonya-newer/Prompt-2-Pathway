@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchLeads, addTagToLead } from '@/store/leadsSlice';
+import { fetchLeads } from '@/store/leadsSlice';
 import { RootState } from '@/store';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,8 +18,7 @@ import {
 import { 
   Search, 
   Eye, 
-  Mail, 
-  Tag, 
+  Mail,
   Download
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -68,24 +67,6 @@ export const LeadsList = () => {
       toast({
         title: "Email Failed",
         description: "Unable to send email. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleTagLead = async (leadId: string, newTag: string) => {
-    try {
-      await dispatch(addTagToLead({ id: leadId, tagData: { tag: newTag } })).unwrap();
-  
-      toast({
-        title: "Tag Added",
-        description: `Added tag "${newTag}" to lead`,
-      });
-    } catch (error) {
-      console.error('Failed to add tag:', error);
-      toast({
-        title: "Error",
-        description: "Could not add tag. Please try again.",
         variant: "destructive",
       });
     }
@@ -215,14 +196,6 @@ export const LeadsList = () => {
                         title="Send Email"
                       >
                         <Mail className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleTagLead(lead.id, 'follow-up')}
-                        title="Add Tag"
-                      >
-                        <Tag className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>

@@ -12,6 +12,4 @@ router.post('/', leadController.createLead);
 // PUT update lead by ID
 router.put('/:id', authenticate, authorize(["client_admin"]), leadController.updateLead);
 
-router.post('/:id/tags', authenticate, authorize(["client_admin"]),  leadController.addTagToLead);
-
 module.exports = router;

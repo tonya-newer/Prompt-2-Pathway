@@ -41,7 +41,6 @@ export const duplicateAssessmentAPI = (id) => API.post(`/assessments/${id}/dupli
 export const getLeadsAPI = () => API.get('/leads');
 export const createLeadAPI = (data) => API.post('/leads', data);
 export const updateLeadAPI = (id, data) => API.put(`/leads/${id}`, data);
-export const addTagToLeadAPI = (id, tagData) => API.post(`/leads/${id}/tags`, tagData);
 
 // ------- Voice Settings -------
 export const getVoiceSettingsAPI = () => API.get('/voicesettings');
@@ -53,6 +52,7 @@ export const getAnalyticsAPI = () => API.get('/analytics');
 // ------- Settings -------
 export const getSettingsAPI = () => API.get('/settings');
 export const getSettingsByAssessmentSlugAPI = (slug) => API.get(`/settings/${slug}`);
+export const getPublicSettingsAPI = () => API.get('/settings/public');
 export const updateSettingsAPI = (payload) =>
   API.put('/settings', payload, {
     headers:

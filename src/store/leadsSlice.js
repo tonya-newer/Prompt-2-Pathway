@@ -2,8 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import {
   getLeadsAPI,
   createLeadAPI,
-  updateLeadAPI,
-  addTagToLeadAPI,
+  updateLeadAPI
 } from '../api';
 
 export const fetchLeads = createAsyncThunk('leads/fetchAll', async () => {
@@ -18,11 +17,6 @@ export const addLead = createAsyncThunk('leads/add', async (data) => {
 
 export const updateLead = createAsyncThunk('leads/update', async ({ id, data }) => {
   const res = await updateLeadAPI(id, data);
-  return res.data;
-});
-
-export const addTagToLead = createAsyncThunk('leads/addTag', async ({ id, tagData }) => {
-  const res = await addTagToLeadAPI(id, tagData);
   return res.data;
 });
 
@@ -43,10 +37,6 @@ const leadsSlice = createSlice({
         const idx = state.list.findIndex((l) => l._id === action.payload._id);
         if (idx > -1) state.list[idx] = action.payload;
       })
-      .addCase(addTagToLead.fulfilled, (state, action) => {
-        const idx = state.list.findIndex((l) => l._id === action.payload._id);
-        if (idx > -1) state.list[idx] = action.payload;
-      });
   },
 });
 

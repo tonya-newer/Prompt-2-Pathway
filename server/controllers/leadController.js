@@ -51,34 +51,8 @@ const updateLead = async (req, res) => {
   }
 };
 
-// Add tag to lead
-const addTagToLead = async (req, res) => {
-    try {
-      const { tag } = req.body;
-  
-      if (!tag) {
-        return res.status(400).json({ error: 'Tag is required' });
-      }
-  
-      const lead = await Lead.findByIdAndUpdate(
-        req.params.id,
-        { $addToSet: { tags: tag } }, // $addToSet avoids duplicates
-        { new: true }
-      );
-  
-      if (!lead) {
-        return res.status(404).json({ error: 'Lead not found' });
-      }
-  
-      res.json(lead);
-    } catch (err) {
-      res.status(400).json({ error: err.message });
-    }
-};
-
 module.exports = {
   getAllLeads,
   createLead,
-  updateLead,
-  addTagToLead
+  updateLead
 };
