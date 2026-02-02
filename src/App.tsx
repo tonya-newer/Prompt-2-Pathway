@@ -7,6 +7,9 @@ import Index from "./pages/Index";
 import { AssessmentEditor } from "./components/admin/AssessmentEditor";
 import Assessment from "./pages/Assessment";
 import ContactForm from "./pages/ContactForm";
+import ContactUs from "./pages/ContactUs";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import Results from "./pages/Results";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login"; 
@@ -39,6 +42,9 @@ const App = () => (
             <Route path="/assessment/add" element={<AssessmentEditor mode="add" />} />
             <Route path="/assessment/update/:slug" element={<AssessmentEditor mode="update" />} />
             <Route path="/contact-form" element={<ContactForm />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/contact" element={<ContactUs />} />
             <Route path="/results" element={<Results />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

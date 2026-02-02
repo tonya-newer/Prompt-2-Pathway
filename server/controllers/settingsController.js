@@ -28,6 +28,19 @@ const getSettingsByAssessmentSlug = async (req, res) => {
   }
 };
 
+const getPublicSettings = async (req, res) => {
+  try {
+    const assessment = await Assessment.findOne().sort({ createdAt: 1 }).lean();
+    if (!assessment) {
+      return res.json({});
+    }
+    const settings = await Settings.findOne({ user_id: assessment.user_id });
+    res.json(settings || {});
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 const updateSettings = async (req, res) => {
   try {
     let payload = req.body;
@@ -72,7 +85,8 @@ const updateSettings = async (req, res) => {
 };
 
 module.exports = {
-	getSettings,
-	updateSettings,
-  getSettingsByAssessmentSlug
-}
+  getSettings,
+  updateSettings,
+  getSettingsByAssessmentSlug,
+  getPublicSettings,
+};

@@ -39,6 +39,7 @@ const settingsSchema = new mongoose.Schema({
   },
   footer: {
     companyName: { type: String, default: 'Your Company Name' },
+    contactEmail: { type: String, default: '' },
     privacyPolicy: { type: String, default: '' },
     termsOfService: { type: String, default: '' },
   },

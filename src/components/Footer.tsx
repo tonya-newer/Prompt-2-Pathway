@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useSettings } from '../SettingsContext';
 
 export const Footer = () => {
@@ -10,27 +11,18 @@ export const Footer = () => {
     >
       <div className="max-w-4xl mx-auto px-4">
         <p className="text-sm text-gray-600 mb-2">
-          © {new Date().getFullYear()} {settings?.footer?.companyName}. All rights reserved.
+          © {new Date().getFullYear()} {settings?.footer?.companyName || 'Prompt 2 Pathway'}. All rights reserved.
         </p>
         <div className="flex justify-center gap-6 text-sm">
-          <a
-            href="/privacy"
-            className="hover:underline"
-          >
+          <Link to="/privacy" className="hover:underline">
             Privacy Policy
-          </a>
-          <a
-            href="/terms"
-            className="hover:underline"
-          >
+          </Link>
+          <Link to="/terms" className="hover:underline">
             Terms of Service
-          </a>
-          <a
-            href="/contact"
-            className="hover:underline"
-          >
+          </Link>
+          <Link to="/contact" className="hover:underline">
             Contact Us
-          </a>
+          </Link>
         </div>
       </div>
     </footer>

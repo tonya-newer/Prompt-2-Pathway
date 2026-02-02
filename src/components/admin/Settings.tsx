@@ -65,6 +65,7 @@ export const Settings = () => {
     },
     footer: {
       companyName: "",
+      contactEmail: "",
       privacyPolicy: "",
       termsOfService: ""
     }
@@ -637,6 +638,18 @@ export const Settings = () => {
               value={form.footer.companyName}
               onChange={handleChange}
               placeholder="Enter Your Company Name"
+              className="mt-2"
+            />
+          </div>
+          <div>
+            <Label htmlFor="contact-email">Contact Email</Label>
+            <Input
+              id="contact-email"
+              name="footer.contactEmail"
+              type="email"
+              value={form.footer.contactEmail}
+              onChange={handleChange}
+              placeholder="contact@example.com"
               className="mt-2"
             />
           </div>
