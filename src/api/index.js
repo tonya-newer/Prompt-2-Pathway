@@ -53,6 +53,12 @@ export const getAnalyticsAPI = () => API.get('/analytics');
 // ------- Settings -------
 export const getSettingsAPI = () => API.get('/settings');
 export const getSettingsByAssessmentSlugAPI = (slug) => API.get(`/settings/${slug}`);
-export const updateSettingsAPI = (data) => API.put('/settings', data);
+export const updateSettingsAPI = (payload) =>
+  API.put('/settings', payload, {
+    headers:
+      payload instanceof FormData
+        ? { 'Content-Type': undefined }
+        : { 'Content-Type': 'application/json' },
+  });
 
 export default API;
