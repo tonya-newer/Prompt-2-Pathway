@@ -5,7 +5,6 @@ const { authenticate, authorize } = require("../middleware/auth.js");
 const imageUpload = require("../middleware/imageUpload.js");
 
 router.get("/", authenticate, authorize(["client_admin"]), settingsController.getSettings);
-router.get("/public", settingsController.getPublicSettings);
 router.put(
   "/",
   authenticate,

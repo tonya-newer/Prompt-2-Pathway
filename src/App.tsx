@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,7 +13,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import Results from "./pages/Results";
 import NotFound from "./pages/NotFound";
-import Login from "./pages/Login"; 
+import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ProtectedRoute from "./ProtectedRoute";
 import { SettingsProvider } from "./SettingsContext";
@@ -20,39 +21,58 @@ import { Footer } from "./components/Footer";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <SettingsProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Index />
-                </ProtectedRoute>
-              }
+type FooterDialog = "privacy" | "terms" | "contact" | null;
+
+const App = () => {
+  const [footerDialog, setFooterDialog] = useState<FooterDialog>(null);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <SettingsProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/assessment/:slug" element={<Assessment />} />
+              <Route path="/assessment/add" element={<AssessmentEditor mode="add" />} />
+              <Route path="/assessment/update/:slug" element={<AssessmentEditor mode="update" />} />
+              <Route path="/contact-form" element={<ContactForm />} />
+              <Route path="/results" element={<Results />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <Footer
+              onOpenPrivacy={() => setFooterDialog("privacy")}
+              onOpenTerms={() => setFooterDialog("terms")}
+              onOpenContact={() => setFooterDialog("contact")}
             />
-            <Route path="/assessment/:slug" element={<Assessment />} />
-            <Route path="/assessment/add" element={<AssessmentEditor mode="add" />} />
-            <Route path="/assessment/update/:slug" element={<AssessmentEditor mode="update" />} />
-            <Route path="/contact-form" element={<ContactForm />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/terms" element={<TermsOfService />} />
-            <Route path="/contact" element={<ContactUs />} />
-            <Route path="/results" element={<Results />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <Footer />
-        </SettingsProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+            <PrivacyPolicy
+              open={footerDialog === "privacy"}
+              onClose={() => setFooterDialog(null)}
+            />
+            <TermsOfService
+              open={footerDialog === "terms"}
+              onClose={() => setFooterDialog(null)}
+            />
+            <ContactUs
+              open={footerDialog === "contact"}
+              onClose={() => setFooterDialog(null)}
+            />
+          </SettingsProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

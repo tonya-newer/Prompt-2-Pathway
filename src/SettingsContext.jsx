@@ -1,78 +1,61 @@
 // SettingsContext.jsx
 import React, { createContext, useState, useEffect, useContext } from "react";
-import { getSettingsByAssessmentSlugAPI, getPublicSettingsAPI } from "./api";
+import { getSettingsAPI, getSettingsByAssessmentSlugAPI } from "./api";
 import { useLocation, matchPath } from "react-router-dom";
-
-const LAST_ASSESSMENT_SLUG_KEY = "lastAssessmentSlug";
 
 const SettingsContext = createContext();
 
 export const useSettings = () => useContext(SettingsContext);
-
-function getSlugForSettings(location) {
-  const match = matchPath("/assessment/:slug", location.pathname);
-  if (match?.params?.slug) {
-    return match.params.slug;
-  }
-  if (["/privacy", "/terms", "/contact"].includes(location.pathname)) {
-    try {
-      return (
-        localStorage.getItem(LAST_ASSESSMENT_SLUG_KEY) ||
-        import.meta.env.VITE_DEFAULT_ASSESSMENT_SLUG ||
-        null
-      );
-    } catch {
-      return import.meta.env.VITE_DEFAULT_ASSESSMENT_SLUG || null;
-    }
-  }
-  return null;
-}
 
 export const SettingsProvider = ({ children }) => {
   const location = useLocation();
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const slugFromRoute = matchPath("/assessment/:slug", location.pathname)?.params?.slug;
-  const slug = slugFromRoute ?? getSlugForSettings(location);
+  // When unauthenticated, settings are tied to the current assessment route (if any)
+  const slug =
+    matchPath("/assessment/:slug", location.pathname)?.params?.slug ?? null;
 
   const loadSettings = async () => {
+    const token = typeof localStorage !== "undefined" ? localStorage.getItem("token") : null;
+
+    if (token) {
+      try {
+        const { data } = await getSettingsAPI();
+        setSettings(data);
+        setLoading(false);
+        return;
+      } catch (err) {
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          // Token invalid or expired, fall through to unauthenticated flow
+        } else {
+          console.error("Failed to fetch settings:", err);
+          setSettings(null);
+          setLoading(false);
+          return;
+        }
+      }
+    }
+
+    // Not logged in or auth failed: get settings by assessment slug (assessment owner's user_id)
     if (slug) {
       try {
         const { data } = await getSettingsByAssessmentSlugAPI(slug);
         setSettings(data);
       } catch (err) {
-        console.error("Failed to fetch settings:", err);
+        console.error("Failed to fetch settings by slug:", err);
         setSettings(null);
-      } finally {
-        setLoading(false);
-        return;
       }
-    }
-    // When no slug (e.g. /, /login, /privacy), load public settings so footer/theme get company name etc.
-    try {
-      const { data } = await getPublicSettingsAPI();
-      setSettings(data || null);
-    } catch (err) {
-      console.error("Failed to fetch public settings:", err);
+    } else {
       setSettings(null);
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
     setLoading(true);
     loadSettings();
-  }, [slug]);
-
-  useEffect(() => {
-    if (slugFromRoute) {
-      try {
-        localStorage.setItem(LAST_ASSESSMENT_SLUG_KEY, slugFromRoute);
-      } catch {}
-    }
-  }, [slugFromRoute]);
+  }, [slug, location.pathname]);
 
   useEffect(() => {
     if (!settings?.platform?.favicon) return;

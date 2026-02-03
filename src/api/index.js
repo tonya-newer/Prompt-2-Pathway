@@ -52,7 +52,6 @@ export const getAnalyticsAPI = () => API.get('/analytics');
 // ------- Settings -------
 export const getSettingsAPI = () => API.get('/settings');
 export const getSettingsByAssessmentSlugAPI = (slug) => API.get(`/settings/${slug}`);
-export const getPublicSettingsAPI = () => API.get('/settings/public');
 export const updateSettingsAPI = (payload) =>
   API.put('/settings', payload, {
     headers:
