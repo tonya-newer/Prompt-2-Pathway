@@ -20,6 +20,7 @@ const assessmentSchema = new mongoose.Schema({
   welcomeMessageAudio: { type: String },
   keepGoingMessageAudio: { type: String },
   congratulationMessageAudio: { type: String },
+  contactMessageAudio: { type: String },
   questions: [questionSchema],
   user_id: {
     type: mongoose.Schema.Types.ObjectId,

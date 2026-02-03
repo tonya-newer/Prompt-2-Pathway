@@ -45,7 +45,8 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
     questions: [],
     welcomeMessageAudio: '',
     keepGoingMessageAudio: '',
-    congratulationMessageAudio: ''
+    congratulationMessageAudio: '',
+    contactMessageAudio: ''
   };
 
   const [assessment, setAssessment] = useState<AssessmentTemplate>(initialAssessment);
@@ -92,7 +93,8 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
       if (assessment.welcomeMessageAudio) formData.append('welcomeMessageAudio', assessment.welcomeMessageAudio);
       if (assessment.keepGoingMessageAudio) formData.append('keepGoingMessageAudio', assessment.keepGoingMessageAudio);
       if (assessment.congratulationMessageAudio) formData.append('congratulationMessageAudio', assessment.congratulationMessageAudio);
-      
+      if (assessment.contactMessageAudio) formData.append('contactMessageAudio', assessment.contactMessageAudio);
+
       const questionAudioFiles: File[] = [];
       const questionAudioIndexes: number[] = [];
 
@@ -356,6 +358,21 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
                 onChange={(e) => setAssessment({
                   ...assessment,
                   congratulationMessageAudio: e.target.files?.[0] ?? null
+                })}
+              />
+            </div>
+
+            <div className="space-y-4">
+              <Label>Contact Message Audio</Label>
+              <p className="text-sm text-gray-500 mt-1">
+                {assessment.contactMessageAudio instanceof File ? assessment.contactMessageAudio.name : assessment.contactMessageAudio || 'None'}
+              </p>
+              <Input
+                type="file"
+                accept="audio/*"
+                onChange={(e) => setAssessment({
+                  ...assessment,
+                  contactMessageAudio: e.target.files?.[0] ?? ''
                 })}
               />
             </div>

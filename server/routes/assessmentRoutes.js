@@ -13,6 +13,7 @@ const assessmentFields = [
   { name: 'welcomeMessageAudio', maxCount: 1 },
   { name: 'keepGoingMessageAudio', maxCount: 1 },
   { name: 'congratulationMessageAudio', maxCount: 1 },
+  { name: 'contactMessageAudio', maxCount: 1 },
   { name: 'questionAudios', maxCount: 50 },
 ];
 

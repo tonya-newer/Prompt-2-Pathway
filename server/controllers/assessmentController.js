@@ -77,6 +77,7 @@ const createAssessment = async (req, res) => {
       if (req.files.welcomeMessageAudio) assessmentData.welcomeMessageAudio = `/uploads/audio/${req.files.welcomeMessageAudio[0].filename}`;
       if (req.files.keepGoingMessageAudio) assessmentData.keepGoingMessageAudio = `/uploads/audio/${req.files.keepGoingMessageAudio[0].filename}`;
       if (req.files.congratulationMessageAudio) assessmentData.congratulationMessageAudio = `/uploads/audio/${req.files.congratulationMessageAudio[0].filename}`;
+      if (req.files.contactMessageAudio) assessmentData.contactMessageAudio = `/uploads/audio/${req.files.contactMessageAudio[0].filename}`;
 
       const indexes = req.body.questionAudioIndexes
         ? JSON.parse(req.body.questionAudioIndexes)
@@ -119,6 +120,7 @@ const updateAssessment = async (req, res) => {
       if (req.files.welcomeMessageAudio) updateData.welcomeMessageAudio = `/uploads/audio/${req.files.welcomeMessageAudio[0].filename}`;
       if (req.files.keepGoingMessageAudio) updateData.keepGoingMessageAudio = `/uploads/audio/${req.files.keepGoingMessageAudio[0].filename}`;
       if (req.files.congratulationMessageAudio) updateData.congratulationMessageAudio = `/uploads/audio/${req.files.congratulationMessageAudio[0].filename}`;
+      if (req.files.contactMessageAudio) updateData.contactMessageAudio = `/uploads/audio/${req.files.contactMessageAudio[0].filename}`;
 
       const indexes = req.body.questionAudioIndexes
         ? JSON.parse(req.body.questionAudioIndexes)
@@ -140,6 +142,9 @@ const updateAssessment = async (req, res) => {
     }
     if (req.files?.congratulationMessageAudio && assessment.congratulationMessageAudio) {
       deleteFileIfExists(assessment.congratulationMessageAudio);
+    }
+    if (req.files?.contactMessageAudio && assessment.contactMessageAudio) {
+      deleteFileIfExists(assessment.contactMessageAudio);
     }
 
     assessment.questions.forEach((q, idx) => {
@@ -172,6 +177,7 @@ const deleteAssessment = async (req, res) => {
       if (deletedAssessment.welcomeMessageAudio) deleteFileIfExists(deletedAssessment.welcomeMessageAudio);
       if (deletedAssessment.keepGoingMessageAudio) deleteFileIfExists(deletedAssessment.keepGoingMessageAudio);
       if (deletedAssessment.congratulationMessageAudio) deleteFileIfExists(deletedAssessment.congratulationMessageAudio);
+      if (deletedAssessment.contactMessageAudio) deleteFileIfExists(deletedAssessment.contactMessageAudio);
       deletedAssessment.questions.forEach(q => {
         if (q.audio) deleteFileIfExists(q.audio);
       });
