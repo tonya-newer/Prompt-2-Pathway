@@ -73,14 +73,15 @@ const createAssessment = async (req, res) => {
     }
 
     if (req.files) {
+      if (req.files.image) assessmentData.image = `/uploads/images/${req.files.image[0].filename}`;
       if (req.files.welcomeMessageAudio) assessmentData.welcomeMessageAudio = `/uploads/audio/${req.files.welcomeMessageAudio[0].filename}`;
       if (req.files.keepGoingMessageAudio) assessmentData.keepGoingMessageAudio = `/uploads/audio/${req.files.keepGoingMessageAudio[0].filename}`;
       if (req.files.congratulationMessageAudio) assessmentData.congratulationMessageAudio = `/uploads/audio/${req.files.congratulationMessageAudio[0].filename}`;
-    
+
       const indexes = req.body.questionAudioIndexes
         ? JSON.parse(req.body.questionAudioIndexes)
         : [];
-        assessmentData.questions = mapQuestionAudios(assessmentData.questions, req.files.questionAudios, indexes);
+      assessmentData.questions = mapQuestionAudios(assessmentData.questions, req.files.questionAudios, indexes);
     }
 
     assessmentData.user_id = req.user.userId;
@@ -114,19 +115,23 @@ const updateAssessment = async (req, res) => {
     }
 
     if (req.files) {
+      if (req.files.image) updateData.image = `/uploads/images/${req.files.image[0].filename}`;
       if (req.files.welcomeMessageAudio) updateData.welcomeMessageAudio = `/uploads/audio/${req.files.welcomeMessageAudio[0].filename}`;
       if (req.files.keepGoingMessageAudio) updateData.keepGoingMessageAudio = `/uploads/audio/${req.files.keepGoingMessageAudio[0].filename}`;
       if (req.files.congratulationMessageAudio) updateData.congratulationMessageAudio = `/uploads/audio/${req.files.congratulationMessageAudio[0].filename}`;
-    
+
       const indexes = req.body.questionAudioIndexes
         ? JSON.parse(req.body.questionAudioIndexes)
         : [];
-        updateData.questions = mapQuestionAudios(updateData.questions, req.files.questionAudios, indexes);
+      updateData.questions = mapQuestionAudios(updateData.questions, req.files.questionAudios, indexes);
     }
 
     const assessment = await Assessment.findById(req.params.id);
     if (!assessment) return res.status(404).json({ error: 'Assessment not found' });
 
+    if (req.files?.image && assessment.image) {
+      deleteFileIfExists(assessment.image);
+    }
     if (req.files?.welcomeMessageAudio && assessment.welcomeMessageAudio) {
       deleteFileIfExists(assessment.welcomeMessageAudio);
     }
@@ -163,6 +168,7 @@ const deleteAssessment = async (req, res) => {
     if (!deletedAssessment) {
       return res.status(404).json({ error: 'Assessment not found' });
     } else {
+      if (deletedAssessment.image) deleteFileIfExists(deletedAssessment.image);
       if (deletedAssessment.welcomeMessageAudio) deleteFileIfExists(deletedAssessment.welcomeMessageAudio);
       if (deletedAssessment.keepGoingMessageAudio) deleteFileIfExists(deletedAssessment.keepGoingMessageAudio);
       if (deletedAssessment.congratulationMessageAudio) deleteFileIfExists(deletedAssessment.congratulationMessageAudio);

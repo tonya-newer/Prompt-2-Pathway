@@ -1,6 +1,6 @@
 const express = require("express");
 const controller = require('../controllers/assessmentController');
-const audioUpload = require('../middleware/audioUpload');
+const assessmentUpload = require('../middleware/assessmentUpload');
 const { authenticate, authorize } = require("../middleware/auth.js");
 
 const router = express.Router();
@@ -8,14 +8,17 @@ const router = express.Router();
 router.get("/", authenticate, authorize(["client_admin"]), controller.getAllAssessments);
 router.get("/:slug", controller.getAssessmentBySlug);
 
+const assessmentFields = [
+  { name: 'image', maxCount: 1 },
+  { name: 'welcomeMessageAudio', maxCount: 1 },
+  { name: 'keepGoingMessageAudio', maxCount: 1 },
+  { name: 'congratulationMessageAudio', maxCount: 1 },
+  { name: 'questionAudios', maxCount: 50 },
+];
+
 router.post(
   "/",
-  audioUpload.fields([
-    { name: 'welcomeMessageAudio', maxCount: 1 },
-    { name: 'keepGoingMessageAudio', maxCount: 1 },
-    { name: 'congratulationMessageAudio', maxCount: 1 },
-    { name: 'questionAudios', maxCount: 50 }
-  ]),
+  assessmentUpload.fields(assessmentFields),
   authenticate,
   authorize(["client_admin"]),
   controller.createAssessment
@@ -23,12 +26,7 @@ router.post(
 
 router.put(
   "/:id",
-  audioUpload.fields([
-    { name: 'welcomeMessageAudio', maxCount: 1 },
-    { name: 'keepGoingMessageAudio', maxCount: 1 },
-    { name: 'congratulationMessageAudio', maxCount: 1 },
-    { name: 'questionAudios', maxCount: 50 }
-  ]),
+  assessmentUpload.fields(assessmentFields),
   authenticate,
   authorize(["client_admin"]),
   controller.updateAssessment

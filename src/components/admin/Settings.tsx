@@ -11,17 +11,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { fetchSettings, saveSettings } from "@/store/settingsSlice";
 import type { RootState } from "@/store";
 import { Upload, X } from 'lucide-react';
-
-const getImageSrc = (url: string) => {
-  if (!url) return '';
-  // Return blob/data/http(s) URLs as-is (e.g. preview before upload)
-  if (url.startsWith('blob:') || url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
-    return url;
-  }
-  let base = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
-  base = base.replace(/\/api\/?$/, ''); // strip /api so uploads URL is origin + /uploads/...
-  return base ? `${base}${url.startsWith('/') ? url : `/${url}`}` : url;
-};
+import { getImageSrc } from '@/lib/utils';
 
 export const Settings = () => {
   const dispatch = useDispatch<any>();

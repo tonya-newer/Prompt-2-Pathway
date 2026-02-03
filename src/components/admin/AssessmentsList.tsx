@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit, Copy, Trash2, Link } from 'lucide-react';
 import { RootState, AppDispatch } from '@/store';
+import { getImageSrc } from '@/lib/utils';
 import {
   fetchAssessments,
   duplicateAssessment,
@@ -82,7 +83,7 @@ export const AssessmentsList = () => {
 						{assessment.image && (
 							<div className="h-48 overflow-hidden">
 								<img 
-									src={assessment.image} 
+									src={getImageSrc(assessment.image)} 
 									alt={assessment.title}
 									className="w-full h-full object-cover"
 								/>
