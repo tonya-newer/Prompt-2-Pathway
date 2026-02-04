@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchLeads } from '@/store/leadsSlice';
@@ -7,21 +6,28 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
-import { 
-  Search, 
-  Eye, 
+import {
+  Search,
+  Eye,
   Mail,
   Download
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { sendLeadEmailAPI } from '@/api';
 
 export const LeadsList = () => {
   const dispatch = useDispatch();
@@ -33,6 +39,7 @@ export const LeadsList = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [selectedLead, setSelectedLead] = useState<typeof leads[0] | null>(null);
   const { toast } = useToast();
 
   const filteredLeads = leads.filter(lead => {
@@ -44,29 +51,26 @@ export const LeadsList = () => {
   });
 
   const handleViewLead = (leadId: string) => {
-    const lead = leads.find(l => l.id === leadId);
-    console.log('Viewing lead details:', lead);
-    
-    toast({
-      title: "Lead Details",
-      description: `Viewing details for ${lead?.firstName} ${lead?.lastName}`,
-    });
+    const lead = leads.find((l: { _id: string }) => l._id === leadId);
+    setSelectedLead(lead ?? null);
   };
 
   const handleEmailLead = async (leadId: string) => {
-    const lead = leads.find(l => l.id === leadId);
+    const lead = leads.find((l: { _id: string }) => l._id === leadId);
     try {
-      // This would integrate with an email service
-      console.log('Sending email to:', lead?.email);
+      await sendLeadEmailAPI(leadId, {});
       toast({
-        title: "Email Sent",
-        description: `Email sent to ${lead?.firstName} ${lead?.lastName}`,
+        title: "Email sent",
+        description: `Follow-up email sent to ${lead?.firstName ?? ''} ${lead?.lastName ?? ''} (${lead?.email}).`,
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to send email:', error);
+      const message = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error
+        : null;
       toast({
-        title: "Email Failed",
-        description: "Unable to send email. Please try again.",
+        title: "Email failed",
+        description: message || "Unable to send email. Check SMTP settings and try again.",
         variant: "destructive",
       });
     }
@@ -95,6 +99,52 @@ export const LeadsList = () => {
 
   return (
     <div className="space-y-6">
+      <Dialog open={!!selectedLead} onOpenChange={(open) => !open && setSelectedLead(null)}>
+        <DialogContent className="max-w-md sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Lead details</DialogTitle>
+          </DialogHeader>
+          {selectedLead && (
+            <div className="space-y-4 text-sm">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                <span className="text-muted-foreground">Name</span>
+                <span className="font-medium">{selectedLead.firstName} {selectedLead.lastName}</span>
+                <span className="text-muted-foreground">Email</span>
+                <span className="font-medium">{selectedLead.email}</span>
+                <span className="text-muted-foreground">Phone</span>
+                <span>{selectedLead.phone || '—'}</span>
+                <span className="text-muted-foreground">Age range</span>
+                <span>{selectedLead.ageRange || '—'}</span>
+                <span className="text-muted-foreground">Gender</span>
+                <span>{selectedLead.gender || '—'}</span>
+                <span className="text-muted-foreground">Source</span>
+                <span>{selectedLead.source || '—'}</span>
+                <span className="text-muted-foreground">Assessment</span>
+                <span className="font-medium">{selectedLead.assessment?.title ?? '—'}</span>
+                <span className="text-muted-foreground">Score</span>
+                <span>
+                  <Badge variant={selectedLead.score >= 80 ? 'default' : selectedLead.score >= 60 ? 'secondary' : 'outline'}>
+                    {selectedLead.score} / 100
+                  </Badge>
+                </span>
+                <span className="text-muted-foreground">Status</span>
+                <span>
+                  <Badge variant={
+                    selectedLead.status === 'converted' ? 'default' :
+                    selectedLead.status === 'qualified' ? 'secondary' :
+                    selectedLead.status === 'contacted' ? 'outline' : 'outline'
+                  }>
+                    {selectedLead.status}
+                  </Badge>
+                </span>
+                <span className="text-muted-foreground">Completed</span>
+                <span>{selectedLead.completedAt ? new Date(selectedLead.completedAt).toLocaleString() : '—'}</span>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Lead Intelligence</h3>
         <Button onClick={exportLeads} variant="outline">
@@ -184,7 +234,7 @@ export const LeadsList = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleViewLead(lead.id)}
+                        onClick={() => handleViewLead(lead._id)}
                         title="View Details"
                       >
                         <Eye className="h-4 w-4" />
@@ -192,7 +242,7 @@ export const LeadsList = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleEmailLead(lead.id)}
+                        onClick={() => handleEmailLead(lead._id)}
                         title="Send Email"
                       >
                         <Mail className="h-4 w-4" />

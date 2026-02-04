@@ -1,5 +1,6 @@
 const Lead = require('../models/leadModel');
 const Assessment = require('../models/assessmentModel');
+const transporter = require('../config/mailer');
 
 // List all leads
 const getAllLeads = async (req, res) => {
@@ -51,8 +52,40 @@ const updateLead = async (req, res) => {
   }
 };
 
+// Send email to a lead
+const sendLeadEmail = async (req, res) => {
+  try {
+    const lead = await Lead.findById(req.params.id).populate('assessment');
+    if (!lead) {
+      return res.status(404).json({ error: 'Lead not found' });
+    }
+    if (lead.user_id.toString() !== req.user.userId) {
+      return res.status(403).json({ error: 'Not authorized to email this lead' });
+    }
+
+    const { subject, body } = req.body;
+    const mailSubject = subject || `Follow-up: ${lead.assessment?.title || 'Your assessment results'}`;
+    const mailBody = body || `Hi ${lead.firstName},\n\nThank you for completing the assessment. We'd love to connect and share more insights with you.\n\nBest regards,\nPrompt 2 Pathway`;
+
+    const mailOptions = {
+      from: `"Prompt 2 Pathway" <${process.env.SMTP_USER}>`,
+      to: lead.email,
+      subject: mailSubject,
+      text: mailBody,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.json({ message: 'Email sent successfully', to: lead.email });
+  } catch (err) {
+    console.error('Send lead email error:', err);
+    res.status(500).json({ error: err.message || 'Failed to send email' });
+  }
+};
+
 module.exports = {
   getAllLeads,
   createLead,
-  updateLead
+  updateLead,
+  sendLeadEmail,
 };

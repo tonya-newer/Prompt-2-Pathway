@@ -12,4 +12,7 @@ router.post('/', leadController.createLead);
 // PUT update lead by ID
 router.put('/:id', authenticate, authorize(["client_admin"]), leadController.updateLead);
 
+// POST send email to lead
+router.post('/:id/send-email', authenticate, authorize(["client_admin"]), leadController.sendLeadEmail);
+
 module.exports = router;

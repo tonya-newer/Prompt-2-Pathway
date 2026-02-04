@@ -41,6 +41,7 @@ export const duplicateAssessmentAPI = (id) => API.post(`/assessments/${id}/dupli
 export const getLeadsAPI = () => API.get('/leads');
 export const createLeadAPI = (data) => API.post('/leads', data);
 export const updateLeadAPI = (id, data) => API.put(`/leads/${id}`, data);
+export const sendLeadEmailAPI = (id, data) => API.post(`/leads/${id}/send-email`, data);
 
 // ------- Voice Settings -------
 export const getVoiceSettingsAPI = () => API.get('/voicesettings');
