@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { addLead } from '@/store/leadsSlice';
@@ -11,16 +11,18 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { VoicePlayer } from '@/components/VoicePlayer';
 import { useToast } from "@/hooks/use-toast";
 import { RootState } from '@/store';
-
-export let celebrationAudio: HTMLAudioElement | null = null;
+import { customVoiceService } from '@/services/customVoiceService';
 
 const ContactForm = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { toast } = useToast();
   const assessment = useSelector(
     (state: RootState) => state.assessments.selected
   );
+  useEffect(() => {
+    if (assessment) customVoiceService.setAssessment(assessment);
+  }, [assessment]);
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -108,17 +110,6 @@ const ContactForm = () => {
         description: "Your information has been saved. Redirecting to your results...",
       });
 
-      // Create and preload the celebration audio
-      celebrationAudio = new Audio('/assets/celebration-audio.mp3');
-      celebrationAudio.volume = 0.7;
-      celebrationAudio.preload = 'auto';
-      celebrationAudio.setAttribute('playsinline', 'true');
-      celebrationAudio.autoplay = true;
-      celebrationAudio.muted = false;
-      celebrationAudio.preload = 'auto';
-
-      // Navigate to results page immediately for better mobile experience
-      console.log('Navigating to results page...');
       navigate('/results', { replace: true });
     } catch (error) {
       console.error('Error saving contact information:', error);

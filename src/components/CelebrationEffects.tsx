@@ -1,53 +1,50 @@
-
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { useSelector } from 'react-redux';
 import { Sparkles, Star, Heart } from 'lucide-react';
-import { celebrationAudio } from '@/pages/ContactForm';
+import { customVoiceService } from '@/services/customVoiceService';
+import { RootState } from '@/store';
 
 interface CelebrationEffectsProps {
   onComplete?: () => void;
+  /** Minimum time to show effects in ms when no audio (default 3000). */
+  minDisplayMs?: number;
 }
 
-export const CelebrationEffects = ({ onComplete }: CelebrationEffectsProps) => {
+export const CelebrationEffects = ({ onComplete, minDisplayMs = 3000 }: CelebrationEffectsProps) => {
   const [showEffects, setShowEffects] = useState(true);
-  const [audioPlayed, setAudioPlayed] = useState(false);
+  const playedRef = useRef(false);
+  const assessment = useSelector((state: RootState) => state.assessments.selected);
 
   useEffect(() => {
-    console.log('CelebrationEffects component mounted');
-    const onEnded = () => {
-      console.log('Celebration sound ended');
+    if (playedRef.current) return;
+    playedRef.current = true;
+
+    const finish = () => {
       setShowEffects(false);
-      if (onComplete) onComplete();
-    }
+      onComplete?.();
+    };
 
-    if (celebrationAudio) {
-      celebrationAudio.currentTime = 0;
-      celebrationAudio.addEventListener('ended', onEnded);
-    }
-
-    // Play the celebration sound effect immediately (not voice message)
-    if (!audioPlayed) {
-      const playCelebrationAudio = async () => {
-        try {
-          await celebrationAudio.play();
-          console.log('Celebration sound effect playing');
-        } catch (error) {
-          console.log('Could not play celebration sound effect:', error);
-          setShowEffects(false);
-          if (onComplete) onComplete();
-        }
-
-        setAudioPlayed(true);
-      };
-
-      playCelebrationAudio();
-    }
-
-    return () => {
-      if (celebrationAudio) {
-        celebrationAudio.removeEventListener('ended', onEnded);
+    const playCongratulations = async () => {
+      if (assessment) customVoiceService.setAssessment(assessment);
+      const hasVoice = assessment && await customVoiceService.checkVoiceExists('congratulations');
+      if (!hasVoice) {
+        setTimeout(finish, minDisplayMs);
+        return;
+      }
+      try {
+        await customVoiceService.playVoice(
+          'congratulations',
+          undefined,
+          undefined,
+          finish
+        );
+      } catch {
+        setTimeout(finish, minDisplayMs);
       }
     };
-  }, [audioPlayed, onComplete]);
+
+    playCongratulations();
+  }, [assessment, onComplete, minDisplayMs]);
 
   if (!showEffects) return null;
 

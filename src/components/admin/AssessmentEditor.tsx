@@ -348,21 +348,6 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
             </div>
 
             <div className="space-y-4">
-              <Label>Congratulation Message Audio</Label>
-              <p className="text-sm text-gray-500 mt-1">
-                {assessment.congratulationMessageAudio instanceof File ? assessment.congratulationMessageAudio.name : assessment.congratulationMessageAudio}
-              </p>
-              <Input
-                type="file"
-                accept="audio/*"
-                onChange={(e) => setAssessment({
-                  ...assessment,
-                  congratulationMessageAudio: e.target.files?.[0] ?? null
-                })}
-              />
-            </div>
-
-            <div className="space-y-4">
               <Label>Contact Message Audio</Label>
               <p className="text-sm text-gray-500 mt-1">
                 {assessment.contactMessageAudio instanceof File ? assessment.contactMessageAudio.name : assessment.contactMessageAudio || 'None'}
@@ -373,6 +358,21 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
                 onChange={(e) => setAssessment({
                   ...assessment,
                   contactMessageAudio: e.target.files?.[0] ?? ''
+                })}
+              />
+            </div>
+
+            <div className="space-y-4">
+              <Label>Congratulation Message Audio</Label>
+              <p className="text-sm text-gray-500 mt-1">
+                {assessment.congratulationMessageAudio instanceof File ? assessment.congratulationMessageAudio.name : assessment.congratulationMessageAudio}
+              </p>
+              <Input
+                type="file"
+                accept="audio/*"
+                onChange={(e) => setAssessment({
+                  ...assessment,
+                  congratulationMessageAudio: e.target.files?.[0] ?? null
                 })}
               />
             </div>

@@ -105,7 +105,7 @@ export const VoicePlayer = ({
 
   // Auto-play logic - ONLY use custom voice, no fallback to native speech
   useEffect(() => {
-    if (autoPlay && useCustomVoice && text && text.trim().length > 0) {
+    if (autoPlay && useCustomVoice && (customVoiceType === 'contact-form' || (text && text.trim().length > 0))) {
       console.log('[VoicePlayer] Auto-playing custom voice for results page:', isResultsPage);
       
       // Stop any existing audio first with enhanced cleanup
@@ -132,7 +132,7 @@ export const VoicePlayer = ({
     } else if (autoPlay && !useCustomVoice) {
       console.log('[VoicePlayer] No custom voice available - skipping auto-play (no fallback to native speech)');
     }
-  }, [autoPlay, useCustomVoice, text, questionId, playCustomVoice, isResultsPage]);
+  }, [autoPlay, useCustomVoice, text, questionId, playCustomVoice, isResultsPage, customVoiceType]);
 
   const handlePlayPause = async () => {
     if (isLoading) return;
