@@ -21,6 +21,7 @@ export interface AssessmentTemplate {
   welcomeMessageAudio?: string | File;
   keepGoingMessageAudio?: string | File;
   congratulationMessageAudio?: string | File;
+  contactMessageAudio?: string | File;
 }
 
 export interface LeadData {

@@ -26,7 +26,7 @@ export class CustomVoiceService {
         case 'congratulations':
           return import.meta.env.VITE_AUDIO_BASE_URL + this.assessment.congratulationMessageAudio || null;
         case 'contact-form':
-          return `/assets/contact-form.wav?v=${Date.now()}`;
+          return import.meta.env.VITE_AUDIO_BASE_URL + this.assessment.contactMessageAudio || null;
         case 'question':
           if (questionId != null && this.assessment.questions?.[questionId - 1]?.audio) {
             return import.meta.env.VITE_AUDIO_BASE_URL + this.assessment.questions[questionId - 1].audio;

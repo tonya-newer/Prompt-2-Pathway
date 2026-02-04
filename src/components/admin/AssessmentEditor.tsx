@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Save, X, Trash2, GripVertical, ArrowUp, ArrowDown, Upload, Image } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AssessmentTemplate, Question } from '@/types';
+import { getImageSrc } from '@/lib/utils';
 
 interface AssessmentEditorProps {
   mode: 'add' | 'update';
@@ -44,14 +45,17 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
     questions: [],
     welcomeMessageAudio: '',
     keepGoingMessageAudio: '',
-    congratulationMessageAudio: ''
+    congratulationMessageAudio: '',
+    contactMessageAudio: ''
   };
 
   const [assessment, setAssessment] = useState<AssessmentTemplate>(initialAssessment);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const { status } = useSelector((state: RootState) => state.assessments);
 
   useEffect(() => {
     if (mode === 'update' && slug) {
+      setImageFile(null);
       dispatch(fetchAssessmentBySlug(slug))
         .unwrap()
         .then((res) => setAssessment(res))
@@ -81,12 +85,16 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
       formData.append('description', assessment.description);
       formData.append('tags', JSON.stringify(assessment.tags));
       formData.append('questions', JSON.stringify(assessment.questions));
-      formData.append('image', assessment.image);
+
+      if (imageFile) {
+        formData.append('image', imageFile);
+      }
 
       if (assessment.welcomeMessageAudio) formData.append('welcomeMessageAudio', assessment.welcomeMessageAudio);
       if (assessment.keepGoingMessageAudio) formData.append('keepGoingMessageAudio', assessment.keepGoingMessageAudio);
       if (assessment.congratulationMessageAudio) formData.append('congratulationMessageAudio', assessment.congratulationMessageAudio);
-      
+      if (assessment.contactMessageAudio) formData.append('contactMessageAudio', assessment.contactMessageAudio);
+
       const questionAudioFiles: File[] = [];
       const questionAudioIndexes: number[] = [];
 
@@ -107,6 +115,7 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
         await dispatch(updateAssessment({ id: assessment._id, data: formData })).unwrap();
         toast({ title: "Assessment Updated", description: "Successfully saved." });
       }
+      setImageFile(null);
       navigate('/');
     } catch (err: any) {
       toast({ title: "Error", description: err.message || "Something went wrong", variant: "destructive" });
@@ -116,20 +125,18 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const imageUrl = e.target?.result as string;
-        setAssessment({
-          ...assessment,
-          image: imageUrl
-        });
-        toast({
-          title: "Image Uploaded",
-          description: "Assessment image has been updated.",
-        });
-      };
-      reader.readAsDataURL(file);
+      setImageFile(file);
+      setAssessment({
+        ...assessment,
+        image: URL.createObjectURL(file),
+      });
+      event.target.value = '';
     }
+  };
+
+  const clearAssessmentImage = () => {
+    setImageFile(null);
+    setAssessment({ ...assessment, image: '' });
   };
 
   const addQuestion = () => {
@@ -214,7 +221,7 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
         </div>
       )}
       <div className={`${status == 'loading' ? 'opacity-50 pointer-events-none' : ''}`}>
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center my-2">
           <h2 className="text-2xl font-bold">{mode === 'add' ? 'Add Assessment' : 'Edit Assessment'}</h2>
           <div className="flex space-x-2">
             <Button variant="outline" onClick={onCancel}>
@@ -271,26 +278,23 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
             </div>
 
             <div>
-              <Label htmlFor="image-upload">Assessment Image (Displays Vertically)</Label>
+              <Label htmlFor="image-upload">Assessment Image</Label>
               <div className="space-y-4">
                 {assessment.image && (
                   <div className="relative max-w-md">
                     <img 
-                      src={assessment.image} 
+                      src={getImageSrc(assessment.image)} 
                       alt="Assessment preview"
                       className="w-full h-64 object-cover rounded-lg border-2 border-gray-200"
                     />
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setAssessment({...assessment, image: ''})}
+                      onClick={clearAssessmentImage}
                       className="absolute top-2 right-2 bg-white/80 hover:bg-white"
                     >
                       <X className="h-4 w-4" />
                     </Button>
-                    <div className="mt-2 text-sm text-gray-600">
-                      This image will display vertically at the top of your assessment
-                    </div>
                   </div>
                 )}
                 <div className="flex items-center space-x-4">
@@ -309,9 +313,6 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
                     <Upload className="h-4 w-4 mr-2" />
                     {assessment.image ? 'Change Image' : 'Upload Image'}
                   </Button>
-                  <span className="text-sm text-gray-500">
-                    {assessment.image ? 'Image uploaded - will display vertically' : 'Recommended: 400x600px or similar vertical format'}
-                  </span>
                 </div>
               </div>
             </div>
@@ -342,6 +343,21 @@ export const AssessmentEditor = ({ mode }: AssessmentEditorProps) => {
                 onChange={(e) => setAssessment({
                   ...assessment,
                   keepGoingMessageAudio: e.target.files?.[0] ?? null
+                })}
+              />
+            </div>
+
+            <div className="space-y-4">
+              <Label>Contact Message Audio</Label>
+              <p className="text-sm text-gray-500 mt-1">
+                {assessment.contactMessageAudio instanceof File ? assessment.contactMessageAudio.name : assessment.contactMessageAudio || 'None'}
+              </p>
+              <Input
+                type="file"
+                accept="audio/*"
+                onChange={(e) => setAssessment({
+                  ...assessment,
+                  contactMessageAudio: e.target.files?.[0] ?? ''
                 })}
               />
             </div>

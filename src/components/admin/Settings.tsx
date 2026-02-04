@@ -11,11 +11,14 @@ import { useToast } from "@/components/ui/use-toast";
 import { fetchSettings, saveSettings } from "@/store/settingsSlice";
 import type { RootState } from "@/store";
 import { Upload, X } from 'lucide-react';
+import { getImageSrc } from '@/lib/utils';
 
 export const Settings = () => {
   const dispatch = useDispatch<any>();
   const { toast } = useToast();
   const settingsFromStore = useSelector((state: RootState) => state.settings.data);
+
+  const [imageFiles, setImageFiles] = useState<Record<string, File>>({});
 
   const [form, setForm] = useState({
     platform: {
@@ -52,6 +55,7 @@ export const Settings = () => {
     },
     footer: {
       companyName: "",
+      contactEmail: "",
       privacyPolicy: "",
       termsOfService: ""
     }
@@ -107,34 +111,69 @@ export const Settings = () => {
     });
   };
   
+  const setNested = (obj: Record<string, unknown>, path: string, value: string) => {
+    const keys = path.split('.');
+    let target = obj;
+    for (let i = 0; i < keys.length - 1; i++) {
+      const k = keys[i];
+      if (!target[k] || typeof target[k] !== 'object') (target as Record<string, unknown>)[k] = {};
+      target = (target as Record<string, unknown>)[k] as Record<string, unknown>;
+    }
+    (target as Record<string, unknown>)[keys[keys.length - 1]] = value;
+  };
+
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>, fieldPath: string) => {
     const file = event.target.files?.[0];
     if (!file) return;
-  
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const imageUrl = e.target?.result as string;
-  
-      setForm(prev => {
-        const keys = fieldPath.split('.');
-        let updated = { ...prev };
-        let temp = updated;
-  
-        for (let i = 0; i < keys.length - 1; i++) {
-          temp[keys[i]] = { ...temp[keys[i]] };
-          temp = temp[keys[i]];
-        }
-  
-        temp[keys[keys.length - 1]] = imageUrl;
-        return updated;
-      });
-    };
-    reader.readAsDataURL(file);
+
+    setImageFiles((prev) => ({ ...prev, [fieldPath]: file }));
+    const imageUrl = URL.createObjectURL(file);
+    setForm((prev) => {
+      const keys = fieldPath.split('.');
+      let updated = { ...prev };
+      let temp = updated as Record<string, unknown>;
+      for (let i = 0; i < keys.length - 1; i++) {
+        (temp[keys[i]] as Record<string, unknown>) = { ...(temp[keys[i]] as Record<string, unknown>) };
+        temp = temp[keys[i]] as Record<string, unknown>;
+      }
+      temp[keys[keys.length - 1]] = imageUrl;
+      return updated;
+    });
+    event.target.value = '';
+  };
+
+  const clearImage = (fieldPath: string) => {
+    setImageFiles((prev) => {
+      const next = { ...prev };
+      delete next[fieldPath];
+      return next;
+    });
+    setForm((prev) => {
+      const keys = fieldPath.split('.');
+      let updated = { ...prev };
+      let temp = updated as Record<string, unknown>;
+      for (let i = 0; i < keys.length - 1; i++) {
+        (temp[keys[i]] as Record<string, unknown>) = { ...(temp[keys[i]] as Record<string, unknown>) };
+        temp = temp[keys[i]] as Record<string, unknown>;
+      }
+      temp[keys[keys.length - 1]] = '';
+      return updated;
+    });
   };
 
   const handleSaveSettings = async () => {
     try {
-      await dispatch(saveSettings(form)).unwrap();
+      const formData = new FormData();
+      const payload = JSON.parse(JSON.stringify(form)) as typeof form;
+      for (const path of Object.keys(imageFiles)) {
+        setNested(payload as unknown as Record<string, unknown>, path, '');
+      }
+      formData.append('data', JSON.stringify(payload));
+      for (const [path, file] of Object.entries(imageFiles)) {
+        formData.append(path, file);
+      }
+      await dispatch(saveSettings(formData)).unwrap();
+      setImageFiles({});
       toast({
         title: "Settings Saved",
         description: "Platform branding and white-label settings updated successfully.",
@@ -175,20 +214,14 @@ export const Settings = () => {
                 {form.platform.logo && (
                   <div className="relative max-w-md">
                     <img 
-                      src={form.platform.logo} 
+                      src={getImageSrc(form.platform.logo)} 
                       alt="Logo preview"
                       className="w-full h-64 object-cover rounded-lg border-2 border-gray-200"
                     />
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setForm({
-                        ...form,
-                        platform: {
-                          ...form.platform,
-                          logo: ''
-                        }
-                      })}
+                      onClick={() => clearImage('platform.logo')}
                       className="absolute top-2 right-2 bg-white/80 hover:bg-white"
                     >
                       <X className="h-4 w-4" />
@@ -198,7 +231,7 @@ export const Settings = () => {
                 <Input
                   id="logo-upload"
                   type="file"
-                  accept="image/*"
+                  accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.bmp,.ico,.tiff,.tif"
                   onChange={(e) => handleImageUpload(e, "platform.logo")}
                   className="hidden"
                 />
@@ -210,9 +243,7 @@ export const Settings = () => {
                   <Upload className="h-4 w-4 mr-2" />
                   {form.platform.logo ? 'Change Image' : 'Upload Image'}
                 </Button>
-                <span className="text-sm text-gray-500">
-                  {form.platform.logo ? 'Image uploaded - will display vertically' : 'Recommended: 400x600px or similar vertical format'}
-                </span>
+
               </div>
             </div>
             <div>
@@ -221,20 +252,14 @@ export const Settings = () => {
                 {form.platform.favicon && (
                   <div className="relative max-w-md">
                     <img 
-                      src={form.platform.favicon} 
+                      src={getImageSrc(form.platform.favicon)} 
                       alt="Favicon preview"
                       className="w-full h-64 object-cover rounded-lg border-2 border-gray-200"
                     />
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setForm({
-                        ...form, 
-                        platform: {
-                          ...form.platform,
-                          favicon: ''
-                        }
-                      })}
+                      onClick={() => clearImage('platform.favicon')}
                       className="absolute top-2 right-2 bg-white/80 hover:bg-white"
                     >
                       <X className="h-4 w-4" />
@@ -244,7 +269,7 @@ export const Settings = () => {
                 <Input
                   id="favicon-upload"
                   type="file"
-                  accept="image/*"
+                  accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.bmp,.ico,.tiff,.tif"
                   onChange={(e) => handleImageUpload(e, "platform.favicon")}
                   className="hidden"
                 />
@@ -256,9 +281,7 @@ export const Settings = () => {
                   <Upload className="h-4 w-4 mr-2" />
                   {form.platform.favicon ? 'Change Image' : 'Upload Image'}
                 </Button>
-                <span className="text-sm text-gray-500">
-                  {form.platform.favicon ? 'Image uploaded - will display vertically' : 'Recommended: 400x600px or similar vertical format'}
-                </span>
+
               </div>
             </div>
 
@@ -346,20 +369,14 @@ export const Settings = () => {
                 {form.interactionPage.image1 && (
                   <div className="relative max-w-md">
                     <img 
-                      src={form.interactionPage.image1} 
+                      src={getImageSrc(form.interactionPage.image1)} 
                       alt="Image 1 preview"
                       className="w-full h-64 object-cover rounded-lg border-2 border-gray-200"
                     />
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setForm({
-                        ...form,
-                        interactionPage: {
-                          ...form.interactionPage,
-                          image1: ''
-                        }
-                      })}
+                      onClick={() => clearImage('interactionPage.image1')}
                       className="absolute top-2 right-2 bg-white/80 hover:bg-white"
                     >
                       <X className="h-4 w-4" />
@@ -369,7 +386,7 @@ export const Settings = () => {
                 <Input
                   id="interaction-image-1-upload"
                   type="file"
-                  accept="image/*"
+                  accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.bmp,.ico,.tiff,.tif"
                   onChange={(e) => handleImageUpload(e, "interactionPage.image1")}
                   className="hidden"
                 />
@@ -381,9 +398,7 @@ export const Settings = () => {
                   <Upload className="h-4 w-4 mr-2" />
                   {form.interactionPage.image1 ? 'Change Image' : 'Upload Image'}
                 </Button>
-                <span className="text-sm text-gray-500">
-                  {form.interactionPage.image1 ? 'Image uploaded - will display vertically' : 'Recommended: 400x600px or similar vertical format'}
-                </span>
+
               </div>
             </div>
             { form.interactionPage.layout == 'dual' && 
@@ -393,20 +408,14 @@ export const Settings = () => {
                 {form.interactionPage.image2 && (
                   <div className="relative max-w-md">
                     <img 
-                      src={form.interactionPage.image2} 
+                      src={getImageSrc(form.interactionPage.image2)} 
                       alt="Image 1 preview"
                       className="w-full h-64 object-cover rounded-lg border-2 border-gray-200"
                     />
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setForm({
-                        ...form,
-                        interactionPage: {
-                          ...form.interactionPage,
-                          image2: ''
-                        }
-                      })}
+                      onClick={() => clearImage('interactionPage.image2')}
                       className="absolute top-2 right-2 bg-white/80 hover:bg-white"
                     >
                       <X className="h-4 w-4" />
@@ -416,7 +425,7 @@ export const Settings = () => {
                 <Input
                   id="interaction-image-2-upload"
                   type="file"
-                  accept="image/*"
+                  accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.bmp,.ico,.tiff,.tif"
                   onChange={(e) => handleImageUpload(e, "interactionPage.image2")}
                   className="hidden"
                 />
@@ -428,9 +437,7 @@ export const Settings = () => {
                   <Upload className="h-4 w-4 mr-2" />
                   {form.interactionPage.image2 ? 'Change Image' : 'Upload Image'}
                 </Button>
-                <span className="text-sm text-gray-500">
-                  {form.interactionPage.image2 ? 'Image uploaded - will display vertically' : 'Recommended: 400x600px or similar vertical format'}
-                </span>
+
               </div>
             </div>
             }
@@ -479,20 +486,14 @@ export const Settings = () => {
               {form.welcomePage.background && (
                 <div className="relative max-w-md">
                   <img 
-                    src={form.welcomePage.background} 
+                    src={getImageSrc(form.welcomePage.background)} 
                     alt="Logo preview"
                     className="w-full h-64 object-cover rounded-lg border-2 border-gray-200"
                   />
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setForm({
-                      ...form,
-                      welcomePage: {
-                        ...form.welcomePage,
-                        background: ''
-                      }
-                    })}
+                    onClick={() => clearImage('welcomePage.background')}
                     className="absolute top-2 right-2 bg-white/80 hover:bg-white"
                   >
                     <X className="h-4 w-4" />
@@ -502,7 +503,7 @@ export const Settings = () => {
               <Input
                 id="welcome-background-upload"
                 type="file"
-                accept="image/*"
+                accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.bmp,.ico,.tiff,.tif"
                 onChange={(e) => handleImageUpload(e, "welcomePage.background")}
                 className="hidden"
               />
@@ -514,9 +515,7 @@ export const Settings = () => {
                 <Upload className="h-4 w-4 mr-2" />
                 {form.welcomePage.background ? 'Change Image' : 'Upload Image'}
               </Button>
-              <span className="text-sm text-gray-500">
-                {form.welcomePage.background ? 'Image uploaded - will display vertically' : 'Recommended: 400x600px or similar vertical format'}
-              </span>
+
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4">
@@ -629,6 +628,18 @@ export const Settings = () => {
               value={form.footer.companyName}
               onChange={handleChange}
               placeholder="Enter Your Company Name"
+              className="mt-2"
+            />
+          </div>
+          <div>
+            <Label htmlFor="contact-email">Contact Email</Label>
+            <Input
+              id="contact-email"
+              name="footer.contactEmail"
+              type="email"
+              value={form.footer.contactEmail}
+              onChange={handleChange}
+              placeholder="contact@example.com"
               className="mt-2"
             />
           </div>
